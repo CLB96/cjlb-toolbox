@@ -77,6 +77,11 @@ Luego abre <http://localhost:8080>.
 `index.html` de su carpeta con la nueva versión, commit y push. Si quieres
 anunciarlo, cambia su `badge` a `"updated"` en `tools.json`.
 
+> **Logos:** gantt, gapcheck y bondline cargan `logo1.png`/`logo2.png` desde su
+> propia carpeta (igual que en sus deploys Netlify originales). Esas copias ya
+> están incluidas — no las borres al actualizar una herramienta. CapaFlow usa
+> logo subido por el usuario (localStorage) y VectoriZr trae el suyo en su build.
+
 **VectoriZr** (app Vite/React, código fuente en `Desktop\Proyectos IA\Digitalizacion`):
 
 ```powershell
