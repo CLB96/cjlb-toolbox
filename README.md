@@ -46,6 +46,34 @@ Campos de cada entrada en `tools.json`:
 
 Incrementa `version` cuando hagas cambios (referencia para depurar caché).
 
+## Agregar una herramienta nueva
+
+**Caso A — HTML autocontenido** (como gantt, gapcheck, bondline, capaflow):
+
+1. Crea la carpeta `mi-herramienta/` en la raíz del repo y guarda el HTML
+   como `mi-herramienta/index.html`.
+2. Si el HTML carga `logo1.png`/`logo2.png`, copia ambos dentro de su carpeta.
+3. Agrega su entrada en `tools.json` con `"url": "/mi-herramienta/"`,
+   `"status": "active"` y `"badge": "new"`. Incrementa `version`.
+4. Prueba en local (sección siguiente) y luego commit + push. La tarjeta
+   aparece sola en la landing — no hay que tocar `index.html`.
+
+**Caso B — app con build** (Vite/React/etc., como VectoriZr):
+
+1. Desarrolla la app en su propia carpeta fuera de este repo.
+2. Evita rutas absolutas (`/archivo.png`) en el código; usa
+   `import.meta.env.BASE_URL` o rutas relativas.
+3. Compila con la subruta como base y copia el resultado aquí:
+   ```powershell
+   npx vite build --base=/mi-herramienta/ --outDir dist-mi-herramienta
+   Copy-Item dist-mi-herramienta\* ..\cjlb-toolbox\mi-herramienta\ -Recurse -Force
+   ```
+4. Igual que el caso A: entrada en `tools.json`, probar, commit + push.
+
+**Caso C — anunciar sin publicar** ("Próximamente"): agrega la entrada en
+`tools.json` con `"status": "hold"`, `"url": ""` y el texto que quieras en
+`holdLabelEs`/`holdLabelEn`. La tarjeta sale deshabilitada con esa etiqueta.
+
 ## Probar en local
 
 El landing carga `tools.json` con `fetch()`, así que necesita un servidor HTTP
