@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "updated": "2026-06-09",
+  "tools": [
+    {
+      "id": "gantt",
+      "icon": "📊",
+      "nameEs": "Gantt Tracker",
+      "nameEn": "Gantt Tracker",
+      "descEs": "Seguimiento visual de proyectos con gestión de cronogramas, dependencias de tareas y monitoreo de progreso.",
+      "descEn": "Visual project tracking with timeline management, task dependencies, and progress monitoring.",
+      "badge": null,
+      "url": "/gantt/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
+      "id": "gapcheck",
+      "icon": "📏",
+      "nameEs": "Análisis GapCheck",
+      "nameEn": "GapCheck Analysis",
+      "descEs": "Análisis avanzado de mediciones con comparaciones de tolerancias, validación estadística y reportes completos.",
+      "descEn": "Advanced measurement analysis with tolerance comparisons, statistical validation, and comprehensive reporting.",
+      "badge": null,
+      "url": "/gapcheck/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
+      "id": "bondline",
+      "icon": "🌡️",
+      "nameEs": "Bondline Térmica",
+      "nameEn": "Bondline Thermal",
+      "descEs": "Análisis térmico y monitoreo de activación de adhesivos con perfiles de temperatura y validación de procesos.",
+      "descEn": "Thermal analysis and adhesive activation monitoring with temperature profiling and process validation.",
+      "badge": null,
+      "url": "/bondline/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
+      "id": "capaflow",
+      "icon": "🧮",
+      "nameEs": "CapaFlow",
+      "nameEn": "CapaFlow",
+      "descEs": "Análisis estadístico en el navegador.\nSin servidores · Sin Minitab · 100% gratuito",
+      "descEn": "Statistical analysis in your browser.\nNo servers · No Minitab · 100% free",
+      "badge": "new",
+      "url": "/capaflow/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
+      "id": "vectorizr",
+      "icon": "📐",
+      "nameEs": "VectoriZr",
+      "nameEn": "VectoriZr",
+      "descEs": "Herramienta para digitalizar/vectorizar dibujos o patrones de corte de forma sencilla.",
+      "descEn": "Digitalization/Vectoring tool to make drawings or cut patterns easier.",
+      "badge": "new",
+      "url": "https://vectorizr.netlify.app/",
+      "status": "active",
+      "holdLabelEs": "En Desarrollo",
+      "holdLabelEn": "In Development"
+    },
+    {
+      "id": "future",
+      "icon": "🔧",
+      "nameEs": "Herramienta Futura",
+      "nameEn": "Future Tool",
+      "descEs": "Explorando nuevas capacidades para mejorar tu flujo de trabajo de ingeniería. Más información próximamente.",
+      "descEn": "Exploring new capabilities to enhance your engineering workflow. More information coming soon.",
+      "badge": null,
+      "url": "",
+      "status": "hold",
+      "holdLabelEs": "Planificado",
+      "holdLabelEn": "Planned"
+    }
+  ]
+}

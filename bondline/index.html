@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Térmico — Activación de Adhesivo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23ef5b67'/><text x='16' y='23' text-anchor='middle' font-size='18'>🌡</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  color-scheme:light;
+  --bg:#f4f7fb;--bg-soft:rgba(255,255,255,.78);--panel:#ffffff;--panel-2:#f8fafc;--panel-3:#eef3f9;
+  --text:#142033;--text-2:#5f6b7d;--text-3:#8a95a6;
+  --border:rgba(15,23,42,.10);--border-2:rgba(15,23,42,.18);
+  --shadow:0 14px 40px rgba(15,23,42,.10);--shadow-soft:0 8px 24px rgba(15,23,42,.08);
+  --blue:#4f8cff;--blue-bg:#e9f1ff;--blue-text:#235fd2;
+  --green:#43b36b;--green-bg:#eaf9ef;--green-text:#217543;
+  --gray:#8a94a6;--gray-bg:#eef1f6;--gray-text:#5d6778;
+  --red:#ef5b67;--red-bg:#ffecee;--red-text:#b82c3f;
+  --amber:#f59e0b;--amber-bg:#fff5df;--amber-text:#9a6800;
+  --purple:#8b5cf6;--purple-bg:#f3edff;--purple-text:#6942d0;
+  --cyan:#06b6d4;--cyan-bg:#e0f7fa;--cyan-text:#0e7490;
+  --radius:12px;--radius-lg:22px;--blur:blur(18px);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#08111f;--bg-soft:rgba(10,18,32,.72);--panel:#0f172a;--panel-2:#131e35;--panel-3:#1a2742;
+  --text:#edf3ff;--text-2:#a9b6cd;--text-3:#71809c;
+  --border:rgba(255,255,255,.09);--border-2:rgba(255,255,255,.18);
+  --shadow:0 18px 48px rgba(0,0,0,.34);--shadow-soft:0 10px 28px rgba(0,0,0,.28);
+  --blue:#72a8ff;--blue-bg:#11284c;--blue-text:#a8cbff;
+  --green:#59c97f;--green-bg:#10281a;--green-text:#9ae5b1;
+  --gray:#91a0b7;--gray-bg:#1a2437;--gray-text:#c0cad8;
+  --red:#ff7683;--red-bg:#34131a;--red-text:#ffb0ba;
+  --amber:#f8b84f;--amber-bg:#322712;--amber-text:#ffd78f;
+  --purple:#a78bfa;--purple-bg:#24183d;--purple-text:#d4c6ff;
+  --cyan:#22d3ee;--cyan-bg:#0c2d33;--cyan-text:#67e8f9;
+}
+html,body{min-height:100%}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);
+  background:radial-gradient(circle at top left,rgba(239,91,103,.14),transparent 28%),
+    radial-gradient(circle at top right,rgba(79,140,255,.12),transparent 24%),
+    linear-gradient(180deg,var(--bg),var(--bg));padding:20px}
+.shell{max-width:1400px;margin:0 auto}
+
+.topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}
+.hero{display:flex;flex-direction:column;gap:6px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase}
+.kicker-dot{width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,var(--red),var(--amber))}
+h1{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-.04em}
+.subtitle{font-size:14px;color:var(--text-2)}
+.logo-box{
+  width:80px;height:80px;
+  background:linear-gradient(135deg,var(--panel),var(--panel-2));
+  border:2px solid var(--border);
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-soft);
+  position:relative;
+  overflow:hidden;
+}
+.logo-box::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at top left,rgba(79,140,255,.08),transparent 60%);
+  pointer-events:none;
+}
+.app-logo{
+  max-width:70%;max-height:70%;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.1));
+  display:none;
+}
+.app-logo.loaded{display:block}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{width:42px;height:42px;padding:0;font-size:18px;display:grid;place-items:center;border:1px solid var(--border-2);border-radius:12px;background:var(--panel);color:var(--text);cursor:pointer;transition:transform .18s,box-shadow .18s}
+.icon-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-soft)}
+.icon-btn:active{transform:scale(.96)}
+
+/* Hamburger menu button */
+.hamburger-btn{position:relative;z-index:1001}
+.hamburger-icon{display:flex;flex-direction:column;gap:3px;width:18px;height:18px;justify-content:center}
+.hamburger-icon span{display:block;width:100%;height:2px;background:currentColor;border-radius:2px;transition:all .25s}
+.hamburger-btn.active .hamburger-icon span:nth-child(1){transform:translateY(5px) rotate(45deg)}
+.hamburger-btn.active .hamburger-icon span:nth-child(2){opacity:0}
+.hamburger-btn.active .hamburger-icon span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+
+/* Dropdown menu */
+.menu-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--panel);border:1px solid var(--border-2);border-radius:12px;box-shadow:var(--shadow);min-width:220px;max-width:calc(100vw - 40px);opacity:0;visibility:hidden;transform:translateY(-10px);transition:all .25s;z-index:1000}
+.menu-dropdown.active{opacity:1;visibility:visible;transform:translateY(0)}
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 16px;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;border:none;background:transparent;width:100%;text-align:left;font-family:inherit;opacity:1}
+.menu-item:first-child{border-radius:12px 12px 0 0}
+.menu-item:last-child{border-radius:0 0 12px 12px}
+.menu-item:hover{background:var(--panel-2);transform:translateX(2px)}
+.menu-item:active{background:var(--panel-3)}
+.menu-item .icon{font-size:18px;width:20px;text-align:center}
+.menu-item strong{font-weight:800;color:var(--blue-text)}
+
+.card{background:var(--bg-soft);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.glow{position:relative;overflow:hidden}
+.glow::before{content:"";position:absolute;inset:-30% auto auto -10%;width:220px;height:220px;border-radius:999px;background:radial-gradient(circle,rgba(239,91,103,.10),transparent 70%);pointer-events:none}
+
+.controls-grid{display:grid;grid-template-columns:1fr auto;gap:16px;margin-bottom:16px}
+.panel-title{font-size:14px;font-weight:800;color:var(--text-2)}
+.panel-subtitle{font-size:12px;color:var(--text-3);margin-top:2px}
+
+.file-drop-zone{border:2px dashed var(--border-2);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .25s;position:relative;margin-top:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.file-drop-zone:hover,.file-drop-zone.dragover{border-color:var(--blue);background:var(--blue-bg)}
+.file-drop-zone.loaded{border-color:var(--green);background:var(--green-bg)}
+.file-drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:10}
+.drop-icon{font-size:28px;margin-bottom:6px}
+.drop-text{font-size:14px;color:var(--text-2)}
+.drop-text strong{color:var(--blue-text);font-weight:800}
+.file-name{font-size:13px;font-weight:800;color:var(--green-text);margin-top:6px}
+
+.adhesive-options{display:flex;gap:8px;margin-top:12px}
+.adhesive-card{min-width:240px}
+.adhesive-options{display:flex;gap:8px;margin-top:12px}
+.adhesive-btn{flex:1;padding:10px 16px;border:2px solid var(--border-2);border-radius:var(--radius);background:var(--panel);color:var(--text-2);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s}
+.adhesive-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-soft)}
+.adhesive-btn.active-hotmelt{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-bg),var(--panel));color:var(--amber-text);box-shadow:0 4px 12px rgba(245,158,11,.12)}
+.adhesive-btn.active-waterbase{border-color:var(--blue);background:linear-gradient(135deg,var(--blue-bg),var(--panel));color:var(--blue-text);box-shadow:0 4px 12px rgba(79,140,255,.12)}
+.adhesive-temps{margin-top:12px;font-size:12px;color:var(--text-3);font-weight:600}
+.adhesive-temps .temp-val{color:var(--text);font-weight:800}
+
+.substrate-btn{flex:1;padding:10px 16px;border:2px solid var(--border-2);border-radius:var(--radius);background:var(--panel);color:var(--text-2);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s}
+.substrate-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-soft)}
+.substrate-btn.active-substrate{border-color:var(--purple);background:linear-gradient(135deg,var(--purple-bg),var(--panel));color:var(--purple-text);box-shadow:0 4px 12px rgba(139,92,246,.12)}
+.substrate-info{margin-top:12px;font-size:12px;color:var(--text-3);font-weight:600}
+.substrate-info .substrate-val{color:var(--text);font-weight:800}
+
+.events-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.event-item{display:flex;flex-direction:column;gap:6px}
+.event-label{font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em}
+.event-input{min-height:42px;border-radius:12px;border:1px solid var(--border-2);background:var(--panel-2);color:var(--text);padding:0 12px;font-size:14px;font-family:inherit;font-weight:600;width:100%;outline:none;transition:border-color .2s}
+.event-input:focus{border-color:var(--blue)}
+.event-input::placeholder{color:var(--text-3);font-weight:400}
+
+/* Compact stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.stat{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow-soft)}
+.stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stat-chip{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px}
+.stat-num{font-size:22px;font-weight:900;letter-spacing:-.05em;line-height:1}
+.stat-label{font-size:11px;color:var(--text-2);margin-top:2px}
+
+.chart-card{padding:20px;position:relative}
+.chart-wrapper{position:relative;height:500px;width:100%}
+.chart-wrapper canvas{width:100%!important;height:100%!important}
+.chart-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:400px;color:var(--text-3);gap:12px}
+.chart-placeholder .placeholder-icon{font-size:48px;opacity:.4}
+.chart-placeholder p{font-size:15px}
+
+.custom-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);font-weight:600}
+.legend-item.tc-legend{position:relative;padding-right:4px}
+.legend-item.tc-legend.hidden{opacity:0.4}
+.legend-item.tc-legend.hidden .legend-line{opacity:0.3}
+.tc-toggle-btn{margin-left:4px;padding:2px 6px;font-size:10px;font-weight:700;border-radius:4px;border:1px solid var(--border-2);background:var(--panel-2);color:var(--text-3);cursor:pointer;transition:all .15s;font-family:inherit}
+.tc-toggle-btn:hover{background:var(--panel-3);color:var(--text-2);border-color:var(--border)}
+.tc-toggle-btn.hidden{background:var(--red-bg);color:var(--red-text);border-color:var(--red)}
+.legend-line{width:20px;height:3px;border-radius:2px}
+.legend-dash{width:20px;height:0;border-top:2px dashed}
+.legend-box{width:16px;height:12px;border-radius:3px;border:1.5px solid var(--green);background:var(--green-bg)}
+
+.activation-result{margin-top:16px;padding:14px 18px;border-radius:16px;font-size:13px;line-height:1.7;display:none}
+.activation-result.pass{background:var(--green-bg);border:1px solid var(--green);color:var(--green-text);display:block}
+.activation-result.fail{background:var(--red-bg);border:1px solid var(--red);color:var(--red-text);display:block}
+.activation-result .result-title{font-weight:900;font-size:14px;margin-bottom:2px}
+
+/* ── Parameters section ── */
+.params-card{position:relative}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.params-body{margin-top:14px;display:flex;flex-direction:column;gap:12px;transition:max-height .3s ease,opacity .3s ease;overflow:hidden}
+.params-body.collapsed{max-height:0!important;opacity:0;margin-top:0}
+.param-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+.param-row.leisters-row{grid-template-columns:1fr auto}
+.param-row.sliders-row{grid-template-columns:1fr}
+.param-group{display:flex;flex-direction:column;gap:4px}
+.param-label{font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.param-input{min-height:42px;border-radius:12px;border:1px solid var(--border-2);background:var(--panel-2);color:var(--text);padding:0 12px;font-size:14px;font-family:inherit;font-weight:600;width:100%;outline:none;transition:border-color .2s}
+.param-input:focus{border-color:var(--blue)}
+.param-input::placeholder{color:var(--text-3);font-weight:400}
+.param-computed{min-height:42px;border-radius:12px;border:1px solid var(--border);background:var(--panel-3);color:var(--text);padding:0 12px;font-size:14px;font-weight:800;display:flex;align-items:center;width:100%}
+.param-computed.loss-positive{color:var(--amber-text)}
+.param-computed.loss-zero{color:var(--text-3)}
+.leisters-list{display:flex;flex-direction:column;gap:8px;flex:1}
+.leister-item{display:flex;gap:8px;align-items:end}
+.leister-item .param-group{flex:1}
+.leister-actions{display:flex;gap:6px;align-items:center;padding-bottom:1px}
+.param-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border-2);background:var(--panel);color:var(--text-2);font-size:18px;font-weight:700;cursor:pointer;display:grid;place-items:center;transition:all .18s;font-family:inherit}
+.param-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-soft)}
+.param-btn.add{color:var(--green-text);border-color:var(--green);background:var(--green-bg)}
+.param-btn.remove{color:var(--red-text);border-color:var(--red);background:var(--red-bg)}
+.param-section-label{font-size:12px;font-weight:800;color:var(--text-2);padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:4px}
+
+.footer{margin-top:20px;text-align:center;font-size:11px;color:var(--text-3);letter-spacing:.04em}
+
+/* ── Defaults Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px}
+.modal-overlay.active{display:flex}
+.modal-content{background:var(--panel);border:1px solid var(--border-2);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:520px;width:100%;max-height:90vh;display:flex;flex-direction:column}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.modal-title{font-size:18px;font-weight:900;color:var(--text);letter-spacing:-.02em}
+.modal-subtitle{font-size:12px;color:var(--text-2);margin-top:4px}
+.modal-close{width:32px;height:32px;border:none;background:var(--panel-3);color:var(--text-2);border-radius:8px;font-size:18px;cursor:pointer;transition:all .18s;display:grid;place-items:center}
+.modal-close:hover{background:var(--red-bg);color:var(--red-text);transform:rotate(90deg)}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.defaults-group{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.defaults-group:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.defaults-label{font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px}
+.defaults-inputs{display:flex;gap:12px}
+.defaults-field{flex:1;display:flex;flex-direction:column;gap:6px}
+.defaults-field label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+.defaults-input{height:44px;border-radius:10px;border:1px solid var(--border-2);background:var(--panel-2);color:var(--text);padding:0 12px;font-size:15px;font-weight:700;font-family:inherit;outline:none;transition:border-color .2s}
+.defaults-input:focus{border-color:var(--blue)}
+.defaults-unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-3);font-weight:600;pointer-events:none}
+.defaults-field{position:relative}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
+.modal-btn{height:42px;padding:0 20px;border-radius:10px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .18s;border:none}
+.modal-btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 4px 12px rgba(79,140,255,.24)}
+.modal-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(79,140,255,.32)}
+.modal-btn-secondary{background:var(--panel-3);color:var(--text-2);border:1px solid var(--border-2)}
+.modal-btn-secondary:hover{background:var(--panel-2);color:var(--text)}
+
+@media(max-width:768px){
+  .controls-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .topbar{flex-direction:column;align-items:stretch}
+  .topbar-actions{justify-content:flex-end}
+  .param-row{grid-template-columns:1fr}
+  .param-row.leisters-row{grid-template-columns:1fr}
+  .hero{margin-bottom:12px}
+  h1{font-size:clamp(24px,6vw,32px)}
+  .menu-dropdown{right:0;left:auto}
+}
+
+/* Lock Screen / Password Gate */
+.app-locked{overflow:hidden}
+.lock-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top left,rgba(239,91,103,.14),transparent 28%),radial-gradient(circle at top right,rgba(79,140,255,.12),transparent 24%),linear-gradient(180deg,rgba(8,17,31,.95),rgba(8,17,31,.98));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10020;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease}
+.lock-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.lock-card{position:relative;width:min(100%,460px);padding:32px;border-radius:28px;background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(15,23,42,.88));border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.5);overflow:hidden}
+.lock-card::before{content:"";position:absolute;inset:auto -10% 72% auto;width:240px;height:240px;border-radius:999px;background:radial-gradient(circle,rgba(239,91,103,.16),transparent 68%);pointer-events:none}
+.lock-card::after{content:"";position:absolute;inset:68% auto auto -8%;width:220px;height:220px;border-radius:999px;background:radial-gradient(circle,rgba(79,140,255,.14),transparent 68%);pointer-events:none}
+.lock-card-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.lock-logo{width:88px;height:88px;border-radius:24px;background:linear-gradient(135deg,#0f172a,#1a2742);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;padding:10px;position:relative}
+.lock-logo img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
+.lock-logo-emoji{font-size:42px;line-height:1}
+.lock-title{font-size:24px;font-weight:900;letter-spacing:-.04em;color:#edf3ff;line-height:1.1}
+.lock-subtitle{font-size:13px;color:#a9b6cd;margin-top:-4px}
+.lock-prompt{font-size:14px;line-height:1.6;color:#a9b6cd;max-width:32ch}
+.lock-form{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.lock-input{width:100%;min-height:50px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(15,23,42,.8);color:#edf3ff;padding:0 16px;font-size:15px;text-align:center;letter-spacing:.04em;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.lock-input:focus{outline:3px solid rgba(239,91,103,.3);outline-offset:2px}
+.lock-input::placeholder{color:#71809c}
+.lock-submit{min-height:48px;border:none;border-radius:16px;background:linear-gradient(135deg,#ef5b67,#ff7683);color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(239,91,103,.2);transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease}
+.lock-submit:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(239,91,103,.3)}
+.lock-submit:active{transform:translateY(0)}
+.lock-submit[disabled]{opacity:.65;cursor:wait}
+.lock-feedback{min-height:22px;font-size:13px;font-weight:800;color:#a9b6cd;transition:color .2s ease}
+.lock-feedback.error{color:#ffb0ba}
+.lock-disclaimer{font-size:11px;color:#71809c;margin-top:8px;line-height:1.4}
+
+/* Bondline Layout */
+.layout-container{position:relative;min-height:400px;border:2px dashed var(--border-2);border-radius:var(--radius);background:var(--panel-2);margin-top:12px;overflow:hidden}
+.layout-drop-zone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:all .25s;padding:24px}
+.layout-drop-zone:hover,.layout-drop-zone.dragover{border-color:var(--blue);background:var(--blue-bg)}
+.layout-drop-zone.loaded{display:none}
+.layout-drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.layout-canvas-wrap{position:relative;width:100%;height:100%;min-height:400px;display:none}
+.layout-canvas-wrap.active{display:block}
+.layout-canvas{width:100%;height:100%;object-fit:contain;display:block;user-select:none;pointer-events:none}
+.layout-instructions{position:absolute;top:12px;left:12px;right:12px;background:var(--bg-soft);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:12px;color:var(--text-2);box-shadow:var(--shadow-soft);z-index:10;pointer-events:none}
+#tcMarkersContainer{position:absolute;inset:0;pointer-events:none}
+.tc-marker{position:absolute;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;cursor:move;user-select:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 12px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.3);pointer-events:auto;transform:translate(-50%,-50%)}
+.tc-marker:hover{transform:translate(-50%,-50%) scale(1.15);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.tc-marker.dragging{transform:translate(-50%,-50%) scale(1.2);box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:100}
+.tc-marker::after{content:attr(data-label);position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:var(--text);background:var(--panel);padding:3px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;box-shadow:var(--shadow-soft);border:1px solid var(--border)}
+</style>
+</head>
+<body class="app-locked">
+
+<!-- Lock Screen / Password Gate -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-card-inner">
+      <div class="lock-logo" id="lockLogoBox">
+        <img id="lockLogo" alt="Bondline Logo" style="display:none" onload="this.style.display='block';this.nextElementSibling.style.display='none'">
+        <div class="lock-logo-emoji">🌡</div>
+      </div>
+      <div class="lock-title">Bondline — R&D Process Engineering</div>
+      <div class="lock-subtitle" data-i18n="lockSubtitle">Análisis Térmico</div>
+      <p class="lock-prompt" data-i18n="lockPrompt">Enter the password to start using this app.</p>
+      <form class="lock-form" id="lockForm">
+        <input type="password" class="lock-input" id="lockPassword" data-i18n-placeholder="lockPlaceholder" placeholder="Access password" autocomplete="off" required>
+        <button type="submit" class="lock-submit" id="lockSubmit" data-i18n="lockButton">Enter</button>
+        <div class="lock-feedback" id="lockFeedback"></div>
+      </form>
+      <div class="lock-disclaimer" data-i18n="lockDisclaimer">This access gate protects the view before you begin.</div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="hero">
+      <div class="kicker"><span class="kicker-dot"></span> <span data-i18n="appKicker">R&D Process Engineering</span></div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <h1 data-i18n="appTitle">Bondline</h1>
+        <div class="logo-box">
+          <img src="" alt="Logo" id="appLogo" class="app-logo">
+        </div>
+      </div>
+      <div class="subtitle" data-i18n="appSubtitle">Visualización de ciclo térmico y ventana de activación de adhesivo</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="hamburger-btn icon-btn" id="hamburgerBtn" onclick="toggleMenu()">
+        <div class="hamburger-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="menu-dropdown" id="menuDropdown">
+          <button class="menu-item" onclick="downloadChart()">
+            <span class="icon">📥</span>
+            <span data-i18n="menuDownload">Descargar gráfica PNG</span>
+          </button>
+          <button class="menu-item" onclick="openDefaultsModal();closeMenu();">
+            <span class="icon">⚙️</span>
+            <span data-i18n="menuDefaults">Valores Default</span>
+          </button>
+          <button class="menu-item" onclick="toggleTheme();closeMenu();">
+            <span class="icon">🌓</span>
+            <span data-i18n="menuTheme">Cambiar tema</span>
+          </button>
+          <button class="menu-item" onclick="toggleLangMenu()">
+            <span class="icon">🌐</span>
+            <span><span data-i18n="menuLanguage">Idioma:</span> <strong id="currentLangLabel">ES</strong></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-grid" style="grid-template-columns:1fr">
+    <div class="card params-card">
+      <div class="panel-head">
+        <div>
+          <span class="panel-title" data-i18n="fileTitle">📂 Archivo de datos</span>
+          <div class="panel-subtitle" data-i18n="fileSubtitle">.xlsx / .xls / .csv — sin encabezados, cada columna = termopar</div>
+        </div>
+        <button class="icon-btn" id="toggleFileBtn" type="button" onclick="toggleFile()">−</button>
+      </div>
+      <div class="params-body" id="fileBody">
+        <div class="file-drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+          <div class="drop-icon">📄</div>
+          <div class="drop-text" data-i18n="fileDrop">Arrastra tu archivo aquí o <strong>haz clic para seleccionar</strong></div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Materia Prima (expandible) -->
+  <div class="card params-card">
+    <div class="panel-head">
+      <div>
+        <span class="panel-title" data-i18n="rawMaterialTitle">🧪 Materia Prima</span>
+        <div class="panel-subtitle" data-i18n="rawMaterialSubtitle">Adhesivo y sustrato</div>
+      </div>
+      <button class="icon-btn" id="toggleRawMaterialBtn" type="button" onclick="toggleRawMaterial()">−</button>
+    </div>
+    <div class="params-body" id="rawMaterialBody">
+      
+      <!-- Adhesive selection -->
+      <div class="param-section-label" data-i18n="adhesiveSection">Tipo de adhesivo</div>
+      <div class="adhesive-options">
+        <button class="adhesive-btn active-waterbase" id="btnWaterBase" onclick="setAdhesive('waterbase')">Water Base</button>
+        <button class="adhesive-btn" id="btnHotmelt" onclick="setAdhesive('hotmelt')">Hotmelt</button>
+      </div>
+      <div class="adhesive-temps" id="tempInfo" style="margin-bottom:16px"></div>
+
+      <!-- Substrate selection -->
+      <div class="param-section-label" data-i18n="substrateSection">Tipo de sustrato</div>
+      <div class="adhesive-options">
+        <button class="substrate-btn active-substrate" id="btnPCABS" onclick="setSubstrate('pcabs')">PC-ABS</button>
+        <button class="substrate-btn" id="btnPP" onclick="setSubstrate('pp')">PP</button>
+      </div>
+      <div class="substrate-info" id="substrateInfo"></div>
+
+    </div>
+  </div>
+
+  <!-- Parameters -->
+  <div class="card params-card">
+    <div class="panel-head">
+      <div>
+        <span class="panel-title" data-i18n="paramsTitle">⚙ Parámetros del proceso</span>
+        <div class="panel-subtitle" data-i18n="paramsSubtitleFull">Temperaturas de termoreguladores, nidos, leisters y sliders</div>
+      </div>
+      <button class="icon-btn" id="toggleParamsBtn" type="button" onclick="toggleParams()">−</button>
+    </div>
+    <div class="params-body" id="paramsBody">
+
+      <!-- Row 1: Upper -->
+      <div class="param-section-label" data-i18n="paramUpper">▲ Superior</div>
+      <div class="param-row">
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramThermoregUpper">Termoregulador Superior</label>
+          <input class="param-input" type="number" step="0.1" id="thermoUpper" placeholder="°C" oninput="calcLoss('upper')">
+        </div>
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramNestUpper">Nido Superior</label>
+          <input class="param-input" type="number" step="0.1" id="nestUpper" placeholder="°C" oninput="calcLoss('upper')">
+        </div>
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramLoss">Temperatura Pérdida</label>
+          <div class="param-computed loss-zero" id="lossUpper">— °C</div>
+        </div>
+      </div>
+
+      <!-- Row 2: Lower -->
+      <div class="param-section-label" data-i18n="paramLower">▼ Inferior</div>
+      <div class="param-row">
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramThermoregLower">Termoregulador Inferior</label>
+          <input class="param-input" type="number" step="0.1" id="thermoLower" placeholder="°C" oninput="calcLoss('lower')">
+        </div>
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramNestLower">Nido Inferior</label>
+          <input class="param-input" type="number" step="0.1" id="nestLower" placeholder="°C" oninput="calcLoss('lower')">
+        </div>
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramLoss">Temperatura Pérdida</label>
+          <div class="param-computed loss-zero" id="lossLower">— °C</div>
+        </div>
+      </div>
+
+      <!-- Row 3: Leisters -->
+      <div class="param-section-label" data-i18n="paramLeistersLabel">Leisters</div>
+      <div class="param-row leisters-row">
+        <div class="leisters-list" id="leistersList">
+          <div class="leister-item" data-idx="0">
+            <div class="param-group">
+              <label class="param-label">Leister 1</label>
+              <input class="param-input leister-input" type="number" step="0.1" placeholder="°C">
+            </div>
+          </div>
+        </div>
+        <div class="leister-actions">
+          <button class="param-btn add" onclick="addLeister()" title="+">+</button>
+          <button class="param-btn remove" onclick="removeLeister()" title="−">−</button>
+        </div>
+      </div>
+
+      <!-- Row 4: Sliders -->
+      <div class="param-section-label" data-i18n="paramSlidersLabel">Sliders</div>
+      <div class="param-row sliders-row">
+        <div class="param-group">
+          <label class="param-label" data-i18n="paramSliders">Temperatura Sliders</label>
+          <input class="param-input" type="number" step="0.1" id="slidersTemp" placeholder="°C">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="statsBar" style="display:none;"></div>
+
+  <!-- Chart -->
+  <div class="card chart-card">
+    <!-- Sheet selector - shown when multiple sheets available -->
+    <div id="sheetSelectorContainer" style="display:none;padding:16px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end">
+        <!-- Left: Sheet info and date -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">📊 Hoja Activa</div>
+            <div id="sheetTitle" style="font-size:18px;font-weight:800;color:var(--text);font-family:Inter,sans-serif"></div>
+          </div>
+          <div style="min-width:160px">
+            <label class="param-label" data-i18n="testDateLabel" style="display:block;margin-bottom:4px;font-size:11px">Fecha de Prueba</label>
+            <input type="text" id="testDate" class="param-input" data-i18n-placeholder="testDatePlaceholder" placeholder="DD/MM/YYYY" style="width:100%;padding:8px 10px;font-size:13px">
+          </div>
+        </div>
+        <!-- Right: Navigation -->
+        <div style="display:flex;gap:8px">
+          <button class="param-btn" onclick="previousSheet()" title="Hoja anterior" style="width:36px;height:36px;font-size:16px">←</button>
+          <select id="sheetSelector" onchange="switchSheet(this.value)" style="min-width:200px;padding:8px 12px;border-radius:8px;border:1px solid var(--border-2);background:var(--panel);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+          </select>
+          <button class="param-btn" onclick="nextSheet()" title="Hoja siguiente" style="width:36px;height:36px;font-size:16px">→</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chart-placeholder" id="placeholder">
+      <div class="placeholder-icon">📈</div>
+      <p data-i18n="chartPlaceholder">Carga un archivo Excel para visualizar el perfil térmico</p>
+    </div>
+    <div class="chart-wrapper" id="chartWrapper" style="display:none;">
+      <canvas id="chartCanvas"></canvas>
+    </div>
+    <div class="custom-legend" id="customLegend" style="display:none;"></div>
+    <div class="activation-result" id="activationResult"></div>
+    <div class="activation-result" id="coolingResult"></div>
+  </div>
+
+  <!-- Time Range Control -->
+  <div class="card params-card">
+    <div class="panel-head">
+      <div>
+        <span class="panel-title" data-i18n="timeRangeTitle">⏱ Rango Temporal</span>
+        <span class="panel-subtitle" data-i18n="timeRangeSubtitle">Recorta el tiempo visible en la gráfica</span>
+      </div>
+      <button class="icon-btn" id="toggleTimeRangeBtn" onclick="toggleTimeRange()">−</button>
+    </div>
+    <div class="params-body" id="timeRangeBody">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
+        <div class="param-group">
+          <label class="param-label" data-i18n="timeRangeStart">Inicio (s)</label>
+          <input class="param-input" type="number" step="1" min="0" id="timeRangeStart" placeholder="0">
+        </div>
+        <div class="param-group">
+          <label class="param-label" data-i18n="timeRangeEnd">Fin (s)</label>
+          <input class="param-input" type="number" step="1" min="0" id="timeRangeEnd" placeholder="Auto">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="param-btn" onclick="applyTimeRange()" title="Aplicar rango" style="width:42px;height:42px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:10px;font-size:20px;cursor:pointer;display:grid;place-items:center">✓</button>
+          <button class="param-btn" onclick="resetTimeRange()" title="Restaurar" style="width:42px;height:42px">↻</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events/Sucesos -->
+  <div class="card params-card">
+    <div class="panel-head">
+      <div>
+        <span class="panel-title" data-i18n="eventsTitle">⏱ Sucesos</span>
+        <div class="panel-subtitle" data-i18n="eventsSubtitle">Marcadores de eventos del proceso</div>
+      </div>
+      <button class="icon-btn" id="toggleEventsBtn" type="button" onclick="toggleEvents()">−</button>
+    </div>
+    <div class="params-body" id="eventsBody">
+
+      <!-- Prensa -->
+      <div class="param-section-label" data-i18n="eventsPrensa">🔧 Prensa</div>
+      <div class="events-grid">
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventPressStart">Inicia Ciclo Prensa</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventPressStart" placeholder="s" oninput="updateEvents()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventPressClosed">Prensa Cerrada</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventPressClosed" placeholder="s" oninput="updateEvents()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventPressOpen">Prensa Abierta</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventPressOpen" placeholder="s" oninput="updateEvents()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventPressEnd">Termina Ciclo Prensa</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventPressEnd" placeholder="s" oninput="updateEvents()">
+        </div>
+      </div>
+
+      <!-- Manipulación -->
+      <div class="param-section-label" data-i18n="eventsManipulation">🤲 Manipulación</div>
+      <div class="events-grid">
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventManipStart">Inicia Manipulación</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventManipStart" placeholder="s" oninput="updateEvents()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventManipEnd">Termina Manipulación</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventManipEnd" placeholder="s" oninput="updateEvents()">
+        </div>
+      </div>
+
+      <!-- Cooling -->
+      <div class="param-section-label" data-i18n="eventsCooling">❄️ Cooling</div>
+      <div class="events-grid">
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventCoolingStart">Inicia Ciclo Cooling</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventCoolingStart" placeholder="s" oninput="updateEvents();checkCoolingParams()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventCoolingClosed">Cooling Cerrado</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventCoolingClosed" placeholder="s" oninput="updateEvents();checkCoolingParams()">
+        </div>
+        <div class="event-item">
+          <label class="event-label" data-i18n="eventCoolingEnd">Termina Ciclo Cooling</label>
+          <input class="event-input" type="number" step="1" min="0" id="eventCoolingEnd" placeholder="s" oninput="updateEvents();checkCoolingParams()">
+        </div>
+      </div>
+
+      <!-- Parámetros de Cooling (se muestran solo si todos los eventos de cooling están llenos) -->
+      <div id="coolingParamsContainer" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="param-section-label" data-i18n="coolingParamsTitle">Parámetros de Cooling</div>
+        <div class="events-grid">
+          <div class="event-item">
+            <label class="event-label" data-i18n="coolingChiller">Chiller</label>
+            <input class="event-input" type="number" step="0.1" id="coolingChiller" placeholder="°C">
+          </div>
+          <div class="event-item">
+            <label class="event-label" data-i18n="coolingNestUpper">Cooling Nido Superior</label>
+            <input class="event-input" type="number" step="0.1" id="coolingNestUpper" placeholder="°C">
+          </div>
+          <div class="event-item">
+            <label class="event-label" data-i18n="coolingNestLower">Cooling Nido Inferior</label>
+            <input class="event-input" type="number" step="0.1" id="coolingNestLower" placeholder="°C">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bondline Layout -->
+  <div class="card params-card">
+    <div class="panel-head">
+      <div>
+        <span class="panel-title" data-i18n="layoutTitle">📍 Bondline Layout</span>
+        <div class="panel-subtitle" data-i18n="layoutSubtitle">Diagrama visual de ubicación de termopares</div>
+      </div>
+      <button class="icon-btn" id="toggleLayoutBtn" type="button" onclick="toggleLayout()">−</button>
+    </div>
+    <div class="params-body" id="layoutBody">
+      <div class="layout-container" id="layoutContainer">
+        <!-- Drop zone for image -->
+        <div class="layout-drop-zone" id="layoutDropZone">
+          <input type="file" id="layoutImageInput" accept="image/*">
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-text" data-i18n="layoutDrop">Arrastra una imagen del guante o <strong>haz clic para seleccionar</strong></div>
+          <div class="file-name" id="layoutFileName"></div>
+        </div>
+        <!-- Canvas with image and markers -->
+        <div class="layout-canvas-wrap" id="layoutCanvasWrap">
+          <div class="layout-instructions" data-i18n="layoutInstructions">Arrastra los termopares para ubicarlos en el diagrama</div>
+          <img class="layout-canvas" id="layoutCanvas" alt="Bondline Layout">
+          <div id="tcMarkersContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" data-i18n="footer">Desarrollado por CJLB — R&D Process Engineering</div>
+</div>
+
+<!-- Defaults Modal -->
+<div class="modal-overlay" id="defaultsModal" onclick="closeDefaultsModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" data-i18n="defaultsTitle">⚙️ Valores Default</div>
+        <div class="modal-subtitle" data-i18n="defaultsSubtitle">Configura los rangos de temperatura predeterminados</div>
+      </div>
+      <button class="modal-close" onclick="closeDefaultsModal()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Water Base -->
+      <div class="defaults-group">
+        <div class="defaults-label">Water Base</div>
+        <div class="defaults-inputs">
+          <div class="defaults-field">
+            <label data-i18n="defaultsTempMin">Temp Mín</label>
+            <input type="number" step="0.1" id="defaultWaterBaseMin" class="defaults-input">
+            <span class="defaults-unit">°C</span>
+          </div>
+          <div class="defaults-field">
+            <label data-i18n="defaultsTempMax">Temp Máx</label>
+            <input type="number" step="0.1" id="defaultWaterBaseMax" class="defaults-input">
+            <span class="defaults-unit">°C</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Hotmelt -->
+      <div class="defaults-group">
+        <div class="defaults-label">Hotmelt</div>
+        <div class="defaults-inputs">
+          <div class="defaults-field">
+            <label data-i18n="defaultsTempMin">Temp Mín</label>
+            <input type="number" step="0.1" id="defaultHotmeltMin" class="defaults-input">
+            <span class="defaults-unit">°C</span>
+          </div>
+          <div class="defaults-field">
+            <label data-i18n="defaultsTempMax">Temp Máx</label>
+            <input type="number" step="0.1" id="defaultHotmeltMax" class="defaults-input">
+            <span class="defaults-unit">°C</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cooling Target -->
+      <div class="defaults-group">
+        <div class="defaults-label" data-i18n="defaultsCoolingTarget">Temp Objetivo Cooling</div>
+        <div class="defaults-inputs">
+          <div class="defaults-field">
+            <input type="number" step="0.1" id="defaultCoolingTarget" class="defaults-input">
+            <span class="defaults-unit">°C</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" onclick="resetDefaults()" data-i18n="defaultsReset">Restaurar valores de fábrica</button>
+      <div style="flex:1"></div>
+      <button class="modal-btn modal-btn-secondary" onclick="closeDefaultsModal()" data-i18n="defaultsCancel">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveDefaults()" data-i18n="defaultsSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// ── I18N System
+// ══════════════════════════════════════════════════════
+const LANG_KEY='tcLangPref';
+let currentLang=localStorage.getItem(LANG_KEY)||((navigator.language||'').toLowerCase().startsWith('en')?'en':'es');
+
+const I18N={
+  es:{
+    appKicker:'R&D Process Engineering',
+    appTitle:'Bondline',
+    appSubtitle:'Visualización de ciclo térmico y ventana de activación de adhesivo',
+    fileTitle:'📂 Archivo de datos',
+    fileSubtitle:'.xlsx / .xls / .csv — sin encabezados, cada columna = termopar',
+    fileDrop:'Arrastra tu archivo aquí o <strong>haz clic para seleccionar</strong>',
+    rawMaterialTitle:'🧪 Materia Prima',
+    rawMaterialSubtitle:'Adhesivo y sustrato',
+    adhesiveSection:'Tipo de adhesivo',
+    adhesiveTitle:'🧪 Tipo de adhesivo',
+    adhesiveSubtitle:'Define los rangos de temperatura',
+    adhesiveMin:'Mín',
+    adhesiveMax:'Máx',
+    substrateSection:'Tipo de sustrato',
+    needsFlame:'Necesita Flama',
+    flameYes:'SÍ',
+    flameNo:'NO',
+    chartPlaceholder:'Carga un archivo Excel para visualizar el perfil térmico',
+    statThermocouples:'Termopares',
+    statDuration:'Duración ciclo',
+    statMinTemp:'Temp mín registrada',
+    statMaxTemp:'Temp máx registrada',
+    statActivation:'Inicio activación',
+    statNotReached:'No alcanzada',
+    legendLimits:'Límites adhesivo',
+    legendWindow:'Ventana activación',
+    axisTime:'Tiempo (segundos)',
+    axisTemp:'Temperatura (°C)',
+    annotMin:(v)=>`Temp Mín: ${v}°C`,
+    annotMax:(v)=>`Temp Máx: ${v}°C`,
+    annotWindow:(s)=>`Ventana de Activación (${s}s)`,
+    resultPassTitle:'✓ Ventana de activación exitosa',
+    resultPass:(min,t,dur,max)=>`Todos los termopares alcanzaron ${min}°C en t=${t}s. Durante los ${dur}s siguientes, todas las lecturas se mantuvieron entre ${min}°C y ${max}°C.`,
+    resultFailTitle:'⚠ Activación no alcanzada',
+    resultFail:(min,label)=>`No todos los termopares alcanzaron la temperatura mínima de ${min}°C del adhesivo ${label}.`,
+    resultOutTitle:'⚠ Ventana de activación fuera de rango',
+    resultOut:(t,dur,min,max)=>`La activación inició en t=${t}s, pero durante la ventana de ${dur}s algunos termopares salieron del rango ${min}°C – ${max}°C.`,
+    // Cooling result
+    coolingResultTitle:'✓ Enfriamiento correcto',
+    coolingResult:(time,target)=>`La pieza alcanzó el correcto enfriamiento (${target}°C) ${time}s después de haber iniciado el ciclo de cooling.`,
+    coolingResultFailTitle:'⚠ Enfriamiento no alcanzado',
+    coolingResultFail:(target)=>`No todos los termopares alcanzaron la temperatura objetivo de ${target}°C durante el ciclo de cooling.`,
+    // TC visibility
+    showHideTCs:'Mostrar/Ocultar TCs',
+    hideTC:'Ocultar',
+    showTC:'Mostrar',
+    footer:'Desarrollado por CJLB — R&D Process Engineering',
+    // Events
+    eventsTitle:'⏱ Sucesos',
+    eventsSubtitle:'Marcadores de eventos del proceso',
+    eventsPrensa:'🔧 Prensa',
+    eventPressStart:'Inicia Ciclo Prensa',
+    eventPressClosed:'Prensa Cerrada',
+    eventPressOpen:'Prensa Abierta',
+    eventPressEnd:'Termina Ciclo Prensa',
+    eventsManipulation:'🤲 Manipulación',
+    eventManipStart:'Inicia Manipulación',
+    eventManipEnd:'Termina Manipulación',
+    eventsCooling:'❄️ Cooling',
+    eventCoolingStart:'Inicia Ciclo Cooling',
+    eventCoolingClosed:'Cooling Cerrado',
+    eventCoolingEnd:'Termina Ciclo Cooling',
+    // Cooling parameters
+    coolingParamsTitle:'Parámetros de Cooling',
+    coolingChiller:'Chiller',
+    coolingNestUpper:'Cooling Nido Superior',
+    coolingNestLower:'Cooling Nido Inferior',
+    // Time range
+    timeRangeTitle:'⏱ Rango Temporal',
+    timeRangeSubtitle:'Recorta el tiempo visible en la gráfica',
+    timeRangeStart:'Inicio (s)',
+    timeRangeEnd:'Fin (s)',
+    timeRangeReset:'Mostrar todo',
+    timeRangeApply:'Aplicar rango',
+    // Test date
+    testDateLabel:'Fecha de Prueba',
+    testDatePlaceholder:'DD/MM/YYYY',
+    // Bondline Layout
+    layoutTitle:'📍 Bondline Layout',
+    layoutSubtitle:'Diagrama visual de ubicación de termopares',
+    layoutDrop:'Arrastra una imagen del guante o <strong>haz clic para seleccionar</strong>',
+    layoutFileName:'Imagen cargada:',
+    layoutInstructions:'Arrastra los termopares para ubicarlos en el diagrama',
+    paramsTitle:'⚙ Parámetros del proceso',
+    paramsSubtitleFull:'Temperaturas de termoreguladores, nidos, leisters y sliders',
+    paramUpper:'▲ Superior',
+    paramLower:'▼ Inferior',
+    paramThermoregUpper:'Termoregulador Superior',
+    paramNestUpper:'Nido Superior',
+    paramThermoregLower:'Termoregulador Inferior',
+    paramNestLower:'Nido Inferior',
+    paramLoss:'Temperatura Pérdida',
+    paramLeistersLabel:'Leisters',
+    paramSlidersLabel:'Sliders',
+    paramSliders:'Temperatura Sliders',
+    menuDownload:'Descargar gráfica PNG',
+    menuDefaults:'Valores Default',
+    menuTheme:'Cambiar tema',
+    menuLanguage:'Idioma:',
+    // Defaults Modal
+    defaultsTitle:'⚙️ Valores Default',
+    defaultsSubtitle:'Configura los rangos de temperatura predeterminados',
+    defaultsTempMin:'Temp Mín',
+    defaultsTempMax:'Temp Máx',
+    defaultsCoolingTarget:'Temp Objetivo Cooling',
+    defaultsReset:'Restaurar valores de fábrica',
+    defaultsSave:'Guardar',
+    defaultsCancel:'Cancelar',
+    exportTitle:'Perfil Térmico — Activación de Adhesivo',
+    exportParams:'Parámetros del proceso',
+    // Lock screen
+    lockSubtitle:'Análisis Térmico',
+    lockPrompt:'Ingresa la contraseña para comenzar a usar esta aplicación.',
+    lockPlaceholder:'Contraseña de acceso',
+    lockButton:'Entrar',
+    lockDisclaimer:'Esta puerta de acceso protege la vista antes de comenzar.',
+    lockError:'Contraseña incorrecta. Intenta de nuevo.',
+  },
+  en:{
+    appKicker:'R&D Process Engineering',
+    appTitle:'Bondline',
+    appSubtitle:'Thermal cycle visualization and adhesive activation window',
+    fileTitle:'📂 Data file',
+    fileSubtitle:'.xlsx / .xls / .csv — no headers, each column = thermocouple',
+    fileDrop:'Drag your file here or <strong>click to select</strong>',
+    rawMaterialTitle:'🧪 Raw Material',
+    rawMaterialSubtitle:'Adhesive and substrate',
+    adhesiveSection:'Adhesive type',
+    adhesiveTitle:'🧪 Adhesive type',
+    adhesiveSubtitle:'Sets the temperature range',
+    adhesiveMin:'Min',
+    adhesiveMax:'Max',
+    substrateSection:'Substrate type',
+    needsFlame:'Needs Flame',
+    flameYes:'YES',
+    flameNo:'NO',
+    chartPlaceholder:'Load an Excel file to visualize the thermal profile',
+    statThermocouples:'Thermocouples',
+    statDuration:'Cycle duration',
+    statMinTemp:'Min temp recorded',
+    statMaxTemp:'Max temp recorded',
+    statActivation:'Activation start',
+    statNotReached:'Not reached',
+    legendLimits:'Adhesive limits',
+    legendWindow:'Activation window',
+    axisTime:'Time (seconds)',
+    axisTemp:'Temperature (°C)',
+    annotMin:(v)=>`Min Temp: ${v}°C`,
+    annotMax:(v)=>`Max Temp: ${v}°C`,
+    annotWindow:(s)=>`Activation Window (${s}s)`,
+    resultPassTitle:'✓ Activation window successful',
+    resultPass:(min,t,dur,max)=>`All thermocouples reached ${min}°C at t=${t}s. During the following ${dur}s, all readings stayed between ${min}°C and ${max}°C.`,
+    resultFailTitle:'⚠ Activation not reached',
+    resultFail:(min,label)=>`Not all thermocouples reached the minimum temperature of ${min}°C for ${label} adhesive.`,
+    resultOutTitle:'⚠ Activation window out of range',
+    resultOut:(t,dur,min,max)=>`Activation started at t=${t}s, but during the ${dur}s window some thermocouples went outside the ${min}°C – ${max}°C range.`,
+    // Cooling result
+    coolingResultTitle:'✓ Correct cooling achieved',
+    coolingResult:(time,target)=>`The part reached correct cooling (${target}°C) ${time}s after the cooling cycle started.`,
+    coolingResultFailTitle:'⚠ Cooling not achieved',
+    coolingResultFail:(target)=>`Not all thermocouples reached the target temperature of ${target}°C during the cooling cycle.`,
+    // TC visibility
+    showHideTCs:'Show/Hide TCs',
+    hideTC:'Hide',
+    showTC:'Show',
+    footer:'Developed by CJLB — R&D Process Engineering',
+    // Events
+    eventsTitle:'⏱ Events',
+    eventsSubtitle:'Process event markers',
+    eventsPrensa:'🔧 Press',
+    eventPressStart:'Press Cycle Start',
+    eventPressClosed:'Press Closed',
+    eventPressOpen:'Press Open',
+    eventPressEnd:'Press Cycle End',
+    eventsManipulation:'🤲 Manipulation',
+    eventManipStart:'Manipulation Start',
+    eventManipEnd:'Manipulation End',
+    eventsCooling:'❄️ Cooling',
+    eventCoolingStart:'Cooling Cycle Start',
+    eventCoolingClosed:'Cooling Closed',
+    eventCoolingEnd:'Cooling Cycle End',
+    // Cooling parameters
+    coolingParamsTitle:'Cooling Parameters',
+    coolingChiller:'Chiller',
+    coolingNestUpper:'Cooling Upper Nest',
+    coolingNestLower:'Cooling Lower Nest',
+    // Time range
+    timeRangeTitle:'⏱ Time Range',
+    timeRangeSubtitle:'Trim visible time in the chart',
+    timeRangeStart:'Start (s)',
+    timeRangeEnd:'End (s)',
+    timeRangeReset:'Show all',
+    timeRangeApply:'Apply range',
+    // Test date
+    testDateLabel:'Test Date',
+    testDatePlaceholder:'MM/DD/YYYY',
+    // Bondline Layout
+    layoutTitle:'📍 Bondline Layout',
+    layoutSubtitle:'Visual diagram of thermocouple locations',
+    layoutDrop:'Drag a glove diagram image here or <strong>click to select</strong>',
+    layoutFileName:'Image loaded:',
+    layoutInstructions:'Drag thermocouples to position them on the diagram',
+    paramsTitle:'⚙ Process parameters',
+    paramsSubtitleFull:'Thermoregulator, nest, leister and slider temperatures',
+    paramUpper:'▲ Upper',
+    paramLower:'▼ Lower',
+    paramThermoregUpper:'Upper Thermoregulator',
+    paramNestUpper:'Upper Nest',
+    paramThermoregLower:'Lower Thermoregulator',
+    paramNestLower:'Lower Nest',
+    paramLoss:'Temperature Loss',
+    paramLeistersLabel:'Leisters',
+    paramSlidersLabel:'Sliders',
+    paramSliders:'Slider Temperature',
+    menuDownload:'Download chart PNG',
+    menuDefaults:'Default Values',
+    menuTheme:'Change theme',
+    menuLanguage:'Language:',
+    // Defaults Modal
+    defaultsTitle:'⚙️ Default Values',
+    defaultsSubtitle:'Configure default temperature ranges',
+    defaultsTempMin:'Min Temp',
+    defaultsTempMax:'Max Temp',
+    defaultsCoolingTarget:'Cooling Target Temp',
+    defaultsReset:'Restore factory values',
+    defaultsSave:'Save',
+    defaultsCancel:'Cancel',
+    exportTitle:'Thermal Profile — Adhesive Activation',
+    exportParams:'Process Parameters',
+    // Lock screen
+    lockSubtitle:'Thermal Analysis',
+    lockPrompt:'Enter the password to start using this app.',
+    lockPlaceholder:'Access password',
+    lockButton:'Enter',
+    lockDisclaimer:'This access gate protects the view before you begin.',
+    lockError:'Incorrect password. Try again.',
+  }
+};
+
+function T(key,...args){
+  const v=I18N[currentLang]?.[key]??I18N.es[key];
+  return typeof v==='function'?v(...args):v??key;
+}
+
+function setLang(lang){
+  if(!I18N[lang])return;
+  currentLang=lang;
+  localStorage.setItem(LANG_KEY,currentLang);
+  document.documentElement.lang=currentLang;
+  document.getElementById('currentLangLabel').textContent=lang.toUpperCase();
+  applyLangToDOM();
+  updateAdhesiveInfo();
+  updateSubstrateInfo();
+  if(parsedData)renderChart();
+}
+
+function toggleLangMenu(){
+  const newLang=currentLang==='es'?'en':'es';
+  setLang(newLang);
+  closeMenu();
+}
+
+function applyLangToDOM(){
+  const L=I18N[currentLang];
+  document.documentElement.lang=currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(L[key]!==undefined){
+      if(typeof L[key]==='function')return;
+      el.innerHTML=L[key];
+    }
+  });
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key=el.dataset.i18nPlaceholder;
+    if(L[key])el.placeholder=L[key];
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// ── Menu Toggle
+// ══════════════════════════════════════════════════════
+function toggleMenu(){
+  const btn=document.getElementById('hamburgerBtn');
+  const menu=document.getElementById('menuDropdown');
+  const isActive=btn.classList.toggle('active');
+  menu.classList.toggle('active',isActive);
+  
+  if(isActive){
+    setTimeout(()=>document.addEventListener('click',closeMenuOutside),10);
+  }else{
+    document.removeEventListener('click',closeMenuOutside);
+  }
+}
+
+function closeMenu(){
+  const btn=document.getElementById('hamburgerBtn');
+  const menu=document.getElementById('menuDropdown');
+  btn.classList.remove('active');
+  menu.classList.remove('active');
+  document.removeEventListener('click',closeMenuOutside);
+}
+
+function closeMenuOutside(e){
+  const btn=document.getElementById('hamburgerBtn');
+  if(!btn.contains(e.target)){
+    closeMenu();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── Defaults Modal
+// ══════════════════════════════════════════════════════
+function openDefaultsModal(){
+  const modal=document.getElementById('defaultsModal');
+  
+  // Load current values into inputs
+  document.getElementById('defaultWaterBaseMin').value=currentDefaults.waterbase.min;
+  document.getElementById('defaultWaterBaseMax').value=currentDefaults.waterbase.max;
+  document.getElementById('defaultHotmeltMin').value=currentDefaults.hotmelt.min;
+  document.getElementById('defaultHotmeltMax').value=currentDefaults.hotmelt.max;
+  document.getElementById('defaultCoolingTarget').value=currentDefaults.coolingTarget;
+  
+  modal.classList.add('active');
+}
+
+function closeDefaultsModal(event){
+  // Si se pasó un evento, solo cerrar si se hizo clic en el overlay (no en el contenido)
+  if(event&&event.target.classList.contains('modal-content'))return;
+  if(event&&!event.target.classList.contains('modal-overlay'))return;
+  
+  document.getElementById('defaultsModal').classList.remove('active');
+}
+
+function saveDefaults(){
+  // Get values from inputs
+  const newDefaults={
+    waterbase:{
+      min:parseFloat(document.getElementById('defaultWaterBaseMin').value)||55,
+      max:parseFloat(document.getElementById('defaultWaterBaseMax').value)||75
+    },
+    hotmelt:{
+      min:parseFloat(document.getElementById('defaultHotmeltMin').value)||60,
+      max:parseFloat(document.getElementById('defaultHotmeltMax').value)||80
+    },
+    coolingTarget:parseFloat(document.getElementById('defaultCoolingTarget').value)||35
+  };
+  
+  // Save to localStorage
+  localStorage.setItem('bondlineDefaults',JSON.stringify(newDefaults));
+  
+  // Update current defaults
+  currentDefaults=newDefaults;
+  
+  // Update UI
+  updateAdhesiveInfo();
+  
+  // Re-render chart if data exists
+  if(parsedData)renderChart();
+  
+  // Close modal
+  closeDefaultsModal();
+}
+
+function resetDefaults(){
+  if(confirm(currentLang==='es'?'¿Restaurar valores de fábrica?':'Restore factory values?')){
+    currentDefaults={...FACTORY_DEFAULTS};
+    localStorage.setItem('bondlineDefaults',JSON.stringify(currentDefaults));
+    
+    // Update inputs
+    document.getElementById('defaultWaterBaseMin').value=currentDefaults.waterbase.min;
+    document.getElementById('defaultWaterBaseMax').value=currentDefaults.waterbase.max;
+    document.getElementById('defaultHotmeltMin').value=currentDefaults.hotmelt.min;
+    document.getElementById('defaultHotmeltMax').value=currentDefaults.hotmelt.max;
+    document.getElementById('defaultCoolingTarget').value=currentDefaults.coolingTarget;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── Theme
+// ══════════════════════════════════════════════════════
+const prefersDark=window.matchMedia('(prefers-color-scheme:dark)');
+function applyTheme(){const s=localStorage.getItem('tc-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(prefersDark.matches)document.documentElement.setAttribute('data-theme','dark');}
+function toggleTheme(){
+  const c=document.documentElement.getAttribute('data-theme');
+  const n=c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('tc-theme',n);
+  updateLogo();
+  if(parsedData)renderChart();
+}
+applyTheme();prefersDark.addEventListener('change',applyTheme);
+function isDark(){return document.documentElement.getAttribute('data-theme')==='dark';}
+
+// Logo management
+function updateLogo(){
+  const logo=document.getElementById('appLogo');
+  const lockLogo=document.getElementById('lockLogo');
+  const dark=isDark();
+  
+  // Rutas de los logos - reemplaza con tus archivos
+  const logoLight='logo1.png';  // Logo para tema claro
+  const logoDark='logo2.png';   // Logo para tema oscuro
+  
+  // Cambiar logo según tema
+  logo.src=dark?logoDark:logoLight;
+  
+  // Cambiar logo del lock screen si existe
+  if(lockLogo){
+    lockLogo.src=dark?logoDark:logoLight;
+  }
+  
+  // Mostrar logo cuando cargue
+  logo.onload=function(){
+    logo.classList.add('loaded');
+  };
+  
+  // Si falla la carga, ocultar
+  logo.onerror=function(){
+    logo.classList.remove('loaded');
+  };
+}
+updateLogo();
+
+// ══════════════════════════════════════════════════════
+// ── State
+// ══════════════════════════════════════════════════════
+let adhesiveType='waterbase',substrateType='pcabs',parsedData=null,chartInstance=null;
+
+// TC visibility state - true = visible, false = hidden
+let tcVisibility=[];
+
+// Time range state
+let timeRangeActive=false;
+let timeRangeStart=0;
+let timeRangeEnd=null; // null = usar el total de filas
+
+// Multi-sheet management
+let workbookData=null; // Almacena el workbook completo
+let availableSheets=[]; // Lista de nombres de hojas
+let currentSheetIndex=0; // Índice de la hoja actual
+let sheetConfigs={}; // Configuraciones por hoja
+
+// Factory defaults
+const FACTORY_DEFAULTS={
+  waterbase:{min:55,max:75},
+  hotmelt:{min:60,max:80},
+  coolingTarget:35
+};
+
+// Load defaults from localStorage or use factory defaults
+function loadDefaults(){
+  const stored=localStorage.getItem('bondlineDefaults');
+  if(stored){
+    try{
+      return JSON.parse(stored);
+    }catch(e){
+      return {...FACTORY_DEFAULTS};
+    }
+  }
+  return {...FACTORY_DEFAULTS};
+}
+
+let currentDefaults=loadDefaults();
+
+// Dynamic adhesive config using current defaults
+function getAdhesiveConfig(){
+  return {
+    waterbase:{min:currentDefaults.waterbase.min,max:currentDefaults.waterbase.max,label:'Water Base'},
+    hotmelt:{min:currentDefaults.hotmelt.min,max:currentDefaults.hotmelt.max,label:'Hotmelt'}
+  };
+}
+
+const SUBSTRATE_INFO={pcabs:{label:'PC-ABS'},pp:{label:'PP'}};
+const ACTIVATION_DURATION=30;
+const TC_COLORS=['#4f8cff','#ef5b67','#43b36b','#8b5cf6','#f59e0b','#06b6d4','#ec4899','#84cc16','#f43f5e','#14b8a6','#6366f1','#d97706','#0ea5e9','#e11d48','#10b981','#a855f7','#ca8a04','#0891b2','#be185d','#3b82f6'];
+
+function updateAdhesiveInfo(){
+  const cfg=getAdhesiveConfig()[adhesiveType];
+  document.getElementById('tempInfo').innerHTML=`${T('adhesiveMin')}: <span class="temp-val">${cfg.min}°C</span> &nbsp;|&nbsp; ${T('adhesiveMax')}: <span class="temp-val">${cfg.max}°C</span>`;
+}
+
+function updateSubstrateInfo(){
+  const info=SUBSTRATE_INFO[substrateType];
+  const needsFlame=substrateType==='pp'?T('flameYes'):T('flameNo');
+  document.getElementById('substrateInfo').innerHTML=`${T('needsFlame')}: <span class="substrate-val">${needsFlame}</span>`;
+}
+
+function setAdhesive(type){
+  adhesiveType=type;
+  document.getElementById('btnWaterBase').className='adhesive-btn'+(type==='waterbase'?' active-waterbase':'');
+  document.getElementById('btnHotmelt').className='adhesive-btn'+(type==='hotmelt'?' active-hotmelt':'');
+  updateAdhesiveInfo();
+  if(parsedData)renderChart();
+}
+
+function setSubstrate(type){
+  substrateType=type;
+  document.getElementById('btnPCABS').className='substrate-btn'+(type==='pcabs'?' active-substrate':'');
+  document.getElementById('btnPP').className='substrate-btn'+(type==='pp'?' active-substrate':'');
+  updateSubstrateInfo();
+}
+
+// ══════════════════════════════════════════════════════
+// ── Events System
+// ══════════════════════════════════════════════════════
+const EVENTS_CONFIG={
+  press:{
+    start:{id:'eventPressStart',label:'pressStart',color:'#4f8cff'},
+    closed:{id:'eventPressClosed',label:'pressClosed',color:'#72a8ff'},
+    open:{id:'eventPressOpen',label:'pressOpen',color:'#a8cbff'},
+    end:{id:'eventPressEnd',label:'pressEnd',color:'#235fd2'}
+  },
+  manipulation:{
+    start:{id:'eventManipStart',label:'manipStart',color:'#43b36b'},
+    end:{id:'eventManipEnd',label:'manipEnd',color:'#217543'}
+  },
+  cooling:{
+    start:{id:'eventCoolingStart',label:'coolingStart',color:'#06b6d4'},
+    closed:{id:'eventCoolingClosed',label:'coolingClosed',color:'#22d3ee'},
+    end:{id:'eventCoolingEnd',label:'coolingEnd',color:'#0e7490'}
+  }
+};
+
+const EVENTS_LABELS={
+  es:{
+    pressStart:'Inicia Prensa',pressClosed:'Prensa Cerrada',pressOpen:'Prensa Abierta',pressEnd:'Termina Prensa',
+    manipStart:'Inicia Manipulación',manipEnd:'Termina Manipulación',
+    coolingStart:'Inicia Cooling',coolingClosed:'Cooling Cerrado',coolingEnd:'Termina Cooling'
+  },
+  en:{
+    pressStart:'Press Start',pressClosed:'Press Closed',pressOpen:'Press Open',pressEnd:'Press End',
+    manipStart:'Manip. Start',manipEnd:'Manip. End',
+    coolingStart:'Cooling Start',coolingClosed:'Cooling Closed',coolingEnd:'Cooling End'
+  }
+};
+
+function getActiveEvents(){
+  const events=[];
+  Object.keys(EVENTS_CONFIG).forEach(category=>{
+    Object.keys(EVENTS_CONFIG[category]).forEach(key=>{
+      const config=EVENTS_CONFIG[category][key];
+      const input=document.getElementById(config.id);
+      const value=parseFloat(input.value);
+      if(!isNaN(value)&&value>=0){
+        events.push({
+          x:value,
+          label:EVENTS_LABELS[currentLang][config.label],
+          color:config.color,
+          id:config.id
+        });
+      }
+    });
+  });
+  return events;
+}
+
+function updateEvents(){
+  if(parsedData)renderChart();
+}
+
+// Check if all cooling events are filled to show cooling parameters
+function checkCoolingParams(){
+  const coolingStartEl=document.getElementById('eventCoolingStart');
+  const coolingClosedEl=document.getElementById('eventCoolingClosed');
+  const coolingEndEl=document.getElementById('eventCoolingEnd');
+  const coolingParamsEl=document.getElementById('coolingParamsContainer');
+  
+  if(!coolingStartEl||!coolingClosedEl||!coolingEndEl||!coolingParamsEl)return;
+  
+  const coolingStart=coolingStartEl.value;
+  const coolingClosed=coolingClosedEl.value;
+  const coolingEnd=coolingEndEl.value;
+  
+  // Mostrar parámetros solo si TODOS los eventos de cooling están llenos
+  const allCoolingFilled=coolingStart&&coolingClosed&&coolingEnd;
+  coolingParamsEl.style.display=allCoolingFilled?'block':'none';
+}
+
+// ══════════════════════════════════════════════════════
+// ── File Handling
+// ══════════════════════════════════════════════════════
+const dropZone=document.getElementById('dropZone'),fileInput=document.getElementById('fileInput');
+
+// Click en el dropZone abre el selector de archivos (mejor para móviles)
+dropZone.addEventListener('click',function(e){
+  if(e.target!==fileInput){
+    fileInput.click();
+  }
+});
+
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
+dropZone.addEventListener('dragleave',()=>{dropZone.classList.remove('dragover');});
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',e=>{if(e.target.files.length)handleFile(e.target.files[0]);});
+
+function handleFile(file){
+  document.getElementById('fileName').textContent=file.name;
+  dropZone.classList.add('loaded');
+  
+  const reader=new FileReader();
+  
+  reader.onerror=function(e){
+    console.error('Error leyendo archivo:',e);
+    alert('Error al leer el archivo. Por favor intenta de nuevo.');
+  };
+  
+  reader.onload=function(e){
+    try{
+      const data=new Uint8Array(e.target.result);
+      
+      // Leer workbook completo
+      const workbook=XLSX.read(data,{type:'array'});
+      
+      // Almacenar workbook y hojas disponibles
+      workbookData=workbook;
+      availableSheets=workbook.SheetNames;
+      
+      console.log(`📊 Archivo cargado: ${availableSheets.length} hoja(s) detectada(s)`,availableSheets);
+      
+      // Si hay múltiples hojas, mostrar selector
+      if(availableSheets.length>1){
+        document.getElementById('sheetSelectorContainer').style.display='block';
+        
+        // Poblar selector
+        const selector=document.getElementById('sheetSelector');
+        selector.innerHTML='';
+        availableSheets.forEach((name,idx)=>{
+          const option=document.createElement('option');
+          option.value=idx;
+          option.textContent=`${idx+1}. ${name}`;
+          selector.appendChild(option);
+        });
+      }else{
+        document.getElementById('sheetSelectorContainer').style.display='none';
+      }
+      
+      // Cargar primera hoja
+      currentSheetIndex=0;
+      loadSheet(0);
+      
+    }catch(err){
+      console.error('Error procesando archivo:',err);
+      alert('Error al procesar el archivo: '+err.message);
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
+}
+
+// ══════════════════════════════════════════════════════
+// ── Sheet Management
+// ══════════════════════════════════════════════════════
+
+function saveCurrentSheetConfig(){
+  if(!workbookData||!availableSheets.length)return;
+  
+  try{
+    const sheetName=availableSheets[currentSheetIndex];
+    
+    // Guardar configuración actual de la hoja
+    sheetConfigs[sheetName]={
+      testDate:document.getElementById('testDate')?.value||'',
+      adhesiveType,
+      substrateType,
+      tcVisibility:[...tcVisibility],
+      timeRangeActive,
+      timeRangeStart,
+      timeRangeEnd,
+      events:{
+        pressStart:document.getElementById('eventPressStart')?.value||'',
+        pressOpen:document.getElementById('eventPressOpen')?.value||'',
+        pressClose:document.getElementById('eventPressClose')?.value||'',
+        pressEnd:document.getElementById('eventPressEnd')?.value||'',
+        manipStart:document.getElementById('eventManipStart')?.value||'',
+        manipEnd:document.getElementById('eventManipEnd')?.value||'',
+        coolingStart:document.getElementById('eventCoolingStart')?.value||'',
+        coolingClosed:document.getElementById('eventCoolingClosed')?.value||'',
+        coolingEnd:document.getElementById('eventCoolingEnd')?.value||''
+      },
+      coolingParams:{
+        chiller:document.getElementById('coolingChiller')?.value||'',
+        nestUpper:document.getElementById('coolingNestUpper')?.value||'',
+        nestLower:document.getElementById('coolingNestLower')?.value||''
+      },
+      params:{
+        thermoUpper:document.getElementById('thermoUpper')?.value||'',
+        nestUpper:document.getElementById('nestUpper')?.value||'',
+        thermoLower:document.getElementById('thermoLower')?.value||'',
+        nestLower:document.getElementById('nestLower')?.value||'',
+        slidersTemp:document.getElementById('slidersTemp')?.value||'',
+        leisters:Array.from(document.querySelectorAll('.leister-input')).map(inp=>inp.value)
+      },
+      layoutImage:layoutImageLoaded?{loaded:true,src:layoutImg.src}:null,
+      layoutMarkers:layoutImageLoaded?tcMarkers.map(m=>({tcIndex:m.tcIndex,x:m.x,y:m.y})):[]
+    };
+    
+    console.log(`💾 Configuración guardada para hoja "${sheetName}"`);
+  }catch(err){
+    console.warn('⚠️ Error al guardar configuración de hoja:',err.message);
+  }
+}
+
+function loadSheetConfig(sheetName){
+  const config=sheetConfigs[sheetName];
+  if(!config){
+    console.log(`📝 No hay configuración previa para "${sheetName}", usando valores por defecto`);
+    return;
+  }
+  
+  try{
+    console.log(`📂 Cargando configuración de "${sheetName}"`);
+    
+    // Restaurar fecha de prueba (solo si el elemento existe)
+    const testDateEl=document.getElementById('testDate');
+    if(testDateEl){
+      testDateEl.value=config.testDate||'';
+    }
+    
+    // Restaurar adhesivo y sustrato
+    adhesiveType=config.adhesiveType||'waterbase';
+    substrateType=config.substrateType||'pcabs';
+    document.querySelectorAll('input[name="adhesive"]').forEach(input=>{
+      input.checked=(input.value===adhesiveType);
+    });
+    document.querySelectorAll('input[name="substrate"]').forEach(input=>{
+      input.checked=(input.value===substrateType);
+    });
+    updateSubstrate();
+    
+    // Restaurar eventos
+    if(config.events){
+      const els={
+        pressStart:document.getElementById('eventPressStart'),
+        pressOpen:document.getElementById('eventPressOpen'),
+        pressClose:document.getElementById('eventPressClose'),
+        pressEnd:document.getElementById('eventPressEnd'),
+        manipStart:document.getElementById('eventManipStart'),
+        manipEnd:document.getElementById('eventManipEnd'),
+        coolingStart:document.getElementById('eventCoolingStart'),
+        coolingClosed:document.getElementById('eventCoolingClosed'),
+        coolingEnd:document.getElementById('eventCoolingEnd')
+      };
+      if(els.pressStart) els.pressStart.value=config.events.pressStart||'';
+      if(els.pressOpen) els.pressOpen.value=config.events.pressOpen||'';
+      if(els.pressClose) els.pressClose.value=config.events.pressClose||'';
+      if(els.pressEnd) els.pressEnd.value=config.events.pressEnd||'';
+      if(els.manipStart) els.manipStart.value=config.events.manipStart||'';
+      if(els.manipEnd) els.manipEnd.value=config.events.manipEnd||'';
+      if(els.coolingStart) els.coolingStart.value=config.events.coolingStart||'';
+      if(els.coolingClosed) els.coolingClosed.value=config.events.coolingClosed||'';
+      if(els.coolingEnd) els.coolingEnd.value=config.events.coolingEnd||'';
+      checkCoolingParams();
+    }
+    
+    // Restaurar parámetros de cooling
+    if(config.coolingParams){
+      const chillerEl=document.getElementById('coolingChiller');
+      const nestUpperEl=document.getElementById('coolingNestUpper');
+      const nestLowerEl=document.getElementById('coolingNestLower');
+      if(chillerEl) chillerEl.value=config.coolingParams.chiller||'';
+      if(nestUpperEl) nestUpperEl.value=config.coolingParams.nestUpper||'';
+      if(nestLowerEl) nestLowerEl.value=config.coolingParams.nestLower||'';
+    }
+    
+    // Restaurar parámetros
+    if(config.params){
+      const pEls={
+        thermoUpper:document.getElementById('thermoUpper'),
+        nestUpper:document.getElementById('nestUpper'),
+        thermoLower:document.getElementById('thermoLower'),
+        nestLower:document.getElementById('nestLower'),
+        slidersTemp:document.getElementById('slidersTemp')
+      };
+      if(pEls.thermoUpper) pEls.thermoUpper.value=config.params.thermoUpper||'';
+      if(pEls.nestUpper) pEls.nestUpper.value=config.params.nestUpper||'';
+      if(pEls.thermoLower) pEls.thermoLower.value=config.params.thermoLower||'';
+      if(pEls.nestLower) pEls.nestLower.value=config.params.nestLower||'';
+      if(pEls.slidersTemp) pEls.slidersTemp.value=config.params.slidersTemp||'';
+      updateTemperatureLoss();
+      
+      // Restaurar leisters
+      const leisterContainer=document.getElementById('leistersList');
+      if(leisterContainer){
+        leisterContainer.innerHTML='';
+        if(config.params.leisters&&config.params.leisters.length>0){
+          config.params.leisters.forEach((value,idx)=>{
+            if(value){
+              const input=document.createElement('input');
+              input.className='leister-input';
+              input.type='number';
+              input.step='0.1';
+              input.placeholder=`Leister ${idx+1} (°C)`;
+              input.value=value;
+              input.oninput=updateTemperatureLoss;
+              leisterContainer.appendChild(input);
+            }
+          });
+        }
+      }
+    }
+    
+    // Restaurar imagen de layout
+    if(config.layoutImage&&config.layoutImage.loaded){
+      const img=new Image();
+      img.onload=function(){
+        layoutImg=img;
+        layoutImageLoaded=true;
+        const ctx=layoutCanvas.getContext('2d');
+        layoutCanvas.width=img.width;
+        layoutCanvas.height=img.height;
+        ctx.drawImage(img,0,0);
+        
+        // Restaurar marcadores
+        if(config.layoutMarkers&&config.layoutMarkers.length>0){
+          tcMarkers=config.layoutMarkers.map(m=>({
+            element:null,
+            tcIndex:m.tcIndex,
+            x:m.x,
+            y:m.y
+          }));
+          updateLayoutMarkers();
+        }else{
+          updateLayoutMarkers();
+        }
+      };
+      img.src=config.layoutImage.src;
+    }else{
+      layoutImageLoaded=false;
+      layoutImg=null;
+      tcMarkers=[];
+      tcMarkersContainer.innerHTML='';
+    }
+    
+    // Restaurar time range
+    timeRangeActive=config.timeRangeActive||false;
+    timeRangeStart=config.timeRangeStart||0;
+    timeRangeEnd=config.timeRangeEnd||null;
+    const trStart=document.getElementById('timeRangeStart');
+    const trEnd=document.getElementById('timeRangeEnd');
+    if(trStart) trStart.value=timeRangeStart||'';
+    if(trEnd) trEnd.value=timeRangeEnd||'';
+  }catch(err){
+    console.warn('⚠️ Error al cargar configuración de hoja:',err.message);
+  }
+}
+
+function loadSheet(index){
+  if(!workbookData||index<0||index>=availableSheets.length)return;
+  
+  // Guardar configuración de la hoja actual antes de cambiar
+  if(parsedData){
+    saveCurrentSheetConfig();
+  }
+  
+  currentSheetIndex=index;
+  const sheetName=availableSheets[index];
+  
+  console.log(`📊 Cargando hoja ${index+1}/${availableSheets.length}: "${sheetName}"`);
+  
+  // Actualizar UI (solo si los elementos existen)
+  const sheetTitleEl=document.getElementById('sheetTitle');
+  const sheetSelectorEl=document.getElementById('sheetSelector');
+  if(sheetTitleEl) sheetTitleEl.textContent=sheetName;
+  if(sheetSelectorEl) sheetSelectorEl.value=index;
+  
+  // Procesar datos de la hoja
+  const sheet=workbookData.Sheets[sheetName];
+  const raw=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null});
+  
+  const rows=raw.filter(r=>r.some(v=>v!==null&&v!==''));
+  if(!rows.length){
+    console.warn(`No se encontraron filas con datos en "${sheetName}"`);
+    alert(`La hoja "${sheetName}" no contiene datos válidos`);
+    return;
+  }
+  
+  const numCols=Math.max(...rows.map(r=>r.length));
+  let allColumns=[];
+  for(let c=0;c<numCols;c++){
+    const col=[];
+    for(let r=0;r<rows.length;r++){
+      const val=parseFloat(rows[r][c]);
+      col.push(isNaN(val)?null:val);
+    }
+    allColumns.push(col);
+  }
+  
+  const activeColumns=allColumns.filter(col=>col.some(v=>v!==null));
+  if(!activeColumns.length){
+    console.warn(`No se encontraron columnas con datos válidos en "${sheetName}"`);
+    alert(`La hoja "${sheetName}" no contiene datos de temperatura válidos`);
+    return;
+  }
+  
+  let lastRow=0;
+  for(let c=0;c<activeColumns.length;c++){
+    for(let r=activeColumns[c].length-1;r>=0;r--){
+      if(activeColumns[c][r]!==null){
+        if(r+1>lastRow)lastRow=r+1;
+        break;
+      }
+    }
+  }
+  
+  const columns=activeColumns.map(col=>col.slice(0,lastRow));
+  parsedData={columns,totalRows:lastRow};
+  
+  console.log(`📊 Datos cargados para "${sheetName}":`,{
+    numTCs:columns.length,
+    totalRows:lastRow,
+    firstValues:columns.map(col=>col[0]),
+    lastValues:columns.map(col=>col[lastRow-1])
+  });
+  
+  // Cargar configuración guardada de esta hoja
+  loadSheetConfig(sheetName);
+  
+  // Restaurar TC visibility (debe hacerse después de tener parsedData)
+  const config=sheetConfigs[sheetName];
+  if(config&&config.tcVisibility&&config.tcVisibility.length===columns.length){
+    tcVisibility=[...config.tcVisibility];
+  }else{
+    tcVisibility=columns.map(()=>true); // Todos visibles por defecto
+  }
+  
+  // Reset time range si no hay configuración previa
+  if(!config||!config.timeRangeActive){
+    resetTimeRange();
+  }
+  
+  renderChart();
+  updateLayoutMarkers();
+  
+  console.log(`✅ Hoja "${sheetName}" cargada exitosamente: ${columns.length} TCs, ${lastRow} segundos`);
+}
+
+function switchSheet(index){
+  loadSheet(parseInt(index));
+}
+
+function previousSheet(){
+  if(currentSheetIndex>0){
+    loadSheet(currentSheetIndex-1);
+  }
+}
+
+function nextSheet(){
+  if(currentSheetIndex<availableSheets.length-1){
+    loadSheet(currentSheetIndex+1);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── TC Visibility Toggle
+// ══════════════════════════════════════════════════════
+function toggleTC(tcIndex){
+  if(!parsedData||tcIndex<0||tcIndex>=parsedData.columns.length)return;
+  
+  // Toggle visibility
+  tcVisibility[tcIndex]=!tcVisibility[tcIndex];
+  
+  // Re-render chart
+  renderChart();
+  
+  // Update layout markers
+  if(layoutImageLoaded){
+    updateLayoutMarkers();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── Time Range Control
+// ══════════════════════════════════════════════════════
+let timeRangeCollapsed=false;
+function toggleTimeRange(){
+  timeRangeCollapsed=!timeRangeCollapsed;
+  document.getElementById('timeRangeBody').classList.toggle('collapsed',timeRangeCollapsed);
+  document.getElementById('toggleTimeRangeBtn').textContent=timeRangeCollapsed?'+':'−';
+}
+
+function applyTimeRange(){
+  if(!parsedData)return;
+  
+  const startEl=document.getElementById('timeRangeStart');
+  const endEl=document.getElementById('timeRangeEnd');
+  
+  if(!startEl||!endEl)return;
+  
+  const startInput=startEl.value;
+  const endInput=endEl.value;
+  
+  const start=parseInt(startInput)||0;
+  const end=endInput?parseInt(endInput):null;
+  
+  // Validar rango
+  if(start<0){
+    alert(currentLang==='es'?'El tiempo de inicio debe ser mayor o igual a 0':'Start time must be 0 or greater');
+    return;
+  }
+  
+  if(end!==null&&end<=start){
+    alert(currentLang==='es'?'El tiempo final debe ser mayor al inicial':'End time must be greater than start time');
+    return;
+  }
+  
+  if(end!==null&&end>parsedData.totalRows){
+    alert(currentLang==='es'?`El tiempo final no puede exceder ${parsedData.totalRows}s`:`End time cannot exceed ${parsedData.totalRows}s`);
+    return;
+  }
+  
+  // Aplicar rango
+  timeRangeActive=true;
+  timeRangeStart=start;
+  timeRangeEnd=end;
+  
+  // Re-render
+  renderChart();
+}
+
+function resetTimeRange(){
+  timeRangeActive=false;
+  timeRangeStart=0;
+  timeRangeEnd=null;
+  
+  const startEl=document.getElementById('timeRangeStart');
+  const endEl=document.getElementById('timeRangeEnd');
+  if(startEl)startEl.value='';
+  if(endEl)endEl.value='';
+  
+  if(parsedData)renderChart();
+}
+
+// ══════════════════════════════════════════════════════
+// ── Chart Rendering
+// ══════════════════════════════════════════════════════
+function renderChart(){
+  if(!parsedData)return;
+  const{columns,totalRows}=parsedData;
+  const cfg=getAdhesiveConfig()[adhesiveType];
+  const dark=isDark();
+  
+  // Aplicar rango temporal si está activo
+  const effectiveStart=timeRangeActive?timeRangeStart:0;
+  const effectiveEnd=timeRangeActive&&timeRangeEnd!==null?timeRangeEnd:totalRows;
+  const effectiveRows=effectiveEnd-effectiveStart;
+  
+  // Crear labels para el rango efectivo - SIEMPRE empezando en 0
+  const labels=Array.from({length:effectiveRows},(_,i)=>i);
+  
+  // Recortar columnas al rango temporal
+  const trimmedColumns=columns.map(col=>col.slice(effectiveStart,effectiveEnd));
+
+  // Initialize TC visibility if not set
+  if(tcVisibility.length!==columns.length){
+    tcVisibility=columns.map(()=>true); // All visible by default
+  }
+
+  // Activation window (usando datos completos para análisis correcto)
+  let activationStart=null;
+  for(let r=0;r<totalRows;r++){if(columns.every(col=>col[r]!==null&&col[r]>=cfg.min)){activationStart=r;break;}}
+  const activationEnd=activationStart!==null?activationStart+ACTIVATION_DURATION:null;
+
+  let allInRange=false;
+  if(activationStart!==null){
+    // Verificar si la ventana de activación está COMPLETAMENTE dentro del rango visible
+    const windowFullyVisible=activationStart>=effectiveStart&&activationEnd<=effectiveEnd;
+    
+    if(windowFullyVisible){
+      // Solo validar si la ventana completa está visible
+      allInRange=true;
+      const end=Math.min(activationEnd,totalRows);
+      for(let r=activationStart;r<end;r++){
+        for(let c=0;c<columns.length;c++){
+          const v=columns[c][r];
+          if(v===null||v<cfg.min||v>cfg.max){
+            allInRange=false;
+            break;
+          }
+        }
+        if(!allInRange)break;
+      }
+    }else{
+      // Si el rango temporal corta la ventana de activación, marcar como NOK
+      allInRange=false;
+    }
+  }
+
+  // Y limits (usando datos del rango visible)
+  const firstValues=trimmedColumns.map(col=>{for(let r=0;r<col.length;r++){if(col[r]!==null)return col[r];}return null;}).filter(v=>v!==null);
+  const avgFirst=firstValues.length?firstValues.reduce((a,b)=>a+b,0)/firstValues.length:0;
+  const yMax=80,yMin=Math.floor(avgFirst*0.95);
+
+  // Stats
+  let maxTemp=-Infinity,minTemp=Infinity;
+  columns.forEach(col=>col.forEach(v=>{if(v!==null){if(v>maxTemp)maxTemp=v;if(v<minTemp)minTemp=v;}}));
+
+  const statsBar=document.getElementById('statsBar');
+  statsBar.style.display='grid';
+  statsBar.innerHTML=`
+    <div class="stat"><div class="stat-top"><div class="stat-chip" style="background:var(--blue-bg);color:var(--blue-text)">TC</div></div><div class="stat-num">${columns.length}</div><div class="stat-label">${T('statThermocouples')}</div></div>
+    <div class="stat"><div class="stat-top"><div class="stat-chip" style="background:var(--purple-bg);color:var(--purple-text)">⏱</div></div><div class="stat-num">${totalRows}s</div><div class="stat-label">${T('statDuration')}</div></div>
+    <div class="stat"><div class="stat-top"><div class="stat-chip" style="background:var(--cyan-bg);color:var(--cyan-text)">↓</div></div><div class="stat-num">${minTemp.toFixed(1)}°</div><div class="stat-label">${T('statMinTemp')}</div></div>
+    <div class="stat"><div class="stat-top"><div class="stat-chip" style="background:var(--red-bg);color:var(--red-text)">↑</div></div><div class="stat-num">${maxTemp.toFixed(1)}°</div><div class="stat-label">${T('statMaxTemp')}</div></div>
+    <div class="stat"><div class="stat-top"><div class="stat-chip" style="background:${activationStart!==null?'var(--green-bg);color:var(--green-text)':'var(--red-bg);color:var(--red-text)'}">⚡</div></div><div class="stat-num">${activationStart!==null?'t='+activationStart+'s':'—'}</div><div class="stat-label">${activationStart!==null?T('statActivation'):T('statNotReached')}</div></div>`;
+
+  // Theme-aware colors
+  const txtC=dark?'#a9b6cd':'#5f6b7d',txtM=dark?'#71809c':'#8a95a6',gridC=dark?'rgba(255,255,255,.06)':'rgba(15,23,42,.06)';
+  const tipBg=dark?'#131e35':'#ffffff',tipBdr=dark?'rgba(255,255,255,.12)':'rgba(15,23,42,.12)',tipTxt=dark?'#edf3ff':'#142033',tipBody=dark?'#a9b6cd':'#5f6b7d';
+
+  // Datasets - usar datos recortados por rango temporal y filtrar solo TCs visibles
+  const datasets=trimmedColumns
+    .map((col,i)=>({
+      label:`TC-${i+1}`,
+      data:col,
+      borderColor:TC_COLORS[i%TC_COLORS.length],
+      backgroundColor:'transparent',
+      borderWidth:2.5,
+      pointRadius:0,
+      pointHoverRadius:5,
+      tension:.3,
+      spanGaps:true,
+      hidden:!tcVisibility[i] // Ocultar si no está visible
+    }));
+
+  // Annotation colors
+  const isHM=adhesiveType==='hotmelt';
+  const lc=isHM?(dark?'rgba(248,184,79,':'rgba(245,158,11,'):(dark?'rgba(34,211,238,':'rgba(6,182,212,');
+  const gc=dark?'rgba(89,201,127,':'rgba(67,179,107,';
+
+  const annotations={
+    minLine:{type:'line',yMin:cfg.min,yMax:cfg.min,borderColor:lc+'0.8)',borderWidth:2,borderDash:[8,4],label:{display:true,content:T('annotMin',cfg.min),position:'start',backgroundColor:lc+'0.60)',color:lc+'1)',font:{size:11,weight:'700'},padding:{top:4,bottom:4,left:8,right:8},borderRadius:8,yAdjust:15}},
+    maxLine:{type:'line',yMin:cfg.max,yMax:cfg.max,borderColor:lc+'0.8)',borderWidth:2,borderDash:[8,4],label:{display:true,content:T('annotMax',cfg.max),position:'start',backgroundColor:lc+'0.60)',color:lc+'1)',font:{size:11,weight:'700'},padding:{top:4,bottom:4,left:8,right:8},borderRadius:8,yAdjust:-15}}
+  };
+  if(activationStart!==null){
+    // Ajustar posiciones de la ventana de activación según el offset
+    const adjustedActivationStart=activationStart-effectiveStart;
+    const adjustedActivationEnd=activationEnd-effectiveStart;
+    
+    // Solo mostrar si la ventana está al menos parcialmente visible
+    if(adjustedActivationEnd>=0&&adjustedActivationStart<effectiveRows){
+      annotations.activationWindow={
+        type:'box',
+        xMin:Math.max(0,adjustedActivationStart),
+        xMax:Math.min(effectiveRows-1,adjustedActivationEnd),
+        yMin:cfg.min,
+        yMax:cfg.max,
+        backgroundColor:gc+'0.08)',
+        borderColor:gc+'0.45)',
+        borderWidth:2,
+        borderDash:[6,3],
+        label:{
+          display:true,
+          content:T('annotWindow',ACTIVATION_DURATION),
+          position:{x:'center',y:'start'},
+          color:dark?'#9ae5b1':'#217543',
+          font:{size:11,weight:'800'},
+          padding:{top:4,bottom:4,left:8,right:8},
+          backgroundColor:gc+'0.14)',
+          borderRadius:8
+        }
+      };
+    }
+  }
+  
+  // Add event lines - ajustar posiciones si hay rango temporal activo
+  const events=getActiveEvents();
+  events.forEach((evt,idx)=>{
+    // Ajustar posición del evento según el offset del rango temporal
+    const adjustedX=evt.x-effectiveStart;
+    
+    // Solo mostrar el evento si está dentro del rango visible
+    if(adjustedX>=0&&adjustedX<effectiveRows){
+      annotations[`event_${idx}`]={
+        type:'line',
+        xMin:adjustedX,
+        xMax:adjustedX,
+        borderColor:evt.color,
+        borderWidth:2,
+        borderDash:[5,5],
+        label:{
+          display:true,
+          content:evt.label,
+          position:'start',
+          backgroundColor:evt.color+'33',
+          color:evt.color,
+          font:{size:10,weight:'700'},
+          padding:{top:3,bottom:3,left:6,right:6},
+          borderRadius:6,
+          rotation:270,
+          yAdjust:-8
+        },
+        enter({element},event){element.options.borderWidth=3;},
+        leave({element},event){element.options.borderWidth=2;}
+      };
+    }
+  });
+
+  // Add cooling target temperature line (horizontal desde inicio de cooling)
+  // Usa automáticamente el valor default si hay eventos de cooling
+  const coolingStartTime=parseFloat(document.getElementById('eventCoolingStart').value);
+  const coolingClosed=parseFloat(document.getElementById('eventCoolingClosed').value);
+  const coolingEnd=parseFloat(document.getElementById('eventCoolingEnd').value);
+  
+  // Si hay algún evento de cooling, usar temperatura objetivo default
+  const hasCoolingEvents=!isNaN(coolingStartTime)||!isNaN(coolingClosed)||!isNaN(coolingEnd);
+  const coolingTargetTemp=currentDefaults.coolingTarget;
+  
+  if(hasCoolingEvents&&!isNaN(coolingStartTime)){
+    // Ajustar posición del inicio de cooling según offset
+    const adjustedCoolingStart=coolingStartTime-effectiveStart;
+    
+    // Solo mostrar si la línea está al menos parcialmente visible
+    if(adjustedCoolingStart<effectiveRows){
+      const purpleColor=dark?'rgba(167,139,250,':'rgba(139,92,246,';
+      annotations.coolingTargetLine={
+        type:'line',
+        xMin:Math.max(0,adjustedCoolingStart),
+        xMax:effectiveRows-1,
+        yMin:coolingTargetTemp,
+        yMax:coolingTargetTemp,
+        borderColor:purpleColor+'0.9)',
+      borderWidth:3,
+      borderDash:[10,5],
+      label:{
+        display:true,
+        content:`🎯 ${coolingTargetTemp}°C`,
+        position:'end',
+        backgroundColor:purpleColor+'0.18)',
+        color:purpleColor+'1)',
+        font:{size:11,weight:'800'},
+        padding:{top:4,bottom:4,left:8,right:8},
+        borderRadius:8,
+        yAdjust:-15
+      }
+      };
+    }
+  }
+
+  // Build chart
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('chartWrapper').style.display='block';
+  const canvas=document.getElementById('chartCanvas');
+  if(chartInstance)chartInstance.destroy();
+
+  chartInstance=new Chart(canvas,{type:'line',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:false,
+    interaction:{mode:'index',intersect:false},
+    scales:{
+      x:{title:{display:true,text:T('axisTime'),color:txtC,font:{size:13,weight:'600'}},ticks:{color:txtM,font:{size:11},maxTicksLimit:30},grid:{color:gridC}},
+      y:{min:yMin,max:yMax,title:{display:true,text:T('axisTemp'),color:txtC,font:{size:13,weight:'600'}},ticks:{color:txtM,font:{size:11},callback:v=>v+'°C'},grid:{color:gridC}}
+    },
+    plugins:{legend:{display:false},tooltip:{backgroundColor:tipBg,titleColor:tipTxt,bodyColor:tipBody,borderColor:tipBdr,borderWidth:1,titleFont:{weight:'800'},bodyFont:{size:12},padding:12,cornerRadius:10,callbacks:{title:items=>`t = ${items[0].label}s`,label:item=>` ${item.dataset.label}: ${item.parsed.y?.toFixed(1)??'—'}°C`}},annotation:{annotations}}
+  }});
+  
+  // Event drag system with CLICK + DRAG and visual feedback
+  let selectedEvent=null;
+  let isDragging=false;
+  let originalX=0;
+  
+  // Create drag tooltip (similar to Gantt Tracker style)
+  const dragTooltip=document.createElement('div');
+  dragTooltip.id='dragEventTooltip';
+  dragTooltip.style.cssText=`
+    position:fixed;
+    background:linear-gradient(135deg, var(--panel), var(--panel-2));
+    border:1.5px solid var(--border-2);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:11px;
+    font-weight:800;
+    color:var(--text);
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    pointer-events:none;
+    display:none;
+    z-index:9999;
+    white-space:nowrap;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  `;
+  document.body.appendChild(dragTooltip);
+  
+  canvas.addEventListener('click',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    
+    // Check if clicked on an event line
+    const xScale=chartInstance.scales.x;
+    
+    const activeEvents=getActiveEvents();
+    let clickedEvent=null;
+    
+    activeEvents.forEach((evt,idx)=>{
+      const lineX=xScale.getPixelForValue(evt.x);
+      if(Math.abs(x-lineX)<10){
+        clickedEvent={...evt,idx};
+      }
+    });
+    
+    if(clickedEvent){
+      selectedEvent=clickedEvent;
+      originalX=clickedEvent.x;
+      canvas.style.cursor='grab';
+    }else{
+      selectedEvent=null;
+      canvas.style.cursor='default';
+    }
+  });
+  
+  canvas.addEventListener('mousedown',function(e){
+    if(selectedEvent){
+      isDragging=true;
+      canvas.style.cursor='grabbing';
+    }
+  });
+  
+  canvas.addEventListener('mousemove',function(e){
+    if(isDragging&&selectedEvent){
+      const rect=canvas.getBoundingClientRect();
+      const x=e.clientX-rect.left;
+      const xScale=chartInstance.scales.x;
+      const newX=Math.round(xScale.getValueForPixel(x));
+      
+      if(newX>=0&&newX<=totalRows-1){
+        const delta=newX-originalX;
+        const deltaText=delta>0?`+${delta}`:delta<0?`${delta}`:`±0`;
+        const deltaColor=delta>0?'var(--green-text)':delta<0?'var(--red-text)':'var(--text-3)';
+        
+        // Update tooltip position - follow cursor closely
+        dragTooltip.style.display='block';
+        dragTooltip.style.left=`${e.clientX+12}px`;
+        dragTooltip.style.top=`${e.clientY-35}px`;
+        dragTooltip.innerHTML=`<span style="color:${deltaColor}">${deltaText}s</span> — t=${newX}s`;
+        
+        const input=document.getElementById(selectedEvent.id);
+        if(input){
+          input.value=newX;
+          updateEvents();
+        }
+      }
+    }
+  });
+  
+  canvas.addEventListener('mouseup',function(){
+    if(isDragging){
+      isDragging=false;
+      dragTooltip.style.display='none';
+      canvas.style.cursor=selectedEvent?'grab':'default';
+    }
+  });
+  
+  canvas.addEventListener('mouseleave',function(){
+    isDragging=false;
+    dragTooltip.style.display='none';
+    canvas.style.cursor='default';
+  });
+
+  // Legend con botones de visibilidad
+  const legendEl=document.getElementById('customLegend');legendEl.style.display='flex';
+  const limC=isHM?'var(--amber)':'var(--cyan)';
+  
+  // TCs con botones de toggle
+  let legendHTML=columns.map((_,i)=>{
+    const isVisible=tcVisibility[i];
+    const hiddenClass=isVisible?'':'hidden';
+    const btnText=isVisible?T('hideTC'):T('showTC');
+    const btnClass=isVisible?'':'hidden';
+    return `<div class="legend-item tc-legend ${hiddenClass}" data-tc="${i}">
+      <div class="legend-line" style="background:${TC_COLORS[i%TC_COLORS.length]}"></div>
+      TC-${i+1}
+      <button class="tc-toggle-btn ${btnClass}" onclick="toggleTC(${i})">${btnText}</button>
+    </div>`;
+  }).join('');
+  
+  // Otros elementos de leyenda
+  legendHTML+=`<div class="legend-item"><div class="legend-dash" style="border-color:${limC}"></div>${T('legendLimits')}</div><div class="legend-item"><div class="legend-box"></div>${T('legendWindow')}</div>`;
+  
+  // Add cooling target temp to legend if cooling events exist
+  if(hasCoolingEvents){
+    legendHTML+=`<div class="legend-item"><div class="legend-dash" style="border-color:var(--purple)"></div>🎯 Cooling ${coolingTargetTemp}°C</div>`;
+  }
+  
+  legendEl.innerHTML=legendHTML;
+
+  // Result - Ajustar tiempo mostrado según rango temporal
+  const resultEl=document.getElementById('activationResult');
+  
+  // Calcular tiempo de activación relativo al rango visible
+  const displayActivationStart=activationStart!==null?(activationStart-effectiveStart):null;
+  
+  if(activationStart===null){
+    resultEl.className='activation-result fail';
+    resultEl.innerHTML=`<div class="result-title">${T('resultFailTitle')}</div>${T('resultFail',cfg.min,cfg.label)}`;
+  }else if(allInRange){
+    resultEl.className='activation-result pass';
+    resultEl.innerHTML=`<div class="result-title">${T('resultPassTitle')}</div>${T('resultPass',cfg.min,displayActivationStart,ACTIVATION_DURATION,cfg.max)}`;
+  }else{
+    resultEl.className='activation-result fail';
+    resultEl.innerHTML=`<div class="result-title">${T('resultOutTitle')}</div>${T('resultOut',displayActivationStart,ACTIVATION_DURATION,cfg.min,cfg.max)}`;
+  }
+
+  // Cooling Result - Analizar si hay eventos de cooling
+  const coolingResultEl=document.getElementById('coolingResult');
+  if(hasCoolingEvents&&!isNaN(coolingStartTime)){
+    // Buscar el momento en que TODOS los termopares alcanzaron la temperatura objetivo
+    let coolingAchievedTime=null;
+    
+    for(let r=Math.floor(coolingStartTime);r<totalRows;r++){
+      // Verificar si todos los TCs están en o debajo de la temperatura objetivo
+      const allCooled=columns.every(col=>col[r]!==null&&col[r]<=coolingTargetTemp);
+      
+      if(allCooled){
+        coolingAchievedTime=r;
+        break;
+      }
+    }
+    
+    if(coolingAchievedTime!==null){
+      // Calcular tiempo transcurrido desde inicio de cooling
+      const timeAfterCoolingStart=coolingAchievedTime-coolingStartTime;
+      
+      console.log('Cooling achieved at:',coolingAchievedTime,'s, Time after start:',timeAfterCoolingStart,'s');
+      
+      coolingResultEl.className='activation-result pass';
+      coolingResultEl.style.display='block';
+      coolingResultEl.innerHTML=`<div class="result-title">${T('coolingResultTitle')}</div>${T('coolingResult',timeAfterCoolingStart,coolingTargetTemp)}`;
+    }else{
+      // No se alcanzó la temperatura objetivo
+      console.log('Cooling target not reached');
+      
+      coolingResultEl.className='activation-result fail';
+      coolingResultEl.style.display='block';
+      coolingResultEl.innerHTML=`<div class="result-title">${T('coolingResultFailTitle')}</div>${T('coolingResultFail',coolingTargetTemp)}`;
+    }
+  }else{
+    // No hay eventos de cooling, ocultar resultado
+    coolingResultEl.className='activation-result';
+    coolingResultEl.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── Chart Export to PNG
+// ══════════════════════════════════════════════════════
+function downloadChart(){
+  
+  if(!chartInstance||!parsedData){
+    alert(currentLang==='es'?'Por favor carga datos primero':'Please load data first');
+    return;
+  }
+  
+  closeMenu();
+  
+  // Mostrar indicador de carga
+  const loadingMsg=currentLang==='es'?'Generando PNG...':'Generating PNG...';
+  console.log(loadingMsg);
+  
+  try {
+    console.log('Creando canvas...');
+    
+    // Canvas siempre 1920px - layout va en diferente posición
+    const hasLayoutImage=layoutImageLoaded;
+    
+    const exportCanvas=document.createElement('canvas');
+    const width=1920;
+    const height=1280;
+    exportCanvas.width=width;
+    exportCanvas.height=height;
+    const ctx=exportCanvas.getContext('2d');
+    const dark=isDark();
+    
+    console.log('Canvas creado:', width, 'x', height, hasLayoutImage?'(con layout)':'(sin layout)');
+  
+  ctx.fillStyle=dark?'#0f172a':'#ffffff';
+  ctx.fillRect(0,0,width,height);
+  
+  const cfg=getAdhesiveConfig()[adhesiveType];
+  const isHM=adhesiveType==='hotmelt';  // Variable necesaria para colores de anotaciones
+  
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 42px Inter, sans-serif';
+  const exportTitle=currentLang==='es'?'Bondline — Activación de Adhesivo':'Bondline — Adhesive Activation';
+  ctx.fillText(exportTitle,60,70);
+  
+  // Badge eliminado - ahora la info está en las líneas punteadas
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='14px Inter, sans-serif';
+  ctx.fillText(new Date().toLocaleString(currentLang==='es'?'es-MX':'en-US'),60,100);
+  
+  // Compact stats row (moved up)
+  const{columns,totalRows}=parsedData;
+  
+  // Aplicar rango temporal si está activo (mismo que en renderChart)
+  const effectiveStart=timeRangeActive?timeRangeStart:0;
+  const effectiveEnd=timeRangeActive&&timeRangeEnd!==null?timeRangeEnd:totalRows;
+  const effectiveRows=effectiveEnd-effectiveStart;
+  
+  // Recortar columnas al rango temporal
+  const trimmedColumns=columns.map(col=>col.slice(effectiveStart,effectiveEnd));
+  
+  let maxTemp=-Infinity,minTemp=Infinity;
+  columns.forEach(col=>col.forEach(v=>{if(v!==null){if(v>maxTemp)maxTemp=v;if(v<minTemp)minTemp=v;}}));
+  let activationStart=null;
+  for(let r=0;r<totalRows;r++){if(columns.every(col=>col[r]!==null&&col[r]>=cfg.min)){activationStart=r;break;}}
+  
+  const stats=[
+    {icon:'TC',label:T('statThermocouples'),value:columns.length,color:dark?'#72a8ff':'#4f8cff'},
+    {icon:'⏱',label:T('statDuration'),value:effectiveRows+'s',color:dark?'#a78bfa':'#8b5cf6'},
+    {icon:'↓',label:T('statMinTemp'),value:minTemp.toFixed(1)+'°',color:dark?'#22d3ee':'#06b6d4'},
+    {icon:'↑',label:T('statMaxTemp'),value:maxTemp.toFixed(1)+'°',color:dark?'#ff7683':'#ef5b67'},
+    {icon:'⚡',label:T('statActivation'),value:activationStart!==null?'t='+activationStart+'s':'—',color:activationStart!==null?(dark?'#59c97f':'#43b36b'):(dark?'#ff7683':'#ef5b67')}
+  ];
+  
+  let statX=60;
+  stats.forEach(s=>{
+    ctx.fillStyle=s.color+'33';
+    ctx.fillRect(statX,130,180,50);
+    ctx.fillStyle=s.color;
+    ctx.font='18px Inter, sans-serif';
+    ctx.fillText(s.icon,statX+10,150);
+    ctx.font='bold 24px Inter, sans-serif';
+    ctx.fillText(s.value,statX+40,155);
+    ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+    ctx.font='11px Inter, sans-serif';
+    ctx.fillText(s.label,statX+40,173);
+    statX+=190;
+  });
+  
+  // Parameters panel (expanded, full width above chart)
+  const thermoU=document.getElementById('thermoUpper').value||'—';
+  const nestU=document.getElementById('nestUpper').value||'—';
+  const lossU=document.getElementById('lossUpper').textContent||'—';
+  const thermoL=document.getElementById('thermoLower').value||'—';
+  const nestL=document.getElementById('nestLower').value||'—';
+  const lossL=document.getElementById('lossLower').textContent||'—';
+  const sliders=document.getElementById('slidersTemp').value||'—';
+  const leisters=[];
+  document.querySelectorAll('.leister-input').forEach((inp,i)=>{const v=inp.value;if(v)leisters.push({n:i+1,v});});
+  
+  // Panel de parámetros - ancho hasta donde terminan los stats (5 stats × 190px = 950px + margen inicial 60px = 1010px)
+  const panelX=60;
+  const panelY=200;
+  const panelW=hasLayoutImage?1010:width-120; // Si hay layout, termina en 1070px (60+1010)
+  const panelH=95;
+  const panelPad=16;
+  
+  const borderGrad=ctx.createLinearGradient(panelX,panelY,panelX+panelW,panelY+panelH);
+  borderGrad.addColorStop(0,dark?'rgba(79,140,255,.5)':'rgba(79,140,255,.35)');
+  borderGrad.addColorStop(1,dark?'rgba(239,91,103,.5)':'rgba(239,91,103,.35)');
+  ctx.strokeStyle=borderGrad;
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.roundRect(panelX,panelY,panelW,panelH,14);
+  ctx.stroke();
+  
+  ctx.fillStyle=dark?'rgba(15,23,42,.93)':'rgba(255,255,255,.93)';
+  ctx.beginPath();
+  ctx.roundRect(panelX+1,panelY+1,panelW-2,panelH-2,13);
+  ctx.fill();
+  
+  // Header
+  let py=panelY+panelPad;
+  const iconGrad=ctx.createLinearGradient(panelX+panelPad,py,panelX+panelPad+28,py+28);
+  iconGrad.addColorStop(0,dark?'#11284c':'#e9f1ff');
+  iconGrad.addColorStop(1,dark?'#24183d':'#f3edff');
+  ctx.fillStyle=iconGrad;
+  ctx.beginPath();
+  ctx.roundRect(panelX+panelPad,py,28,28,7);
+  ctx.fill();
+  ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+  ctx.font='14px Inter, sans-serif';
+  ctx.fillText('⚙️',panelX+panelPad+7,py+20);
+  
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 13px Inter, sans-serif';
+  ctx.fillText(T('exportParams'),panelX+panelPad+38,py+19);
+  
+  py+=38;
+  
+  // Horizontal layout: Superior | Inferior | Leisters | Sliders
+  let colX=panelX+panelPad;
+  const colW=280;
+  
+  // Superior section
+  ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+  ctx.font='bold 10px Inter, sans-serif';
+  ctx.fillText('▲ '+T('paramUpper'),colX,py);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Termoreg.',colX,py+15);
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(thermoU+'°C',colX+90,py+15);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Nido',colX+160,py+15);
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(nestU+'°C',colX+200,py+15);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Pérdida',colX,py+33);
+  const lossUColor=parseFloat(lossU)>0?(dark?'#ffd78f':'#9a6800'):(dark?'#edf3ff':'#142033');
+  ctx.fillStyle=lossUColor;
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(lossU,colX+90,py+33);
+  
+  // Divider
+  colX+=colW;
+  ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(15,23,42,.10)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(colX-10,py-8);
+  ctx.lineTo(colX-10,py+40);
+  ctx.stroke();
+  
+  // Inferior section
+  ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+  ctx.font='bold 10px Inter, sans-serif';
+  ctx.fillText('▼ '+T('paramLower'),colX,py);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Termoreg.',colX,py+15);
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(thermoL+'°C',colX+90,py+15);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Nido',colX+160,py+15);
+  ctx.fillStyle=dark?'#edf3ff':'#142033';
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(nestL+'°C',colX+200,py+15);
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='9px Inter, sans-serif';
+  ctx.fillText('Pérdida',colX,py+33);
+  const lossLColor=parseFloat(lossL)>0?(dark?'#ffd78f':'#9a6800'):(dark?'#edf3ff':'#142033');
+  ctx.fillStyle=lossLColor;
+  ctx.font='bold 15px Inter, sans-serif';
+  ctx.fillText(lossL,colX+90,py+33);
+  
+  // Divider
+  colX+=colW;
+  ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(15,23,42,.10)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(colX-10,py-8);
+  ctx.lineTo(colX-10,py+40);
+  ctx.stroke();
+  
+  // Leisters section
+  if(leisters.length){
+    ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+    ctx.font='bold 10px Inter, sans-serif';
+    ctx.fillText(T('paramLeistersLabel'),colX,py);
+    
+    leisters.forEach((l,idx)=>{
+      ctx.fillStyle=dark?'#71809c':'#8a95a6';
+      ctx.font='9px Inter, sans-serif';
+      ctx.fillText(`Leister ${l.n}`,colX,py+15+(idx*18));
+      ctx.fillStyle=dark?'#edf3ff':'#142033';
+      ctx.font='bold 15px Inter, sans-serif';
+      ctx.fillText(l.v+'°C',colX+90,py+15+(idx*18));
+    });
+    
+    // Divider
+    colX+=colW;
+    ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(15,23,42,.10)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(colX-10,py-8);
+    ctx.lineTo(colX-10,py+40);
+    ctx.stroke();
+  }
+  
+  // Sliders section
+  if(sliders!=='—'){
+    ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+    ctx.font='bold 10px Inter, sans-serif';
+    ctx.fillText(T('paramSlidersLabel'),colX,py);
+    
+    ctx.fillStyle=dark?'#71809c':'#8a95a6';
+    ctx.font='9px Inter, sans-serif';
+    ctx.fillText('Temperatura',colX,py+15);
+    ctx.fillStyle=dark?'#edf3ff':'#142033';
+    ctx.font='bold 15px Inter, sans-serif';
+    ctx.fillText(sliders+'°C',colX+90,py+15);
+  }
+  
+  // Cooling parameters section (si existen)
+  const coolingChiller=document.getElementById('coolingChiller')?.value||'';
+  const coolingNestU=document.getElementById('coolingNestUpper')?.value||'';
+  const coolingNestL=document.getElementById('coolingNestLower')?.value||'';
+  const hasCoolingParams=coolingChiller||coolingNestU||coolingNestL;
+  
+  if(hasCoolingParams){
+    // Divider
+    colX+=colW;
+    if(colX+colW<=panelX+panelW-panelPad){
+      ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(15,23,42,.10)';
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(colX-10,py-8);
+      ctx.lineTo(colX-10,py+40);
+      ctx.stroke();
+      
+      // Cooling section
+      ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+      ctx.font='bold 10px Inter, sans-serif';
+      ctx.fillText('❄️ Cooling',colX,py);
+      
+      let coolingY=py+15;
+      
+      if(coolingChiller){
+        ctx.fillStyle=dark?'#71809c':'#8a95a6';
+        ctx.font='9px Inter, sans-serif';
+        ctx.fillText('Chiller',colX,coolingY);
+        ctx.fillStyle=dark?'#edf3ff':'#142033';
+        ctx.font='bold 15px Inter, sans-serif';
+        ctx.fillText(coolingChiller+'°C',colX+90,coolingY);
+        coolingY+=18;
+      }
+      
+      if(coolingNestU){
+        ctx.fillStyle=dark?'#71809c':'#8a95a6';
+        ctx.font='9px Inter, sans-serif';
+        ctx.fillText('Nido Sup',colX,coolingY);
+        ctx.fillStyle=dark?'#edf3ff':'#142033';
+        ctx.font='bold 15px Inter, sans-serif';
+        ctx.fillText(coolingNestU+'°C',colX+90,coolingY);
+        coolingY+=18;
+      }
+      
+      if(coolingNestL){
+        ctx.fillStyle=dark?'#71809c':'#8a95a6';
+        ctx.font='9px Inter, sans-serif';
+        ctx.fillText('Nido Inf',colX,coolingY);
+        ctx.fillStyle=dark?'#edf3ff':'#142033';
+        ctx.font='bold 15px Inter, sans-serif';
+        ctx.fillText(coolingNestL+'°C',colX+90,coolingY);
+      }
+    }
+  }
+  
+  // Chart dimensions - siempre full width
+  const chartY=315;
+  const chartH=845;
+  const chartX=60;
+  const chartW=width-120; // Siempre full width
+  
+  const tempCanvas=document.createElement('canvas');
+  tempCanvas.width=chartW;
+  tempCanvas.height=chartH;
+  
+  // Labels empiezan en 0 (mismo comportamiento que en renderChart)
+  const labels=Array.from({length:effectiveRows},(_,i)=>i);
+  
+  const txtC=dark?'#a9b6cd':'#5f6b7d',txtM=dark?'#71809c':'#8a95a6',gridC=dark?'rgba(255,255,255,.06)':'rgba(15,23,42,.06)';
+  const firstValues=trimmedColumns.map(col=>{for(let r=0;r<col.length;r++){if(col[r]!==null)return col[r];}return null;}).filter(v=>v!==null);
+  const avgFirst=firstValues.length?firstValues.reduce((a,b)=>a+b,0)/firstValues.length:0;
+  const yMax=80,yMin=Math.floor(avgFirst*0.95);
+  
+  // Filtrar solo TCs visibles para el PNG - usar trimmedColumns
+  const visibleColumns=trimmedColumns.filter((col,i)=>tcVisibility[i]);
+  const visibleIndices=trimmedColumns.map((col,i)=>i).filter(i=>tcVisibility[i]);
+  const datasets=visibleColumns.map((col,idx)=>{
+    const originalIndex=visibleIndices[idx];
+    return {
+      label:`TC-${originalIndex+1}`,
+      data:col,
+      borderColor:TC_COLORS[originalIndex%TC_COLORS.length],
+      backgroundColor:'transparent',
+      borderWidth:3,
+      pointRadius:0,
+      tension:.3,
+      spanGaps:true
+    };
+  });
+  
+  const lc=isHM?(dark?'rgba(248,184,79,':'rgba(245,158,11,'):(dark?'rgba(34,211,238,':'rgba(6,182,212,');
+  const gc=dark?'rgba(89,201,127,':'rgba(67,179,107,';
+  const annotations={
+    minLine:{type:'line',yMin:cfg.min,yMax:cfg.min,borderColor:lc+'0.9)',borderWidth:3,borderDash:[10,5],label:{display:true,content:T('annotMin',cfg.min),position:'start',backgroundColor:lc+'0.60)',color:lc+'1)',font:{size:14,weight:'700'},padding:{top:6,bottom:6,left:10,right:10},borderRadius:8,yAdjust:20}},
+    maxLine:{type:'line',yMin:cfg.max,yMax:cfg.max,borderColor:lc+'0.9)',borderWidth:3,borderDash:[10,5],label:{display:true,content:T('annotMax',cfg.max),position:'start',backgroundColor:lc+'0.60)',color:lc+'1)',font:{size:14,weight:'700'},padding:{top:6,bottom:6,left:10,right:10},borderRadius:8,yAdjust:-20}}
+  };
+  if(activationStart!==null){
+    const activationEnd=activationStart+ACTIVATION_DURATION;
+    // Ajustar posiciones según offset
+    const adjustedActivationStart=activationStart-effectiveStart;
+    const adjustedActivationEnd=activationEnd-effectiveStart;
+    
+    // Solo mostrar si está dentro del rango visible
+    if(adjustedActivationEnd>=0&&adjustedActivationStart<effectiveRows){
+      annotations.activationWindow={type:'box',xMin:Math.max(0,adjustedActivationStart),xMax:Math.min(effectiveRows-1,adjustedActivationEnd),yMin:cfg.min,yMax:cfg.max,backgroundColor:gc+'0.12)',borderColor:gc+'0.6)',borderWidth:3,borderDash:[8,4],label:{display:true,content:T('annotWindow',ACTIVATION_DURATION),position:{x:'center',y:'start'},color:dark?'#9ae5b1':'#217543',font:{size:14,weight:'800'},padding:{top:5,bottom:5,left:10,right:10},backgroundColor:gc+'0.18)',borderRadius:8}};
+    }
+  }
+  
+  // Add event lines to PNG - ajustar por offset
+  const pngEvents=getActiveEvents();
+  pngEvents.forEach((evt,idx)=>{
+    const adjustedX=evt.x-effectiveStart;
+    
+    // Solo agregar si está dentro del rango visible
+    if(adjustedX>=0&&adjustedX<effectiveRows){
+      annotations[`event_${idx}`]={
+        type:'line',
+        xMin:adjustedX,
+        xMax:adjustedX,
+        borderColor:evt.color,
+        borderWidth:3,
+        borderDash:[6,6],
+        label:{
+          display:true,
+          content:evt.label,
+          position:'start',
+          backgroundColor:evt.color+'44',
+          color:evt.color,
+          font:{size:11,weight:'700'},
+          padding:{top:4,bottom:4,left:7,right:7},
+        borderRadius:7,
+        rotation:270,
+        yAdjust:-10
+      }
+      };
+    }
+  });
+  
+  // Add cooling target temperature line (horizontal desde inicio de cooling)
+  // Usa automáticamente el valor default si hay eventos de cooling
+  const coolingStartTime=parseFloat(document.getElementById('eventCoolingStart').value);
+  const coolingClosed=parseFloat(document.getElementById('eventCoolingClosed').value);
+  const coolingEnd=parseFloat(document.getElementById('eventCoolingEnd').value);
+  
+  const hasCoolingEvents=!isNaN(coolingStartTime)||!isNaN(coolingClosed)||!isNaN(coolingEnd);
+  const coolingTargetTemp=currentDefaults.coolingTarget;
+  
+  if(hasCoolingEvents&&!isNaN(coolingStartTime)){
+    const purpleColor=dark?'rgba(167,139,250,':'rgba(139,92,246,';
+    annotations.coolingTargetLine={
+      type:'line',
+      xMin:coolingStartTime,
+      xMax:totalRows,
+      yMin:coolingTargetTemp,
+      yMax:coolingTargetTemp,
+      borderColor:purpleColor+'0.95)',
+      borderWidth:4,
+      borderDash:[12,6],
+      label:{
+        display:true,
+        content:`🎯 ${coolingTargetTemp}°C`,
+        position:'end',
+        backgroundColor:purpleColor+'0.22)',
+        color:purpleColor+'1)',
+        font:{size:12,weight:'800'},
+        padding:{top:5,bottom:5,left:9,right:9},
+        borderRadius:8,
+        yAdjust:-18
+      }
+    };
+  }
+  
+  new Chart(tempCanvas,{type:'line',data:{labels,datasets},options:{
+    responsive:false,animation:false,
+    scales:{
+      x:{title:{display:true,text:T('axisTime'),color:txtC,font:{size:16,weight:'600'}},ticks:{color:txtM,font:{size:13}},grid:{color:gridC}},
+      y:{min:yMin,max:yMax,title:{display:true,text:T('axisTemp'),color:txtC,font:{size:16,weight:'600'}},ticks:{color:txtM,font:{size:13},callback:v=>v+'°C'},grid:{color:gridC}}
+    },
+    plugins:{legend:{display:false},annotation:{annotations}}
+  }});
+  ctx.drawImage(tempCanvas,chartX,chartY,chartW,chartH);
+  
+  // Legend (closer to chart) - Solo TCs visibles
+  const legendY=chartY+chartH+20;
+  let legendX=chartX;
+  
+  visibleIndices.forEach((originalIndex)=>{
+    ctx.fillStyle=TC_COLORS[originalIndex%TC_COLORS.length];
+    ctx.fillRect(legendX,legendY,28,4);
+    ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+    ctx.font='14px Inter, sans-serif';
+    ctx.fillText(`TC-${originalIndex+1}`,legendX+35,legendY+5);
+    legendX+=100;
+  });
+  
+  ctx.strokeStyle=isHM?(dark?'#f8b84f':'#f59e0b'):(dark?'#22d3ee':'#06b6d4');
+  ctx.lineWidth=3;
+  ctx.setLineDash([10,5]);
+  ctx.beginPath();
+  ctx.moveTo(legendX,legendY+2);
+  ctx.lineTo(legendX+28,legendY+2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+  ctx.fillText(T('legendLimits'),legendX+35,legendY+5);
+  legendX+=200;
+  ctx.strokeStyle=dark?'#59c97f':'#43b36b';
+  ctx.lineWidth=2;
+  ctx.strokeRect(legendX,legendY-6,24,16);
+  ctx.fillStyle=dark?'rgba(89,201,127,.12)':'rgba(67,179,107,.12)';
+  ctx.fillRect(legendX,legendY-6,24,16);
+  ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+  ctx.fillText(T('legendWindow'),legendX+30,legendY+5);
+  
+  // Add cooling target temp to legend if cooling events exist
+  if(hasCoolingEvents){
+    legendX+=200;
+    ctx.strokeStyle=dark?'#a78bfa':'#8b5cf6';
+    ctx.lineWidth=3;
+    ctx.setLineDash([10,5]);
+    ctx.beginPath();
+    ctx.moveTo(legendX,legendY+2);
+    ctx.lineTo(legendX+28,legendY+2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=dark?'#a9b6cd':'#5f6b7d';
+    ctx.fillText(`🎯 Cooling ${coolingTargetTemp}°C`,legendX+35,legendY+5);
+  }
+  
+  // Bondline Layout (if image exists) - positioned in top right corner
+  if(hasLayoutImage){
+    // First, calculate image size to determine layout box size
+    const layoutImg=document.getElementById('layoutCanvas');
+    if(layoutImg&&layoutImg.complete&&layoutImg.naturalHeight!==0){
+      // Determinar el tamaño máximo disponible para la imagen
+      const maxImgW=750; // Max width disponible
+      const maxImgH=250; // Max height disponible
+      
+      // Calculate actual image size maintaining aspect ratio
+      const imgAspect=layoutImg.naturalWidth/layoutImg.naturalHeight;
+      let imgW,imgH;
+      
+      if(imgAspect>maxImgW/maxImgH){
+        imgW=maxImgW;
+        imgH=maxImgW/imgAspect;
+      }else{
+        imgH=maxImgH;
+        imgW=maxImgH*imgAspect;
+      }
+      
+      // Layout box es 105% del tamaño de la imagen (5% extra = 2.5% en cada lado)
+      const layoutW=imgW*1.05;
+      const layoutH=imgH*1.05;
+      const layoutX=1120; // Posición horizontal
+      
+      // Calcular Y para que la base del layout coincida con la base del panel de parámetros
+      const panelBase=panelY+panelH; // 295
+      const layoutY=panelBase-layoutH;
+      
+      // Border con gradiente
+      const borderGrad=ctx.createLinearGradient(layoutX,layoutY,layoutX+layoutW,layoutY+layoutH);
+      borderGrad.addColorStop(0,dark?'rgba(239,91,103,.8)':'rgba(239,91,103,.6)');
+      borderGrad.addColorStop(1,dark?'rgba(79,140,255,.8)':'rgba(79,140,255,.6)');
+      ctx.strokeStyle=borderGrad;
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.roundRect(layoutX,layoutY,layoutW,layoutH,12);
+      ctx.stroke();
+      
+      // Dibujar la imagen centrada (ocupando el espacio interior del 5% offset)
+      const imgX=layoutX+(layoutW-imgW)/2; // Centrada horizontalmente
+      const imgY=layoutY+(layoutH-imgH)/2; // Centrada verticalmente
+      
+      ctx.drawImage(layoutImg,imgX,imgY,imgW,imgH);
+      
+      // Draw TC markers on top - solo TCs visibles
+      tcMarkers.forEach(marker=>{
+        // Solo dibujar si el TC está visible
+        if(!tcVisibility[marker.tcIndex])return;
+        
+        const markerX=imgX+(marker.x/100)*imgW;
+        const markerY=imgY+(marker.y/100)*imgH;
+        const markerSize=16;
+        const markerColor=TC_COLORS[marker.tcIndex%TC_COLORS.length];
+        
+        // Shadow
+        ctx.shadowColor='rgba(0,0,0,.4)';
+        ctx.shadowBlur=6;
+        ctx.shadowOffsetX=0;
+        ctx.shadowOffsetY=3;
+        
+        // Marker circle
+        ctx.fillStyle=markerColor;
+        ctx.beginPath();
+        ctx.arc(markerX,markerY,markerSize/2,0,Math.PI*2);
+        ctx.fill();
+        
+        // Border
+        ctx.strokeStyle='rgba(255,255,255,.7)';
+        ctx.lineWidth=2;
+        ctx.stroke();
+        
+        ctx.shadowColor='transparent';
+        ctx.shadowBlur=0;
+        
+        // Number
+        ctx.fillStyle='#fff';
+        ctx.font='bold 9px Inter, sans-serif';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText(marker.tcIndex+1,markerX,markerY);
+        
+        // Reset text align
+        ctx.textAlign='left';
+        ctx.textBaseline='alphabetic';
+      });
+    }
+  }
+  
+  ctx.fillStyle=dark?'#71809c':'#8a95a6';
+  ctx.font='12px Inter, sans-serif';
+  ctx.fillText(T('footer'),chartX,height-40);
+  
+  console.log('Generando dataURL...');
+  const dataURL=exportCanvas.toDataURL('image/png');
+  console.log('dataURL generado, longitud:', dataURL.length);
+  
+  // Construir nombre del archivo: Bondline - "fecha" - "hoja"
+  const testDateEl=document.getElementById('testDate');
+  const testDate=testDateEl?testDateEl.value||'SinFecha':'SinFecha';
+  const sheetName=availableSheets.length>0?availableSheets[currentSheetIndex]:'Hoja1';
+  
+  // Limpiar caracteres especiales del nombre de hoja
+  const cleanSheetName=sheetName.replace(/[/\\:*?"<>|]/g,'-');
+  
+  const fileName=`Bondline - ${testDate} - ${cleanSheetName}.png`;
+  
+  const a=document.createElement('a');
+  a.href=dataURL;
+  a.download=fileName;
+  console.log('Archivo a descargar:', a.download);
+  
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  console.log('PNG generado exitosamente');
+  const successMsg=currentLang==='es'?'✓ PNG descargado':'✓ PNG downloaded';
+  console.log(successMsg);
+  
+  } catch(err) {
+    console.error('Error generando PNG:',err);
+    const errorMsg=currentLang==='es'?'Error al generar la imagen. Por favor intenta de nuevo.':'Error generating image. Please try again.';
+    alert(errorMsg);
+  }
+}
+// ══════════════════════════════════════════════════════
+// ── Parameters
+// ══════════════════════════════════════════════════════
+let paramsCollapsed=false;
+function toggleParams(){
+  paramsCollapsed=!paramsCollapsed;
+  document.getElementById('paramsBody').classList.toggle('collapsed',paramsCollapsed);
+  document.getElementById('toggleParamsBtn').textContent=paramsCollapsed?'+':'−';
+}
+
+let rawMaterialCollapsed=false;
+function toggleRawMaterial(){
+  rawMaterialCollapsed=!rawMaterialCollapsed;
+  document.getElementById('rawMaterialBody').classList.toggle('collapsed',rawMaterialCollapsed);
+  document.getElementById('toggleRawMaterialBtn').textContent=rawMaterialCollapsed?'+':'−';
+}
+
+let fileCollapsed=false;
+function toggleFile(){
+  fileCollapsed=!fileCollapsed;
+  document.getElementById('fileBody').classList.toggle('collapsed',fileCollapsed);
+  document.getElementById('toggleFileBtn').textContent=fileCollapsed?'+':'−';
+}
+
+let eventsCollapsed=false;
+function toggleEvents(){
+  eventsCollapsed=!eventsCollapsed;
+  document.getElementById('eventsBody').classList.toggle('collapsed',eventsCollapsed);
+  document.getElementById('toggleEventsBtn').textContent=eventsCollapsed?'+':'−';
+}
+
+let layoutCollapsed=false;
+function toggleLayout(){
+  layoutCollapsed=!layoutCollapsed;
+  document.getElementById('layoutBody').classList.toggle('collapsed',layoutCollapsed);
+  document.getElementById('toggleLayoutBtn').textContent=layoutCollapsed?'+':'−';
+}
+
+// ══════════════════════════════════════════════════════
+// ── Bondline Layout System
+// ══════════════════════════════════════════════════════
+let layoutImageLoaded=false;
+let tcMarkers=[];
+
+// Setup layout image drop zone
+const layoutDropZone=document.getElementById('layoutDropZone');
+const layoutImageInput=document.getElementById('layoutImageInput');
+const layoutCanvas=document.getElementById('layoutCanvas');
+const layoutCanvasWrap=document.getElementById('layoutCanvasWrap');
+const tcMarkersContainer=document.getElementById('tcMarkersContainer');
+
+layoutDropZone.addEventListener('dragover',e=>{
+  e.preventDefault();
+  layoutDropZone.classList.add('dragover');
+});
+
+layoutDropZone.addEventListener('dragleave',()=>{
+  layoutDropZone.classList.remove('dragover');
+});
+
+layoutDropZone.addEventListener('drop',e=>{
+  e.preventDefault();
+  layoutDropZone.classList.remove('dragover');
+  if(e.dataTransfer.files.length){
+    handleLayoutImage(e.dataTransfer.files[0]);
+  }
+});
+
+layoutImageInput.addEventListener('change',e=>{
+  if(e.target.files.length){
+    handleLayoutImage(e.target.files[0]);
+  }
+});
+
+function handleLayoutImage(file){
+  if(!file.type.startsWith('image/')){
+    alert(currentLang==='es'?'Por favor selecciona una imagen':'Please select an image');
+    return;
+  }
+  
+  const reader=new FileReader();
+  reader.onload=e=>{
+    layoutCanvas.src=e.target.result;
+    layoutCanvas.onload=()=>{
+      layoutImageLoaded=true;
+      layoutDropZone.classList.add('loaded');
+      layoutCanvasWrap.classList.add('active');
+      document.getElementById('layoutFileName').textContent=file.name;
+      
+      // Create TC markers if data is loaded
+      if(parsedData){
+        createTCMarkers();
+      }
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+function createTCMarkers(){
+  if(!layoutImageLoaded||!parsedData)return;
+  
+  // Clear existing markers
+  tcMarkersContainer.innerHTML='';
+  tcMarkers=[];
+  
+  const{columns}=parsedData;
+  const container=layoutCanvasWrap.getBoundingClientRect();
+  
+  // Filtrar solo TCs visibles
+  const visibleTCs=columns.map((col,idx)=>({col,idx})).filter(({idx})=>tcVisibility[idx]);
+  
+  // Create a marker for each VISIBLE thermocouple
+  visibleTCs.forEach(({col,idx},visibleIndex)=>{
+    const marker=document.createElement('div');
+    marker.className='tc-marker';
+    marker.style.backgroundColor=TC_COLORS[idx%TC_COLORS.length];
+    marker.textContent=`${idx+1}`;
+    marker.dataset.label=`TC-${idx+1}`;
+    marker.dataset.tcIndex=idx;
+    
+    // Better default positions - distributed in a grid pattern based on visible count
+    let defaultX,defaultY;
+    const visibleCount=visibleTCs.length;
+    
+    if(visibleCount<=2){
+      // Horizontal line for 1-2 TCs
+      defaultX=30+(visibleIndex*40);
+      defaultY=50;
+    }else if(visibleCount<=4){
+      // 2x2 grid for 3-4 TCs
+      const row=Math.floor(visibleIndex/2);
+      const col=visibleIndex%2;
+      defaultX=25+(col*50);
+      defaultY=30+(row*40);
+    }else if(visibleCount<=6){
+      // 2x3 grid for 5-6 TCs
+      const row=Math.floor(visibleIndex/3);
+      const col=visibleIndex%3;
+      defaultX=20+(col*30);
+      defaultY=30+(row*40);
+    }else if(visibleCount<=9){
+      // 3x3 grid for 7-9 TCs
+      const row=Math.floor(visibleIndex/3);
+      const col=visibleIndex%3;
+      defaultX=20+(col*30);
+      defaultY=25+(row*30);
+    }else{
+      // 4x5 grid for 10-20 TCs
+      const row=Math.floor(visibleIndex/5);
+      const col=visibleIndex%5;
+      defaultX=15+(col*18);
+      defaultY=20+(row*20);
+    }
+    
+    marker.style.left=defaultX+'%';
+    marker.style.top=defaultY+'%';
+    
+    // Make draggable
+    makeTCMarkerDraggable(marker);
+    
+    tcMarkersContainer.appendChild(marker);
+    tcMarkers.push({
+      element:marker,
+      tcIndex:idx,
+      x:defaultX,
+      y:defaultY
+    });
+  });
+  
+  console.log(`Created ${visibleTCs.length} visible TC markers (of ${columns.length} total) with smart positioning`);
+}
+
+function makeTCMarkerDraggable(marker){
+  let isDragging=false;
+  let startX,startY;
+  let markerStartX,markerStartY;
+  
+  marker.addEventListener('mousedown',e=>{
+    e.preventDefault();
+    isDragging=true;
+    marker.classList.add('dragging');
+    
+    const container=layoutCanvasWrap.getBoundingClientRect();
+    startX=e.clientX;
+    startY=e.clientY;
+    
+    const markerRect=marker.getBoundingClientRect();
+    markerStartX=markerRect.left-container.left;
+    markerStartY=markerRect.top-container.top;
+    
+    document.addEventListener('mousemove',onMouseMove);
+    document.addEventListener('mouseup',onMouseUp);
+  });
+  
+  function onMouseMove(e){
+    if(!isDragging)return;
+    
+    const container=layoutCanvasWrap.getBoundingClientRect();
+    const deltaX=e.clientX-startX;
+    const deltaY=e.clientY-startY;
+    
+    let newX=markerStartX+deltaX;
+    let newY=markerStartY+deltaY;
+    
+    // Constrain to container bounds
+    const markerSize=32;
+    newX=Math.max(0,Math.min(newX,container.width-markerSize));
+    newY=Math.max(0,Math.min(newY,container.height-markerSize));
+    
+    // Convert to percentage
+    const percentX=(newX/container.width)*100;
+    const percentY=(newY/container.height)*100;
+    
+    marker.style.left=percentX+'%';
+    marker.style.top=percentY+'%';
+  }
+  
+  function onMouseUp(){
+    if(!isDragging)return;
+    isDragging=false;
+    marker.classList.remove('dragging');
+    
+    // Update stored position
+    const tcIndex=parseInt(marker.dataset.tcIndex);
+    const markerData=tcMarkers.find(m=>m.tcIndex===tcIndex);
+    if(markerData){
+      markerData.x=parseFloat(marker.style.left);
+      markerData.y=parseFloat(marker.style.top);
+    }
+    
+    document.removeEventListener('mousemove',onMouseMove);
+    document.removeEventListener('mouseup',onMouseUp);
+  }
+  
+  // Touch support
+  marker.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const touch=e.touches[0];
+    isDragging=true;
+    marker.classList.add('dragging');
+    
+    const container=layoutCanvasWrap.getBoundingClientRect();
+    startX=touch.clientX;
+    startY=touch.clientY;
+    
+    const markerRect=marker.getBoundingClientRect();
+    markerStartX=markerRect.left-container.left;
+    markerStartY=markerRect.top-container.top;
+    
+    document.addEventListener('touchmove',onTouchMove);
+    document.addEventListener('touchend',onTouchEnd);
+  });
+  
+  function onTouchMove(e){
+    if(!isDragging)return;
+    const touch=e.touches[0];
+    
+    const container=layoutCanvasWrap.getBoundingClientRect();
+    const deltaX=touch.clientX-startX;
+    const deltaY=touch.clientY-startY;
+    
+    let newX=markerStartX+deltaX;
+    let newY=markerStartY+deltaY;
+    
+    const markerSize=32;
+    newX=Math.max(0,Math.min(newX,container.width-markerSize));
+    newY=Math.max(0,Math.min(newY,container.height-markerSize));
+    
+    const percentX=(newX/container.width)*100;
+    const percentY=(newY/container.height)*100;
+    
+    marker.style.left=percentX+'%';
+    marker.style.top=percentY+'%';
+  }
+  
+  function onTouchEnd(){
+    if(!isDragging)return;
+    isDragging=false;
+    marker.classList.remove('dragging');
+    
+    const tcIndex=parseInt(marker.dataset.tcIndex);
+    const markerData=tcMarkers.find(m=>m.tcIndex===tcIndex);
+    if(markerData){
+      markerData.x=parseFloat(marker.style.left);
+      markerData.y=parseFloat(marker.style.top);
+    }
+    
+    document.removeEventListener('touchmove',onTouchMove);
+    document.removeEventListener('touchend',onTouchEnd);
+  }
+}
+
+// Update markers when data changes
+function updateLayoutMarkers(){
+  if(layoutImageLoaded&&parsedData){
+    createTCMarkers();
+  }
+}
+
+function calcLoss(zone){
+  const thermoEl=document.getElementById(zone==='upper'?'thermoUpper':'thermoLower');
+  const nestEl=document.getElementById(zone==='upper'?'nestUpper':'nestLower');
+  const lossEl=document.getElementById(zone==='upper'?'lossUpper':'lossLower');
+  
+  if(!thermoEl||!nestEl||!lossEl)return;
+  
+  const thermo=parseFloat(thermoEl.value);
+  const nest=parseFloat(nestEl.value);
+  
+  if(!isNaN(thermo)&&!isNaN(nest)){
+    const loss=thermo-nest;
+    lossEl.textContent=loss.toFixed(1)+' °C';
+    lossEl.className='param-computed'+(loss>0?' loss-positive':' loss-zero');
+  }else{
+    lossEl.textContent='— °C';
+    lossEl.className='param-computed loss-zero';
+  }
+}
+
+function updateTemperatureLoss(){
+  calcLoss('upper');
+  calcLoss('lower');
+}
+
+let leisterCount=1;
+function addLeister(){
+  leisterCount++;
+  const list=document.getElementById('leistersList');
+  const div=document.createElement('div');
+  div.className='leister-item';
+  div.dataset.idx=leisterCount-1;
+  div.innerHTML=`<div class="param-group"><label class="param-label">Leister ${leisterCount}</label><input class="param-input leister-input" type="number" step="0.1" placeholder="°C"></div>`;
+  list.appendChild(div);
+}
+
+function removeLeister(){
+  if(leisterCount<=1)return;
+  const list=document.getElementById('leistersList');
+  list.removeChild(list.lastElementChild);
+  leisterCount--;
+}
+
+// ══════════════════════════════════════════════════════
+// ── Password Gate / Lock Screen
+// ══════════════════════════════════════════════════════
+const AUTH_KEY='bondlineAuthSession';
+const CORRECT_PASSWORD='CJLB'; // Change this to your desired password
+
+function checkAuth(){
+  const isAuth=sessionStorage.getItem(AUTH_KEY)==='true';
+  if(isAuth){
+    unlockApp();
+  }
+}
+
+function unlockApp(){
+  document.body.classList.remove('app-locked');
+  document.getElementById('lockScreen').classList.add('hidden');
+  sessionStorage.setItem(AUTH_KEY,'true');
+}
+
+document.getElementById('lockForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const input=document.getElementById('lockPassword');
+  const feedback=document.getElementById('lockFeedback');
+  const submit=document.getElementById('lockSubmit');
+  const pass=input.value;
+  
+  submit.disabled=true;
+  feedback.textContent='';
+  feedback.className='lock-feedback';
+  
+  setTimeout(()=>{
+    if(pass===CORRECT_PASSWORD){
+      unlockApp();
+    }else{
+      feedback.textContent=T('lockError');
+      feedback.className='lock-feedback error';
+      input.value='';
+      input.focus();
+    }
+    submit.disabled=false;
+  },400);
+});
+
+// Init
+checkAuth();
+applyLangToDOM();
+updateAdhesiveInfo();
+updateSubstrateInfo();
+document.getElementById('currentLangLabel').textContent=currentLang.toUpperCase();
+</script>
+</body>
+</html>
