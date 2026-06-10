@@ -15,12 +15,12 @@ cjlb-toolbox/
 ├── gantt/index.html    ← Gantt Tracker
 ├── gapcheck/index.html ← GapCheck Analysis
 ├── bondline/index.html ← Bondline Thermal
-└── capaflow/index.html ← CapaFlow
+├── capaflow/index.html ← CapaFlow
+└── vectorizr/          ← VectoriZr (build de la app Vite en `Digitalizacion/`)
 ```
 
 Cada herramienta queda disponible como ruta del mismo dominio: `/gantt/`, `/gapcheck/`,
-`/bondline/`, `/capaflow/`. VectoriZr es una app Vite/React aparte (carpeta `Digitalizacion`)
-y por ahora se enlaza a su URL de Netlify.
+`/bondline/`, `/capaflow/`, `/vectorizr/`.
 
 ## Diferencias vs. la landing original
 
@@ -73,14 +73,24 @@ Luego abre <http://localhost:8080>.
 
 ## Actualizar una herramienta
 
-Reemplaza el `index.html` de su carpeta (p. ej. `gantt/index.html`) con la nueva
-versión, commit y push. Si quieres anunciarlo, cambia su `badge` a `"updated"` en
-`tools.json`.
+**Herramientas HTML** (gantt, gapcheck, bondline, capaflow): reemplaza el
+`index.html` de su carpeta con la nueva versión, commit y push. Si quieres
+anunciarlo, cambia su `badge` a `"updated"` en `tools.json`.
+
+**VectoriZr** (app Vite/React, código fuente en `Desktop\Proyectos IA\Digitalizacion`):
+
+```powershell
+cd "C:\Users\PC AERO R5 PRO\Desktop\Proyectos IA\Digitalizacion"
+npm run build                                          # valida tsc + tests del deploy Netlify
+npx vite build --base=/vectorizr/ --outDir dist-vectorizr
+Copy-Item dist-vectorizr\* ..\cjlb-toolbox\vectorizr\ -Recurse -Force
+```
+
+Luego commit y push en `cjlb-toolbox`. El código fuente usa `import.meta.env.BASE_URL`
+para logo y OpenCV, así que el mismo código sirve para Netlify (base `/`) y para
+este monorepo (base `/vectorizr/`).
 
 ## Pendiente / futuro
 
-- **VectoriZr**: migrar la app Vite (`Digitalizacion`) a su propio proyecto Vercel o
-  integrarla a este dominio (p. ej. build estático servido en `/vectorizr/`), y
-  actualizar su URL en `tools.json` a ruta relativa.
 - Dominio propio: se configura en Vercel → Settings → Domains y aplica a todas las
   herramientas a la vez.

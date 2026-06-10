@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-06-09",
   "tools": [
     {
@@ -62,7 +62,7 @@
       "descEs": "Herramienta para digitalizar/vectorizar dibujos o patrones de corte de forma sencilla.",
       "descEn": "Digitalization/Vectoring tool to make drawings or cut patterns easier.",
       "badge": "new",
-      "url": "https://vectorizr.netlify.app/",
+      "url": "/vectorizr/",
       "status": "active",
       "holdLabelEs": "En Desarrollo",
       "holdLabelEn": "In Development"
