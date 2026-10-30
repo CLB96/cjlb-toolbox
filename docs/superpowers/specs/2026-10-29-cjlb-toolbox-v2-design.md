@@ -60,8 +60,11 @@ borra el trabajo (GapCheck no guarda nada hoy).
 
 ## 4. Anti-objetivos (fallaría aunque "funcione")
 
-- **Que cualquier cálculo dé un valor distinto al de hoy, o que se muestre de otra forma**
-  (formato, unidades, decimales, orden, gráficos, reportes/exports). [Decidido]
+- **Que cualquier cálculo dé un valor distinto al de hoy, o que los valores y gráficas se
+  presenten de otra forma** (formato, unidades, decimales, orden, tipo de gráfico, qué datos
+  muestra cada gráfica, contenido de reportes/exports). [Decidido] El **diseño** alrededor
+  (colores, tipografía, layout, vidrio) sí puede cambiar, pero solo después de mostrar un
+  mockup o propuesta y que el dueño lo apruebe (§6.4). [Decidido]
 - Que desaparezca una función existente, aunque se use poco. [Decidido]
 - Que la versión nueva reemplace a la actual antes de que el dueño esté 100% conforme. [Decidido]
 - Mejoras "porque sí": toda mejora en valores o presentación se propone **aparte**,
@@ -148,6 +151,12 @@ v2/
   gráfico; cambia solo la piel (glass + paleta). Los colores de series de gráficos se toman
   de la paleta; si una serie tiene hoy un color con significado (p. ej. rojo = fuera de
   tolerancia), se conserva el significado con el color semántico equivalente del tema.
+- **Propuesta de rediseño por herramienta [Decidido]:** antes de portar cada herramienta, el
+  builder entrega una propuesta visual **antes / después** (mockup HTML con datos reales o de
+  ejemplo, en día y noche) de cada pantalla y de cada export con aspecto propio (PNG de
+  gráficos, Excel con estilos, reportes). La propuesta indica qué cambia de diseño y confirma
+  que valores y gráficas quedan iguales. Solo se implementa lo aprobado; lo no aprobado
+  conserva el diseño actual adaptado mínimamente al shell.
 - Se eliminan las cinco pantallas de contraseña hardcodeadas (reemplazadas por el login).
 
 ### 6.5 VectoriZr
@@ -165,6 +174,9 @@ v2/
 4. GapCheck y Bondline (las que se usan juntas; además GapCheck es la que más sufre hoy).
 5. Gantt, CapaFlow.
 6. VectoriZr.
+
+En los pasos 4 a 6, cada herramienta empieza con su propuesta antes/después (§6.4) y
+espera la aprobación del dueño antes de implementar el rediseño.
 7. Tracking de uso + pestaña Uso.
 8. Publicación en la dirección de prueba; revisión del dueño herramienta por herramienta.
 
@@ -198,6 +210,15 @@ Referencia visual aprobada: `.superpowers/brainstorm/*/content/estilo-espacial.h
   Un usuario autenticado que no está en la lista ve un mensaje "Sin acceso" y se cierra sesión.
   Las **reglas de seguridad de Firestore** verifican la allowlist (la protección real está en
   el servidor, no solo en la UI).
+- **Solicitud de acceso [Decidido]:** quien inicia sesión y no está en la allowlist ve
+  "Sin acceso" con la opción **Solicitar acceso** (nombre, correo de la cuenta y un motivo
+  breve opcional). [Propuesta] La solicitud se guarda en Firestore `accessRequests/{email}`
+  (una por correo, sin duplicados). El admin ve las solicitudes pendientes en su pestaña
+  (con un contador en el avatar) y las **aprueba o rechaza desde la app**: aprobar agrega el
+  correo a la allowlist. El solicitante ve "Solicitud enviada" / "pendiente" al volver a
+  entrar. Sin correos automáticos en este alcance. Para correo/contraseña, como no hay
+  registro público, la solicitud se hace con la cuenta de Google o dejando un correo de
+  contacto en un formulario mínimo sin login (con límite básico anti-spam).
 - **Admin:** un único correo (el del dueño), definido en la configuración (variable de entorno
   y regla de Firestore). Solo ve además la pestaña Uso. [Decidido]
 - **Saludo [Decidido]:** "Hola, {nombre}" usando el nombre de la cuenta; si no hay nombre,
@@ -211,8 +232,9 @@ Referencia visual aprobada: `.superpowers/brainstorm/*/content/estilo-espacial.h
 
 - API común en `persistence/`: cada herramienta expone `getSnapshot()` / `restore(snapshot)`
   de su estado serializable.
-- Autosave cada ~5 s tras un cambio (debounce) y al ocultar/cerrar la pestaña
-  (`visibilitychange`/`pagehide`).
+- Autosave **cada 1 minuto** si hubo cambios [Decidido], y además al ocultar/cerrar la
+  pestaña o cambiar de herramienta (`visibilitychange`/`pagehide`) para no perder el último
+  minuto. [Propuesta] Un indicador discreto muestra "Guardado hace X min".
 - Almacenamiento en **IndexedDB** (los archivos cargados pueden superar el límite de
   localStorage), con clave por **usuario + herramienta**, para que dos personas en el mismo
   equipo no se mezclen.
@@ -262,10 +284,11 @@ Referencia visual aprobada: `.superpowers/brainstorm/*/content/estilo-espacial.h
 
 ## 12b. Decisiones tras la revisión [Propuesta salvo que se indique]
 
-- **Exports vs. pantalla:** el re-tema aplica solo a lo que se ve en pantalla. Los archivos
-  exportados (PNG de gráficos, Excel, ZIP, reportes) conservan el aspecto de hoy: colores,
-  fondos, estilos de celda. Los gráficos tienen un tema "pantalla" y un tema "export" igual
-  al actual. Los golden tests comparan valores de celdas, contenido y estructura, no bytes
+- **Exports y pantallas [Decidido]:** pantallas y exports (PNG de gráficos, Excel, ZIP,
+  reportes) pueden adoptar el lenguaje de diseño Nebulosa, siempre que valores y gráficas no
+  cambien y que el cambio se haya mostrado antes en la propuesta antes/después (§6.4) y el
+  dueño lo haya aprobado. Mientras no haya aprobación, el export conserva su aspecto actual.
+  [Propuesta] Los golden tests comparan valores de celdas, contenido y estructura, no bytes
   (xlsx/JSZip meten fechas y metadatos); los PNG exportados se revisan visualmente.
 - **Herramienta "pausada"** (`status: "hold"` en `tools.json`): su tarjeta y su pestaña se
   muestran deshabilitadas con el `holdLabel`, como hoy. `tools.json` se mueve a `v2/` y se
@@ -281,7 +304,9 @@ Referencia visual aprobada: `.superpowers/brainstorm/*/content/estilo-espacial.h
   en el navegador con la misma persistencia por usuario de §9, y cada Gantt tiene su propio
   historial; sincronizar entre equipos queda como mejora futura.]
 - **Archivos de prueba [Decidido]:** el dueño aporta un Excel real para GapCheck y otro para
-  Bondline. [Propuesta: el builder arma archivos de ejemplo para Gantt y CapaFlow. Los
+  Bondline. [Decidido] CapaFlow usa el set de ejemplo que ya trae la página ("Cargar datos de
+  ejemplo", basado en el ejercicio de muestra de Minitab). [Propuesta: el builder arma un
+  archivo de ejemplo para Gantt. Los
   archivos reales se guardan en `v2/legacy-fixtures/private/`, fuera de git (gitignored); sus
   golden tests se saltan con aviso si los archivos no están.]
 - **VectoriZr [Decidido]:** la copia dentro de `v2/` pasa a ser la versión oficial desde
@@ -292,8 +317,9 @@ Referencia visual aprobada: `.superpowers/brainstorm/*/content/estilo-espacial.h
 
 ## 13. Lo que queda a criterio del builder
 
-- Detalles de componentes, animaciones, iconografía (reemplazar emojis de `tools.json` por
-  íconos consistentes es aceptable si se ve mejor; conservar el emoji como fallback).
+- Detalles de componentes, animaciones e iconografía. [Decidido] Se **deben** cambiar cuando
+  el reemplazo es consistente con el sistema y se ve mejor (p. ej. emojis de `tools.json` →
+  set de íconos propio), y **se conserva siempre el emoji como fallback** si el ícono no carga.
 - Router concreto (hash vs history) y librería de IndexedDB (p. ej. `idb-keyval`).
 - Forma exacta de la pestaña Uso, dentro de lo descrito.
 - Cómo partir cada herramienta grande en componentes.
