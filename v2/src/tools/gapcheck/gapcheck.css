@@ -70,6 +70,30 @@
 .gc-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
 .gc-chart-slot { min-height: 420px; }
 
+/* gráfica: alto fijo del original (.chart-wrapper 450px) */
+.gc-chart { position: relative; height: 450px; width: 100%; }
+.gc-chart canvas { width: 100% !important; height: 100% !important; }
+
+/* chips de filtro (buildFilterChips): colores de iteración = paleta de datos */
+.gc-filters {
+  display: flex; flex-wrap: wrap; gap: 16px; padding: 14px 18px;
+  border: 1px solid var(--edge); border-radius: var(--radius-md); background: var(--glass);
+}
+.gc-filters__group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.gc-filters__label { font-size: 10px; font-weight: 800; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.07em; }
+.gc-filters__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-filters__divider { width: 1px; align-self: stretch; background: var(--edge); }
+.gc-fchip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+  border-radius: 999px; border: 1.5px solid transparent; background: var(--glass-dense);
+  font: 700 12px var(--font-body); color: var(--fg-muted); cursor: pointer; user-select: none;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s, color 0.18s;
+}
+.gc-fchip--on { color: var(--accent-1); border-color: var(--accent-1); background: color-mix(in srgb, var(--accent-1) 16%, transparent); }
+.gc-fchip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+.gc-fchip:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+.gc-fchip__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
 .gc-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: var(--radius-md); background: var(--glass-dense); }
 .gc-seg__btn {
   padding: 8px; border: 0; border-radius: 9px; background: transparent;
@@ -113,6 +137,6 @@
   .gc-head__actions { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gc-drop, .gc-seg__btn { transition: none; }
-  .gc-drop--over { transform: none; }
+  .gc-drop, .gc-seg__btn, .gc-fchip { transition: none; }
+  .gc-drop--over, .gc-fchip:hover { transform: none; }
 }

@@ -12,6 +12,8 @@ import { importExcelFile } from './importExcel'
 import { useGapcheckT } from './i18n'
 import { EmptyState } from './components/EmptyState'
 import { Header, type LoadedFile } from './components/Header'
+import { GapcheckChart } from './components/Chart'
+import { Filters } from './components/Filters'
 import { Kpis } from './components/Kpis'
 import { TargetPanel } from './components/TargetPanel'
 import './gapcheck.css'
@@ -73,6 +75,8 @@ function GapcheckBody({ toolId, onExport = noop }: Props) {
               <h2 id="gc-chart-title" className="gc-card__title">
                 📊 {t('chart')}
               </h2>
+              <Filters />
+              <GapcheckChart />
             </GlassPanel>
             <TargetPanel disabled={disabled} />
           </div>

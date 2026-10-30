@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/useI18n'
 /**
  * Diccionario copiado literal del original (gapcheck/index.html 1702-1795, inventario §10).
  * Añadidos de la v2: `importFailed` (aviso de lectura), `fileDims`, `changeFile` y `history`
- * (cabecera aprobada en el mockup).
+ * (cabecera aprobada en el mockup). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
  */
 const es = {
   loginEnter: 'Ingresar',
@@ -54,6 +54,8 @@ const es = {
   fileDims: '{n} iteraciones × {m} puntos',
   changeFile: 'Cambiar archivo',
   history: 'Historial',
+  axisThickness: 'Medición de Espesor (mm)',
+  axisCompression: 'Compresión Real (%)',
 } as const
 
 export type GapcheckKey = keyof typeof es
@@ -107,6 +109,8 @@ const en: Record<GapcheckKey, string> = {
   fileDims: '{n} iterations × {m} points',
   changeFile: 'Change file',
   history: 'History',
+  axisThickness: 'Thickness Measurement (mm)',
+  axisCompression: 'Actual Compression (%)',
 }
 
 export const GAPCHECK_TEXTS: Record<'es' | 'en', Record<GapcheckKey, string>> = { es, en }

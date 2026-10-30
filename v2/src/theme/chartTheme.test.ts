@@ -14,6 +14,14 @@ describe('chartTheme', () => {
     expect(t.series).toHaveLength(5)
   })
 
+  it('tooltip colors come from surface tokens', () => {
+    const t = getChartTheme('light')
+    expect(t.tooltipBg).toBe('#f3eeff')
+    expect(t.tooltipTitle).toBe('#251a40')
+    expect(t.tooltipBody).toBe('#6d6290')
+    expect(t.tooltipBorder).toBe('rgba(255, 255, 255, 0.9)')
+  })
+
   it('fallback mirror matches tokens.css for both themes', () => {
     const css = readFileSync('src/theme/tokens.css', 'utf8')
     for (const theme of ['dark', 'light'] as const) {

@@ -7,6 +7,10 @@ export type ChartTheme = {
   ok: string
   warn: string
   error: string
+  tooltipBg: string
+  tooltipTitle: string
+  tooltipBody: string
+  tooltipBorder: string
 }
 
 /* Espejo de tokens.css, solo como respaldo cuando getComputedStyle no ve el CSS
@@ -14,7 +18,10 @@ export type ChartTheme = {
    que no se desfasen. */
 export const FALLBACK_TOKENS: Record<ResolvedTheme, Record<string, string>> = {
   dark: {
+    '--fg': '#efe9ff',
     '--fg-muted': '#b3a6d9',
+    '--glass-solid': '#241545',
+    '--edge': 'rgba(255, 255, 255, 0.16)',
     '--accent-1': '#d16bff',
     '--accent-2': '#6a7bff',
     '--info': '#8fb4ff',
@@ -23,7 +30,10 @@ export const FALLBACK_TOKENS: Record<ResolvedTheme, Record<string, string>> = {
     '--error': '#ff8a9b',
   },
   light: {
+    '--fg': '#251a40',
     '--fg-muted': '#6d6290',
+    '--glass-solid': '#f3eeff',
+    '--edge': 'rgba(255, 255, 255, 0.9)',
     '--accent-1': '#9b3fe0',
     '--accent-2': '#4a5fe8',
     '--info': '#2a4fc4',
@@ -44,5 +54,9 @@ export function getChartTheme(resolved: ResolvedTheme): ChartTheme {
     ok: read('--ok'),
     warn: read('--warn'),
     error: read('--error'),
+    tooltipBg: read('--glass-solid'),
+    tooltipTitle: read('--fg'),
+    tooltipBody: read('--fg-muted'),
+    tooltipBorder: read('--edge'),
   }
 }

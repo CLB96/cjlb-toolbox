@@ -12,6 +12,9 @@ import GapcheckTool from './GapcheckTool'
 import { createGapcheckStore, snapshotOf } from './store'
 import { GAPCHECK_TEXTS } from './i18n'
 
+// la gráfica tiene sus propias pruebas con Chart.js simulado (jsdom no tiene canvas)
+vi.mock('./components/Chart', () => ({ GapcheckChart: () => <div data-testid="gc-chart" /> }))
+
 let setLangRef: ((l: Lang) => void) | null = null
 function LangGrab() {
   setLangRef = useI18n().setLang
