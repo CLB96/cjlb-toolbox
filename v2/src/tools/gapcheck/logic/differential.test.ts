@@ -34,6 +34,14 @@ describe('parseRows ≡ legacyProcessData', () => {
     })
   }
 
+  it('primera fila solo con strings numéricos (sin cabecera)', () => {
+    const rows: unknown[][] = [['5', ' 3 ', ''], ['6', '4', '2'], [' 7', '', '1.5']]
+    const got = parseRows(rows)
+    expect(got).toEqual(legacyProcessData(rows))
+    expect(got?.points.map((p) => p.name)).toEqual(['P1', 'P2', 'P3'])
+    expect(got?.points[0].values).toEqual([5, 6, 7])
+  })
+
   it('ragged produce los mismos puntos', () => {
     expect(parseRows(FIXTURES.ragged)).toEqual(legacyProcessData(FIXTURES.ragged))
     expect(parseRows(FIXTURES.ragged)).not.toBeNull()
@@ -117,6 +125,25 @@ describe('computeTarget ≡ legacyComputeGapCheck', () => {
         })
       }
     }
+  }
+
+  const DISTINCT: TargetInputs[] = [
+    { skin: '12.5', pct: '30', skinSoft: '2.5', foam: '8', pctSoft: '40' },
+    { skin: '7', pct: '', skinSoft: '', foam: '9.5', pctSoft: '' },
+    { skin: '', pct: '20', skinSoft: '3', foam: '', pctSoft: '65' },
+    { skin: '4', pct: '15', skinSoft: '', foam: '6', pctSoft: '25' },
+    { skin: '9', pct: '60', skinSoft: '1.5', foam: '11', pctSoft: '' },
+  ]
+  for (const covering of COVERINGS) {
+    DISTINCT.forEach((inputs, n) => {
+      it(`campos distintos ${covering} #${n}`, () => {
+        const got = computeTarget(covering, inputs)
+        const ref = legacyComputeGapCheck({ coveringType: covering, ...inputs })
+        expect(got.target).toBe(ref.target)
+        expect(got.valueText).toBe(ref.valueText)
+        expect(`${got.formula.text}<strong>${got.formula.result}</strong>`).toBe(ref.formulaHtml)
+      })
+    })
   }
 
   it('valores por defecto', () => {

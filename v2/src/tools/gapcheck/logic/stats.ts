@@ -1,6 +1,6 @@
 import type { GapPoint, KpiTexts } from './types'
 
-const EMPTY_KPIS: KpiTexts = { totalRecords: '0', avg: '0', min: '0', max: '0', meeting: '0 / 0' }
+const emptyKpis = (): KpiTexts => ({ totalRecords: '0', avg: '0', min: '0', max: '0', meeting: '0 / 0' })
 
 export function computeStats(
   points: readonly GapPoint[],
@@ -16,7 +16,7 @@ export function computeStats(
     })
   })
 
-  if (values.length === 0) return EMPTY_KPIS
+  if (values.length === 0) return emptyKpis()
   const avg = values.reduce((a, b) => a + b, 0) / values.length
   const meetingCount = values.filter((v) => v <= target).length
   return {
