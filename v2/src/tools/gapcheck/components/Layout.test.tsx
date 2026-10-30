@@ -187,6 +187,51 @@ test('arrastre con pointer events: % relativos a la imagen, sin salto y limitado
   expect(api.getState().layout.markers[0]).toEqual({ pointIndex: 0, x: 100, y: 0 })
 })
 
+test('la imagen que no se puede decodificar avisa y se quita', () => {
+  setup()
+  loadPoints()
+  pick(imageFile())
+  fireEvent.error(screen.getByRole('img', { name: 'Gapcheck Layout' }))
+  expect(toastMessages()).toEqual(['No se pudo mostrar la imagen'])
+  expect(api.getState().layout.image).toBeNull()
+  expect(api.getState().layout.imageName).toBeNull()
+  expect(screen.getByTestId('gc-layout-input')).toBeInTheDocument()
+})
+
+test('aviso de imagen no decodificable en inglés', () => {
+  localStorage.setItem('cjlb.lang', 'en')
+  __resetI18nForTests()
+  setup()
+  loadPoints()
+  pick(imageFile())
+  fireEvent.error(screen.getByRole('img', { name: 'Gapcheck Layout' }))
+  expect(toastMessages()).toEqual(['The image could not be displayed'])
+})
+
+test('perder la captura del puntero cierra el arrastre y guarda la posición', () => {
+  setup()
+  loadPoints()
+  pick(imageFile())
+  mockRect(screen.getByTestId('gc-layout-overlay'), { left: 0, top: 0, width: 400, height: 200 })
+  const m = screen.getByTestId('gc-marker-0')
+  fireEvent.pointerDown(m, { pointerId: 1, clientX: 200, clientY: 100, button: 0 })
+  fireEvent.pointerMove(m, { pointerId: 1, clientX: 340, clientY: 140 })
+  fireEvent(m, new Event('lostpointercapture', { bubbles: true }))
+  expect(m.className).not.toContain('gc-marker--dragging')
+  expect(api.getState().layout.markers[0]).toMatchObject({ x: 50, y: 50 })
+})
+
+test('accesibilidad: marcadores descritos por las instrucciones; emoji del título oculto', () => {
+  setup()
+  loadPoints()
+  pick(imageFile())
+  const hint = screen.getByText('Arrastra los puntos de medición para ubicarlos en el diagrama')
+  expect(hint.id).toBeTruthy()
+  expect(screen.getByTestId('gc-marker-0')).toHaveAttribute('aria-describedby', hint.id)
+  expect(screen.getByRole('button', { name: /Gapcheck Layout/ }).textContent).toContain('📐')
+  expect(document.querySelector('#gc-layout-title [aria-hidden="true"]:not(:first-child)')).not.toBeNull()
+})
+
 test('teclado: flechas mueven el marcador 1% (Shift 5%)', () => {
   setup()
   loadPoints()

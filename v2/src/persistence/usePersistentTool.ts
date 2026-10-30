@@ -102,9 +102,15 @@ export function usePersistentTool<S>(toolId: ToolId, adapter: PersistAdapter<S>)
       }
     })()
 
+    // avisa una vez por estado con archivos omitidos; se rearma cuando un guardado ya no omite nada
+    let warnedLargeFiles = false
     const persist = async (data: S) => {
       const meta = await saveSnapshot(uid, toolId, data)
-      if (meta.skippedLargeFiles) toast('warn', tRef.current('persist.largeFilesSkipped'))
+      if (!meta.skippedLargeFiles) warnedLargeFiles = false
+      else if (!warnedLargeFiles) {
+        warnedLargeFiles = true
+        toast('warn', tRef.current('persist.largeFilesSkipped'))
+      }
       if (active) setLastSavedAt(meta.savedAt)
     }
 

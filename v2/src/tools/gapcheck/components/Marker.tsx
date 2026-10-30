@@ -18,6 +18,8 @@ interface Props {
   y: number
   size: number
   disabled?: boolean
+  /** id del texto de instrucciones que describe al marcador. */
+  describedBy?: string
   /** Rectángulo de la imagen mostrada (las posiciones son % de él, Ruling R4). */
   getImageRect: () => DOMRect | null
   onMove: (x: number, y: number) => void
@@ -35,7 +37,7 @@ export const markerBoxStyle = (size: number) => ({
  * Marcador arrastrable centrado en su punto (translate(-50%,-50%) igual que las cuentas),
  * así no salta al agarrarlo (bug (a) del inventario §8).
  */
-export function Marker({ index, name, color, x, y, size, disabled = false, getImageRect, onMove }: Props) {
+export function Marker({ index, name, color, x, y, size, disabled = false, describedBy, getImageRect, onMove }: Props) {
   const [drag, setDrag] = useState<Pos | null>(null)
   const grab = useRef<Pos>({ x: 0, y: 0 })
   const last = useRef<Pos | null>(null)
@@ -83,6 +85,15 @@ export function Marker({ index, name, color, x, y, size, disabled = false, getIm
     onMove(p.x, p.y)
   }
 
+  // el navegador retiró la captura (p. ej. el elemento se desmontó o cambió el DOM): cierra con la última posición
+  const onLostCapture = () => {
+    if (!last.current) return
+    const p = last.current
+    last.current = null
+    setDrag(null)
+    onMove(p.x, p.y)
+  }
+
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return
     const step = e.shiftKey ? KEY_STEP_FAST : KEY_STEP
@@ -105,6 +116,7 @@ export function Marker({ index, name, color, x, y, size, disabled = false, getIm
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled || undefined}
       aria-label={name}
+      aria-describedby={describedBy}
       data-testid={`gc-marker-${index}`}
       className={`gc-marker${drag ? ' gc-marker--dragging' : ''}`}
       style={{ left: `${pos.x}%`, top: `${pos.y}%`, backgroundColor: color, ...markerBoxStyle(size) }}
@@ -112,6 +124,7 @@ export function Marker({ index, name, color, x, y, size, disabled = false, getIm
       onPointerMove={onPointerMove}
       onPointerUp={finish}
       onPointerCancel={finish}
+      onLostPointerCapture={onLostCapture}
       onKeyDown={onKeyDown}
     >
       {name}

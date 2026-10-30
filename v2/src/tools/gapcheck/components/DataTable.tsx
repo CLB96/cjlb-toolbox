@@ -35,10 +35,11 @@ export function DataTable() {
           type="button"
           className="gc-table-toggle"
           aria-expanded={tableOpen}
-          aria-controls="gc-table-body"
+          aria-controls={tableOpen ? 'gc-table-body' : undefined}
           onClick={() => api.getState().setTableOpen(!tableOpen)}
         >
-          <span aria-hidden="true">{tableOpen ? '▾' : '▸'}</span> 📋 {t('table')}
+          <span aria-hidden="true">{tableOpen ? '▾' : '▸'}</span>{' '}
+          <span aria-hidden="true">📋</span> {t('table')}
         </button>
       </h2>
       {tableOpen && (

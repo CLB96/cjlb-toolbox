@@ -274,3 +274,34 @@ test('startFresh de otro uid no toca la herramienta montada', async () => {
   expect(ad.reset).not.toHaveBeenCalled()
   expect(await consumeFreshStart('u2', 'gantt')).toBe(true)
 })
+
+function bigBlob() {
+  const b = new Blob(['x'])
+  Object.defineProperty(b, 'size', { value: 20 * 1024 * 1024 + 1 })
+  return b
+}
+
+test('aviso de archivo grande: una sola vez por estado omitido, otra vez tras un guardado sin omitir', async () => {
+  const ad = statefulAdapter<{ v: number; big: Blob | null }>({ v: 0, big: null })
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.restored).toBe(true))
+  const warns = () => useToasts.getState().toasts.filter((t) => t.kind === 'warn').length
+  const save = async () => {
+    act(() => result.current.markDirty())
+    await act(async () => {
+      await result.current.flush()
+    })
+  }
+  ad.box.state = { v: 1, big: bigBlob() }
+  await save()
+  expect(warns()).toBe(1)
+  ad.box.state = { v: 2, big: ad.box.state.big }
+  await save()
+  await save()
+  expect(warns()).toBe(1)
+  ad.box.state = { v: 3, big: null }
+  await save()
+  ad.box.state = { v: 4, big: bigBlob() }
+  await save()
+  expect(warns()).toBe(2)
+})

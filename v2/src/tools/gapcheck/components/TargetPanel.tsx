@@ -44,7 +44,7 @@ export function TargetPanel({ disabled }: { disabled: boolean }) {
   return (
     <GlassPanel as="section" className="gc-card gc-target" aria-labelledby="gc-target-title">
       <h2 id="gc-target-title" className="gc-card__title">
-        🎯 {t('targets')}
+        <span aria-hidden="true">🎯</span> {t('targets')}
       </h2>
       <div className="gc-sub" id="gc-covering-type">
         {STATIC_TEXTS.coveringType}

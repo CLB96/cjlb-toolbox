@@ -105,6 +105,36 @@ describe('computeStats ≡ legacyStats', () => {
   })
 })
 
+describe('archivos muy grandes', () => {
+  const N = 200_000
+  const values = Array.from({ length: N }, (_, i) => ((i * 7919) % 1000) / 100)
+
+  it('computeStats no lanza con ~200k valores y da min/max/avg correctos', () => {
+    const points: GapPoint[] = [{ name: 'A', values }]
+    const vp = new Set([0])
+    const vi = new Set(values.map((_, i) => i))
+    const out = computeStats(points, vp, vi, 5)
+    expect(out.min).toBe('0')
+    expect(out.max).toBe('9.99')
+    expect(out.meeting.endsWith(` / ${N}`)).toBe(true)
+  })
+
+  it('mismos valores que el original sobre un trozo pequeño del mismo conjunto', () => {
+    const slice = values.slice(0, 500)
+    const points: GapPoint[] = [{ name: 'A', values: slice }]
+    const vp = new Set([0])
+    const vi = new Set(slice.map((_, i) => i))
+    expect(computeStats(points, vp, vi, 5)).toEqual(legacyStats(points, vp, vi, 5))
+  })
+
+  it('parseRows no lanza con ~200k filas', () => {
+    const rows: unknown[][] = [['A', 'B'], ...values.map((v) => [v, v])]
+    const got = parseRows(rows)
+    expect(got?.maxIter).toBe(N)
+    expect(got?.points).toHaveLength(2)
+  })
+})
+
 describe('computeTarget ≡ legacyComputeGapCheck', () => {
   for (const covering of COVERINGS) {
     for (const a of GRID) {

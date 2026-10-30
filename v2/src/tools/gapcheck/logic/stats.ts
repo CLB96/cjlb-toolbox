@@ -17,13 +17,23 @@ export function computeStats(
   })
 
   if (values.length === 0) return emptyKpis()
-  const avg = values.reduce((a, b) => a + b, 0) / values.length
-  const meetingCount = values.filter((v) => v <= target).length
+  // bucle en vez de Math.min(...values): el spread revienta la pila con cientos de miles de valores
+  let sum = 0
+  let min = values[0]
+  let max = values[0]
+  let meetingCount = 0
+  for (const v of values) {
+    sum += v
+    if (v < min) min = v
+    if (v > max) max = v
+    if (v <= target) meetingCount++
+  }
+  const avg = sum / values.length
   return {
     totalRecords: String(visiblePoints.size),
     avg: avg.toFixed(2),
-    min: String(Math.min(...values)),
-    max: String(Math.max(...values)),
+    min: String(min),
+    max: String(max),
     meeting: `${meetingCount} / ${values.length}`,
   }
 }

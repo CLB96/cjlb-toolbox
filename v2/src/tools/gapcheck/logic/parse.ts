@@ -21,7 +21,8 @@ export function parseRows(
   const firstRow: unknown[] = rows[0] || []
   const hasHeaders = firstRow.some(isHeaderCell)
   const dataStart = hasHeaders ? 1 : 0
-  const numCols = Math.max(...rows.map((r) => (r || []).length))
+  let numCols = 0
+  for (const r of rows) numCols = Math.max(numCols, (r || []).length)
 
   const points: GapPoint[] = []
   for (let col = 0; col < numCols; col++) {
@@ -40,5 +41,7 @@ export function parseRows(
   }
 
   if (points.length === 0) return null
-  return { points, maxIter: Math.max(...points.map((p) => p.values.length)) }
+  let maxIter = 0
+  for (const p of points) maxIter = Math.max(maxIter, p.values.length)
+  return { points, maxIter }
 }

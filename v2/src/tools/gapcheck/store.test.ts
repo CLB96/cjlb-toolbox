@@ -112,6 +112,20 @@ describe('filtros, comparación y layout', () => {
     expect(act().tableOpen).toBe(true)
   })
 
+  it('volver a poner una imagen tras quitarse la anterior conserva las posiciones guardadas', () => {
+    act().setLayoutImage(null, null)
+    act().loadRows('a.xlsx', FIXTURES.header)
+    act().setLayoutImage(new Blob(['x']), 'i.png')
+    act().moveMarker(0, 12, 34)
+    // snapshot con la imagen grande omitida (>20 MB): image null pero marcadores guardados
+    restoreInto(api, { ...getGapcheckSnapshot(), layout: { ...act().layout, image: null } })
+    act().setLayoutImage(new Blob(['y']), 'otra.png')
+    expect(act().layout.markers.find((m) => m.pointIndex === 0)).toMatchObject({ x: 12, y: 34 })
+    // con otra imagen ya presente sí se recolocan (original)
+    act().setLayoutImage(new Blob(['z']), 'z.png')
+    expect(act().layout.markers.find((m) => m.pointIndex === 0)).not.toMatchObject({ x: 12, y: 34 })
+  })
+
   it('reset vuelve al estado inicial', () => {
     act().setInput('pct', '60')
     act().reset()

@@ -28,7 +28,7 @@ export function EmptyState({ disabled, onFile }: Props) {
   return (
     <GlassPanel as="section" className="gc-card gc-empty" aria-labelledby="gc-import-title">
       <h2 id="gc-import-title" className="gc-card__title">
-        📁 {t('importData')}
+        <span aria-hidden="true">📁</span> {t('importData')}
       </h2>
       <p className="gc-muted">{t('uploadSubtitle')}</p>
       <label

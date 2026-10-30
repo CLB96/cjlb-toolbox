@@ -59,6 +59,7 @@ export function Layout({ disabled }: { disabled: boolean }) {
   const [over, setOver] = useState(false)
   const overlay = useRef<HTMLDivElement>(null)
   const sliderId = useId()
+  const hintId = useId()
   const { points, image, imageName, markers, markerSize } = useGapcheck(
     useShallow((s) => ({
       points: s.points,
@@ -76,7 +77,7 @@ export function Layout({ disabled }: { disabled: boolean }) {
       toast('error', t('selectImage'))
       return
     }
-    // >20 MB: la persistencia avisa una sola vez al autoguardar (persist.largeFilesSkipped)
+    // >20 MB: la persistencia avisa una vez por estado al autoguardar (persist.largeFilesSkipped)
     api.getState().setLayoutImage(file, file.name)
   }
 
@@ -85,6 +86,11 @@ export function Layout({ disabled }: { disabled: boolean }) {
     setOver(false)
     const file = e.dataTransfer.files?.[0]
     if (file) onFile(file)
+  }
+
+  const onImageError = () => {
+    toast('error', t('imageLoadFailed'))
+    api.getState().setLayoutImage(null, null)
   }
 
   const getImageRect = () => overlay.current?.getBoundingClientRect() ?? null
@@ -99,7 +105,8 @@ export function Layout({ disabled }: { disabled: boolean }) {
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
-          <span aria-hidden="true">{open ? '▾' : '▸'}</span> 📐 {t('gapLayout')}
+          <span aria-hidden="true">{open ? '▾' : '▸'}</span>{' '}
+          <span aria-hidden="true">📐</span> {t('gapLayout')}
         </button>
       </h2>
       {open && (
@@ -153,10 +160,10 @@ export function Layout({ disabled }: { disabled: boolean }) {
                   <ImageInput disabled={disabled} testId="gc-layout-change" onFile={onFile} />
                 </label>
               </div>
-              <p className="gc-layout__hint">{t('gapLayoutInstructions')}</p>
+              <p id={hintId} className="gc-layout__hint">{t('gapLayoutInstructions')}</p>
               <div className="gc-layout__scroll">
                 <div className="gc-layout__stage">
-                  {url && <img className="gc-layout__img" src={url} alt="Gapcheck Layout" draggable={false} />}
+                  {url && <img className="gc-layout__img" src={url} alt="Gapcheck Layout" draggable={false} onError={onImageError} />}
                   <div ref={overlay} className="gc-layout__overlay" data-testid="gc-layout-overlay">
                     {markers.map((m) => (
                       <Marker
@@ -168,6 +175,7 @@ export function Layout({ disabled }: { disabled: boolean }) {
                         y={m.y}
                         size={markerSize}
                         disabled={disabled}
+                        describedBy={hintId}
                         getImageRect={getImageRect}
                         onMove={moveMarker(m.pointIndex)}
                       />

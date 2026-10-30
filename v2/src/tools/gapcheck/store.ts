@@ -100,56 +100,62 @@ export type GapcheckApi = StoreApi<GapcheckStore>
 /** Un store por instancia de la herramienta: no comparte estado entre usuarios. */
 export const createGapcheckStore = (): GapcheckApi =>
   createStore<GapcheckStore>()((set, get) => ({
-  ...initialData(),
+    ...initialData(),
 
-  loadRows(fileName, rows) {
-    const parsed = parseRows(rows)
-    if (!parsed) return false
-    const { layout, covering, inputs } = get()
-    set({
-      fileName,
-      points: parsed.points,
-      maxIter: parsed.maxIter,
-      visiblePoints: range(parsed.points.length),
-      visibleIters: range(parsed.maxIter),
-      ...comparisonOf({ covering, inputs }),
-      layout: layout.image
-        ? { ...layout, markers: markersFor(parsed.points.length) }
-        : layout,
-    })
-    return true
-  },
+    loadRows(fileName, rows) {
+      const parsed = parseRows(rows)
+      if (!parsed) return false
+      const { layout, covering, inputs } = get()
+      set({
+        fileName,
+        points: parsed.points,
+        maxIter: parsed.maxIter,
+        visiblePoints: range(parsed.points.length),
+        visibleIters: range(parsed.maxIter),
+        ...comparisonOf({ covering, inputs }),
+        layout: layout.image
+          ? { ...layout, markers: markersFor(parsed.points.length) }
+          : layout,
+      })
+      return true
+    },
 
-  togglePoint: (i) => set((s) => ({ visiblePoints: toggled(s.visiblePoints, i) })),
-  toggleIter: (j) => set((s) => ({ visibleIters: toggled(s.visibleIters, j) })),
-  setCovering: (covering) => set({ covering }),
-  setInput: (key, value) => set((s) => ({ inputs: { ...s.inputs, [key]: value } })),
-  applyComparison: () => set((s) => comparisonOf(s)),
-  setTableOpen: (tableOpen) => set({ tableOpen }),
+    togglePoint: (i) => set((s) => ({ visiblePoints: toggled(s.visiblePoints, i) })),
+    toggleIter: (j) => set((s) => ({ visibleIters: toggled(s.visibleIters, j) })),
+    setCovering: (covering) => set({ covering }),
+    setInput: (key, value) => set((s) => ({ inputs: { ...s.inputs, [key]: value } })),
+    applyComparison: () => set((s) => comparisonOf(s)),
+    setTableOpen: (tableOpen) => set({ tableOpen }),
 
-  setLayoutImage(image, imageName) {
-    set((s) => ({
-      layout: {
-        ...s.layout,
-        image,
-        imageName,
-        markers: image && s.points.length > 0 ? markersFor(s.points.length) : s.layout.markers,
-      },
-    }))
-  },
+    setLayoutImage(image, imageName) {
+      set((s) => {
+        // sin imagen (p. ej. una de >20 MB omitida al restaurar) pero con marcadores guardados: se conservan
+        const keepSaved =
+          s.layout.image === null && s.layout.markers.length === s.points.length
+        const recolocate = image !== null && s.points.length > 0 && !keepSaved
+        return {
+          layout: {
+            ...s.layout,
+            image,
+            imageName,
+            markers: recolocate ? markersFor(s.points.length) : s.layout.markers,
+          },
+        }
+      })
+    },
 
-  moveMarker: (pointIndex, x, y) =>
-    set((s) => ({
-      layout: {
-        ...s.layout,
-        markers: s.layout.markers.map((m) => (m.pointIndex === pointIndex ? { ...m, x, y } : m)),
-      },
-    })),
+    moveMarker: (pointIndex, x, y) =>
+      set((s) => ({
+        layout: {
+          ...s.layout,
+          markers: s.layout.markers.map((m) => (m.pointIndex === pointIndex ? { ...m, x, y } : m)),
+        },
+      })),
 
-  setMarkerSize: (markerSize) => set((s) => ({ layout: { ...s.layout, markerSize } })),
+    setMarkerSize: (markerSize) => set((s) => ({ layout: { ...s.layout, markerSize } })),
 
-  reset: () => set(initialData()),
-}))
+    reset: () => set(initialData()),
+  }))
 
 export const selectKpis = (s: GapcheckState): KpiTexts =>
   computeStats(s.points, new Set(s.visiblePoints), new Set(s.visibleIters), s.appliedTarget)
