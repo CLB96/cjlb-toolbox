@@ -1,11 +1,5 @@
 import * as XLSX from 'xlsx'
 
-/** Textos del aviso de error de lectura; Task 4 los mueve al diccionario (clave `importFailed`). */
-export const IMPORT_FAILED_TEXT = {
-  es: 'No se pudo leer el archivo',
-  en: 'The file could not be read',
-} as const
-
 function readBuffer(file: File): Promise<ArrayBuffer> {
   if (typeof file.arrayBuffer === 'function') return file.arrayBuffer()
   return new Promise((resolve, reject) => {

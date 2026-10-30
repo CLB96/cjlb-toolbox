@@ -4,6 +4,11 @@ import type { ToolDef } from './types'
 
 const loadPlaceholder = () => import('./Placeholder')
 
+/** Herramientas ya portadas; el resto sigue en Placeholder. */
+const LOADERS: Partial<Record<ToolId, ToolDef['load']>> = {
+  gapcheck: () => import('./gapcheck/GapcheckTool'),
+}
+
 export const TOOLS: ToolDef[] = data.tools
   .filter((t) => isToolId(t.id))
   .map((t) => ({
@@ -18,7 +23,7 @@ export const TOOLS: ToolDef[] = data.tools
     holdLabelEs: t.holdLabelEs,
     holdLabelEn: t.holdLabelEn,
     url: t.url,
-    load: loadPlaceholder,
+    load: LOADERS[t.id as ToolId] ?? loadPlaceholder,
   }))
 
 export function getTool(id: ToolId): ToolDef {
