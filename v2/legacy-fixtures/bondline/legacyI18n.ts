@@ -1,3 +1,4 @@
+// @ts-nocheck -- copia literal del original: los parámetros de las plantillas no se tipan
 // Copia literal de I18N, EVENTS_CONFIG y EVENTS_LABELS del original (bondline/index.html).
 //   I18N          <- líneas 731-970
 //   EVENTS_CONFIG <- líneas 1239-1255
