@@ -11,7 +11,7 @@ export const BONDLINE_DEFAULTS_KEY = 'bondline.defaults'
 export interface BondlineDefaultsApi {
   defaults: BondlineDefaults
   loaded: boolean
-  /** Resuelven true si se guardó; false si falló (ya se avisó con un toast). */
+  /** Resuelven true si se guardÃ³; false si fallÃ³ (ya se avisÃ³ con un toast). */
   save(form: DefaultsForm): Promise<boolean>
   resetToFactory(): Promise<boolean>
 }
@@ -45,9 +45,9 @@ export function useBondlineDefaults(): BondlineDefaultsApi {
 
   const persist = useCallback(
     async (next: BondlineDefaults): Promise<boolean> => {
-      writesRef.current += 1
       try {
         await savePreference(uid, BONDLINE_DEFAULTS_KEY, next)
+        writesRef.current += 1
         if (uidRef.current === uid) setState({ uid, defaults: next })
         return true
       } catch {
