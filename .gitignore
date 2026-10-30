@@ -3,3 +3,7 @@
 Thumbs.db
 _build-landing.ps1
 .superpowers/
+v2/node_modules/
+v2/dist/
+v2/.env.local
+v2/legacy-fixtures/private/
