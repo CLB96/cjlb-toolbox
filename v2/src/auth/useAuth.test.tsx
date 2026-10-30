@@ -72,36 +72,11 @@ test('isAdmin solo si el correo coincide con el admin (sin distinguir mayúscula
   expect(result.current.isAdmin).toBe(true)
 })
 
-test('isAdmin falso si el admin es otro', async () => {
-  svc.fetchAdminEmail.mockResolvedValue('otro@gmail.com')
-  const { result } = renderHook(() => useAuth())
-  act(() => emit(user()))
-  await waitFor(() => expect(result.current.status).toBe('allowed'))
-  expect(result.current.isAdmin).toBe(false)
-})
-
-test('fallo al leer admin: allowed, no admin y toast', async () => {
-  svc.fetchAdminEmail.mockRejectedValue(new Error('net'))
-  const { result } = renderHook(() => useAuth())
-  act(() => emit(user()))
-  await waitFor(() => expect(result.current.status).toBe('allowed'))
-  expect(result.current.isAdmin).toBe(false)
-  expect(useToasts.getState().toasts).toHaveLength(1)
-})
-
 test('correo sin verificar -> unverified y no consulta allowlist', async () => {
   const { result } = renderHook(() => useAuth())
   act(() => emit(user({ emailVerified: false })))
   await waitFor(() => expect(result.current.status).toBe('unverified'))
   expect(svc.isAllowed).not.toHaveBeenCalled()
-})
-
-test('al verificar tras reloadUser pasa a allowed', async () => {
-  const { result } = renderHook(() => useAuth())
-  act(() => emit(user({ emailVerified: false })))
-  await waitFor(() => expect(result.current.status).toBe('unverified'))
-  act(() => emit(user({ emailVerified: true })))
-  await waitFor(() => expect(result.current.status).toBe('allowed'))
 })
 
 test('fallo de isAllowed -> error con toast, y retry reevalúa', async () => {

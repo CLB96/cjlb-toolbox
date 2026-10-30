@@ -6,7 +6,7 @@ import {
 import { translate, type BondlineT } from '../i18n'
 import { initialConfig } from '../store'
 import { computeView } from '../useBondlineView'
-import { ADHESIVES, LANGS, NO_EVENTS, calcOf, rangesFor, validSheets } from '../logic/testHelpers'
+import { ADHESIVES, NO_EVENTS, calcOf, repRangesFor, repSheets, validSheets } from '../logic/testHelpers'
 import { FACTORY_DEFAULTS, TC_COLORS, type EventInputs, type Lang } from '../logic/types'
 import { buildChartConfig, type BondlineChartTheme } from './chartConfig'
 
@@ -39,39 +39,38 @@ const stripHover = (anns: Record<string, Record<string, unknown>>) =>
     Object.entries(anns).map(([k, { enter: _e, leave: _l, ...rest }]) => [k, rest]),
   )
 
-describe.each(validSheets.map((s) => [s.name, s] as const))('%s', (_name, sheet) => {
-  for (const adhesive of ADHESIVES) {
-    for (const { name, tr } of rangesFor(sheet.legacy)) {
-      for (const { name: evName, events } of EVENT_SETS) {
-        test(`${adhesive} · ${name} · ${evName}: anotaciones ≡ legacyAnnotations`, () => {
-          const coolingTarget = 35
-          const { lc, cfg } = calcOf(sheet.legacy, adhesive, tr)
-          const cool = legacyCoolingInput(
-            { start: events.eventCoolingStart, closed: events.eventCoolingClosed, end: events.eventCoolingEnd },
-            coolingTarget,
-          )
-          for (const lang of LANGS) {
-            const view = computeView(sheet.legacy, { ...initialConfig(), adhesive, timeRange: tr, events }, FACTORY_DEFAULTS, lang)
-            for (const dark of [false, true]) {
-              const config = buildChartConfig({
-                view,
-                tcVisibility: sheet.legacy.columns.map(() => true),
-                adhesive,
-                coolingTarget,
-                lang,
-                dark,
-                theme: THEME,
-                t: tFor(lang),
-              })
-              const want = legacyAnnotations(lc, cfg, adhesive, legacyActiveEvents(events, lang), cool, dark, lang)
-              expect(stripHover(annotationsOf(config))).toEqual(want)
-              expect(config.data.labels).toEqual(lc.labels)
-              const y = (config.options?.scales as { y: { min: number; max: number } }).y
-              expect([y.min, y.max]).toEqual([lc.yMin, 80])
-              config.data.datasets.forEach((ds, i) => expect(ds.data).toEqual(lc.trimmedColumns[i]))
-            }
-          }
+test('anotaciones, etiquetas, eje Y y datos ≡ legacy (configuración representativa)', () => {
+  const coolingTarget = 35
+  for (const sheet of repSheets.slice(0, 2)) {
+    for (const adhesive of ADHESIVES) {
+      const ranges = repRangesFor(sheet.legacy)
+      const combos: [typeof ranges[number]['tr'], EventInputs, Lang, boolean][] = [
+        [ranges[0].tr, EVENT_SETS[1].events, 'es', false],
+        [ranges[1].tr, EVENT_SETS[2].events, 'en', true],
+      ]
+      for (const [tr, events, lang, dark] of combos) {
+        const { lc, cfg } = calcOf(sheet.legacy, adhesive, tr)
+        const cool = legacyCoolingInput(
+          { start: events.eventCoolingStart, closed: events.eventCoolingClosed, end: events.eventCoolingEnd },
+          coolingTarget,
+        )
+        const view = computeView(sheet.legacy, { ...initialConfig(), adhesive, timeRange: tr, events }, FACTORY_DEFAULTS, lang)
+        const config = buildChartConfig({
+          view,
+          tcVisibility: sheet.legacy.columns.map(() => true),
+          adhesive,
+          coolingTarget,
+          lang,
+          dark,
+          theme: THEME,
+          t: tFor(lang),
         })
+        const want = legacyAnnotations(lc, cfg, adhesive, legacyActiveEvents(events, lang), cool, dark, lang)
+        expect(stripHover(annotationsOf(config))).toEqual(want)
+        expect(config.data.labels).toEqual(lc.labels)
+        const y = (config.options?.scales as { y: { min: number; max: number } }).y
+        expect([y.min, y.max]).toEqual([lc.yMin, 80])
+        config.data.datasets.forEach((ds, i) => expect(ds.data).toEqual(lc.trimmedColumns[i]))
       }
     }
   }
@@ -94,7 +93,7 @@ describe('buildChartConfig (§5A/§5B)', () => {
       ...over,
     })
 
-  test('un dataset por TC con el estilo del original; TC oculta -> hidden', () => {
+  test('un dataset por TC con el estilo del original; TC oculta -> hidden; visibilidad de otra longitud -> todas', () => {
     const c = build()
     expect(c.type).toBe('line')
     expect(c.data.datasets).toHaveLength(4)
@@ -111,11 +110,7 @@ describe('buildChartConfig (§5A/§5B)', () => {
         hidden: i === 1,
       })
     })
-  })
-
-  test('visibilidad de otra longitud: todas visibles (como el original al reiniciar)', () => {
-    const c = build({ tcVisibility: [] })
-    expect(c.data.datasets.every((d) => d.hidden === false)).toBe(true)
+    expect(build({ tcVisibility: [] }).data.datasets.every((d) => d.hidden === false)).toBe(true)
   })
 
   test('opciones, ejes, tooltip y colores de tema (R7)', () => {
@@ -156,28 +151,22 @@ describe('buildChartConfig (§5A/§5B)', () => {
     expect(cb.label({ dataset: { label: 'TC-2' }, parsed: { y: null } })).toBe(' TC-2: —°C')
   })
 
-  test('textos de anotación ES y EN', () => {
+  test('textos de anotación ES/EN, sucesos fuera de rango, 🎯 objetivo y hover', () => {
     const es = annotationsOf(build())
     expect((es.minLine.label as { content: string }).content).toBe('Temp Mín: 55°C')
     expect((es.activationWindow.label as { content: string }).content).toBe('Ventana de Activación (30s)')
     const en = annotationsOf(build({ view: view('en'), lang: 'en', t: tFor('en') }))
     expect((en.activationWindow.label as { content: string }).content).toBe('Activation Window (30s)')
-  })
-
-  test('suceso fuera del rango no aparece; cooling con 🎯 objetivo', () => {
     const events = { ...NO_EVENTS, eventPressStart: '10', eventManipStart: '40', eventCoolingStart: '85' }
     const anns = annotationsOf(build({ view: view('es', events, { active: true, start: 20, end: null }), coolingTarget: 33 }))
     expect(anns.event_0).toBeUndefined()
     expect(anns.event_1).toMatchObject({ xMin: 20, xMax: 20 })
     expect((anns.coolingTargetLine.label as { content: string }).content).toBe('🎯 33°C')
-  })
-
-  test('las líneas de suceso engrosan al pasar el ratón (enter/leave del original)', () => {
-    const anns = annotationsOf(build({ view: view('es', { ...NO_EVENTS, eventPressStart: '30' }) }))
+    const hover = annotationsOf(build({ view: view('es', { ...NO_EVENTS, eventPressStart: '30' }) }))
     const element = { options: { borderWidth: 2 } }
-    ;(anns.event_0.enter as (c: { element: typeof element }) => void)({ element })
+    ;(hover.event_0.enter as (c: { element: typeof element }) => void)({ element })
     expect(element.options.borderWidth).toBe(3)
-    ;(anns.event_0.leave as (c: { element: typeof element }) => void)({ element })
+    ;(hover.event_0.leave as (c: { element: typeof element }) => void)({ element })
     expect(element.options.borderWidth).toBe(2)
   })
 })

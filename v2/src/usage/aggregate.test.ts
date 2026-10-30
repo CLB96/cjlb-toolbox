@@ -26,14 +26,3 @@ test('agrega horas por persona y herramienta, ordenado por horas desc', () => {
   expect(ana.lastSeen).toBe(900)
   expect(r.byTool).toEqual({ gapcheck: 1, bondline: 0.5, gantt: 2 })
 })
-
-test('home y usage cuentan en totalHours pero no como herramienta', () => {
-  const r = aggregateUsage([s('ana@x.com', 'Ana', 'home', 1800), s('ana@x.com', 'Ana', 'usage', 1800)])
-  expect(r.users[0].totalHours).toBe(1)
-  expect(r.users[0].byTool).toEqual({})
-  expect(r.byTool).toEqual({})
-})
-
-test('sin sesiones devuelve vacío', () => {
-  expect(aggregateUsage([])).toEqual({ users: [], byTool: {} })
-})

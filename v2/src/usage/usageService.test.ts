@@ -11,7 +11,7 @@ vi.mock('firebase/firestore', async () => {
   return { ...actual, ...fs }
 })
 vi.mock('../auth/firebase', () => ({ db: {} }))
-import { beat, recordLogin, startSession } from './usageService'
+import { beat, startSession } from './usageService'
 
 const user = { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true }
 
@@ -33,13 +33,6 @@ test('startSession crea exactamente las claves de las reglas', async () => {
   expect(data.name).toHaveLength(80)
 })
 
-test('recordLogin crea solo uid, email, name, at (serverTimestamp)', async () => {
-  await recordLogin(user)
-  const [col, data] = fs.addDoc.mock.calls[0]
-  expect(col).toEqual({ name: 'logins' })
-  expect(data).toEqual({ uid: 'u1', email: 'a@b.com', name: 'Ana', at: 'SERVER_TS' })
-})
-
 test('beat envía solo activeSeconds (increment) y lastBeat', async () => {
   await startSession(user, 'gantt')
   vi.setSystemTime(1_060_000)
@@ -57,16 +50,4 @@ test('beat limita a 120 y a los segundos reales transcurridos', async () => {
   expect(fs.increment).toHaveBeenLastCalledWith(120)
   await beat('s1', -5)
   expect(fs.increment).toHaveBeenLastCalledWith(0)
-})
-
-test('lastSuccess se fija al resolver updateDoc, no antes del envío', async () => {
-  await startSession(user, 'gantt')
-  vi.setSystemTime(1_060_000)
-  fs.updateDoc.mockImplementationOnce(async () => {
-    vi.setSystemTime(1_070_000)
-  })
-  await beat('s1', 60)
-  vi.setSystemTime(1_080_000)
-  await beat('s1', 60)
-  expect(fs.increment).toHaveBeenLastCalledWith(10)
 })

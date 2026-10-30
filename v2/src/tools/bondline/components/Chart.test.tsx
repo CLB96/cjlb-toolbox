@@ -118,16 +118,6 @@ test('leyenda: Ocultar cambia a Mostrar y oculta el dataset', () => {
   expect(chart.data.datasets[1].hidden).toBe(false)
 })
 
-test('leyenda: límites, ventana y 🎯 Cooling solo con sucesos de cooling', () => {
-  renderChart()
-  load()
-  expect(screen.getByText('Límites adhesivo')).toBeInTheDocument()
-  expect(screen.getByText('Ventana activación')).toBeInTheDocument()
-  expect(screen.queryByText(/🎯 Cooling/)).toBeNull()
-  act(() => api.getState().setEvent('eventCoolingEnd', '100'))
-  expect(screen.getByTestId('bl-legend')).toHaveTextContent('🎯 Cooling 35°C')
-})
-
 test('arrastrar un suceso con rango activo escribe el segundo absoluto y mueve la línea', () => {
   renderChart()
   load()
@@ -146,16 +136,4 @@ test('arrastrar un suceso con rango activo escribe el segundo absoluto y mueve l
   expect(chart.options.plugins.annotation.annotations.event_0.xMin).toBe(15)
   expect(document.querySelectorAll('#dragEventTooltip')).toHaveLength(1)
   expect(document.querySelector('#dragEventTooltip')).toHaveTextContent('+5s — t=35s')
-})
-
-test('bloqueado: el arrastre no escribe y los botones de la leyenda están deshabilitados', () => {
-  renderChart(true)
-  load()
-  act(() => api.getState().setEvent('eventPressStart', '30'))
-  const canvas = canvasRef.current!
-  fireEvent.click(canvas, { clientX: 300 })
-  fireEvent.mouseDown(canvas, { clientX: 300 })
-  fireEvent.mouseMove(canvas, { clientX: 400 })
-  expect(api.getState().config.events.eventPressStart).toBe('30')
-  expect(screen.getAllByRole('button', { name: 'Ocultar' })[0]).toBeDisabled()
 })

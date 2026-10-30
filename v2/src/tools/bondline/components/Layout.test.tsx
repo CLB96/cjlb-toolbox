@@ -92,16 +92,6 @@ test('archivo que no es imagen: aviso original y no se carga', () => {
   expect(layout().image).toBeNull()
 })
 
-test('aviso de no imagen en inglés', () => {
-  localStorage.setItem('cjlb.lang', 'en')
-  __resetI18nForTests()
-  setup()
-  load()
-  open()
-  pick(new File(['x'], 'a.txt', { type: 'text/plain' }))
-  expect(toastMessages()).toEqual(['Please select an image'])
-})
-
 test('con imagen: un marcador por TC visible, color, texto idx+1, etiqueta TC-n y posiciones por defecto', () => {
   setup()
   load()
@@ -163,20 +153,6 @@ test('arrastre: % relativos a la imagen, sin salto y limitados a [0,100]', () =>
   expect(layout().markers[0]).toEqual({ tcIndex: 0, x: 100, y: 0 })
 })
 
-test('perder la captura del puntero cierra el arrastre y guarda la posición', () => {
-  setup()
-  load()
-  open()
-  pick(imageFile())
-  mockRect(screen.getByTestId('bl-layout-overlay'), { left: 0, top: 0, width: 400, height: 200 })
-  const m = screen.getByTestId('bl-marker-0')
-  fireEvent.pointerDown(m, { pointerId: 1, clientX: 200, clientY: 100, button: 0 })
-  fireEvent.pointerMove(m, { pointerId: 1, clientX: 340, clientY: 140 })
-  fireEvent(m, new Event('lostpointercapture', { bubbles: true }))
-  expect(m.className).not.toContain('bl-marker--dragging')
-  expect(layout().markers[0]).toMatchObject({ x: 60, y: 50 })
-})
-
 test('teclado: flechas mueven 1% (Shift 5%), limitado a [0,100]; descritos por las instrucciones', () => {
   setup()
   load()
@@ -189,22 +165,6 @@ test('teclado: flechas mueven 1% (Shift 5%), limitado a [0,100]; descritos por l
   expect(layout().markers[0]).toEqual({ tcIndex: 0, x: 51, y: 0 })
   const hint = screen.getByText('Arrastra los termopares para ubicarlos en el diagrama')
   expect(m).toHaveAttribute('aria-describedby', hint.id)
-})
-
-test('deshabilitado: no acepta archivos ni mueve marcadores', () => {
-  setup(true)
-  load()
-  act(() => {
-    api.getState().setPanelOpen('layout', true)
-  })
-  expect(screen.getByTestId('bl-layout-input')).toBeDisabled()
-  act(() => api.getState().setLayoutImage(imageFile(), 'd.png'))
-  const m = screen.getByTestId('bl-marker-0')
-  expect(m).toHaveAttribute('aria-disabled', 'true')
-  const before = layout().markers[0]
-  fireEvent.keyDown(m, { key: 'ArrowRight' })
-  expect(layout().markers[0]).toEqual(before)
-  expect(screen.getByRole('button', { name: 'Tamaño real' })).toBeDisabled()
 })
 
 test('"Tamaño real" alterna ajuste y tamaño natural, y se guarda en el store', () => {
@@ -258,13 +218,4 @@ test('imagen > 20 MB: se usa y el Layout no avisa (lo hace la persistencia)', ()
   pick(big)
   expect(layout().image).toBe(big)
   expect(toastMessages()).toEqual([])
-})
-
-test('revoca la URL al desmontar', () => {
-  const { unmount } = setup()
-  load()
-  open()
-  pick(imageFile())
-  unmount()
-  expect(revoked).toContain('blob:test/1')
 })

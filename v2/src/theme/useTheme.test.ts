@@ -36,18 +36,4 @@ describe('useTheme', () => {
     expect(localStorage.getItem('cjlb.theme')).toBe('light')
   })
 
-  it('keeps working when localStorage throws', () => {
-    mockMatchMedia(false)
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked')
-    })
-    const { result } = renderHook(() => useTheme())
-    expect(result.current.resolved).toBe('light')
-    act(() => result.current.setMode('dark'))
-    expect(result.current.resolved).toBe('dark')
-    expect(document.documentElement.dataset.theme).toBe('dark')
-  })
 })

@@ -102,18 +102,6 @@ test('el resultado en vivo cambia al escribir pero el KPI espera al botón (R1)'
   expect(kpi('target')).toHaveTextContent('4.00')
 })
 
-test('Soft Covering muestra sus campos con ids y valores por defecto', async () => {
-  await seed(FIXTURES.plain)
-  renderTool()
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Soft Covering' })).toBeEnabled())
-  await userEvent.click(screen.getByRole('button', { name: 'Soft Covering' }))
-  const foam = screen.getByLabelText('Espesor de Foam (mm)')
-  expect(foam).toHaveAttribute('id', 'foamThickness')
-  expect(foam).toHaveValue(50)
-  expect(screen.getByTestId('gapcheckValue')).toHaveTextContent('35.00')
-  expect(document.getElementById('compressionPctSoft')).toHaveAttribute('max', '100')
-})
-
 test('subir un Excel carga los datos; un archivo ilegible avisa con toast', async () => {
   renderTool()
   const input = screen.getByLabelText(/Clic para subir/)

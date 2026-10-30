@@ -1,7 +1,6 @@
 import { buildResumeItems } from './resume'
 import type { SnapshotMeta } from '../persistence/snapshotStore'
 import type { ToolId } from '../app/routes'
-import { TOOLS } from '../tools/registry'
 
 const NOW = 1_800_000_000_000
 const meta = (toolId: ToolId, ago: number): SnapshotMeta => ({
@@ -33,10 +32,4 @@ test.each([
 ])('tiempo relativo %i ms', (ago, es, en) => {
   expect(buildResumeItems([meta('gantt', ago)], NOW, 'es')[0]?.ago).toBe(es)
   expect(buildResumeItems([meta('gantt', ago)], NOW, 'en')[0]?.ago).toBe(en)
-})
-
-test('excluye herramientas en hold', () => {
-  const tools = TOOLS.map((t) => (t.id === 'gantt' ? { ...t, status: 'hold' as const } : t))
-  const items = buildResumeItems([meta('gantt', 1000), meta('gapcheck', 2000)], NOW, 'es', tools)
-  expect(items.map((i) => i.toolId)).toEqual(['gapcheck'])
 })

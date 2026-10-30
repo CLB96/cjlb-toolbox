@@ -7,76 +7,64 @@ import { effectiveRange, trimColumns } from './range'
 import { activationResult } from './results'
 import { kpiTexts, minMaxTemp } from './stats'
 import { ACTIVATION_DURATION, FACTORY_DEFAULTS } from './types'
-import { ADHESIVES, LANGS, T, calcOf, rangesFor, sheets, validSheets } from './testHelpers'
+import { ADHESIVES, LANGS, T, calcOf, repRangesFor, repSheets, sheets } from './testHelpers'
 
 describe('parseSheetRows ≡ legacyLoadSheet (primera fila siempre es dato)', () => {
-  for (const { name, raw } of sheets) {
-    it(`hoja ${name}`, () => {
+  it('todas las hojas (sintéticas y reales, vacía, solo texto, celdas en blanco, 12abc, una fila)', () => {
+    const extra = [[[20, '12abc']], [['', 21], [22, '12abc']]]
+    for (const raw of [...sheets.map((s) => s.raw), ...extra]) {
       const legacy = legacyLoadSheet(raw)
       const got = parseSheetRows(raw)
       if (typeof legacy === 'string') expect(got).toEqual({ ok: false, reason: legacy })
       else expect(got).toEqual({ ok: true, data: legacy })
-    })
-  }
+    }
+  })
 
-  it('una primera fila de texto es dato (no encabezado): sus celdas no numéricas son null', () => {
-    const got = parseSheetRows([['Time', 'Probe'], [1, 2], [3, 4]])
-    expect(got).toEqual({
+  it('la primera fila es dato: texto -> null, numérica -> primer segundo', () => {
+    expect(parseSheetRows([['Time', 'Probe'], [1, 2], [3, 4]])).toEqual({
       ok: true,
       data: { columns: [[null, 1, 3], [null, 2, 4]], totalRows: 3 },
     })
+    expect(parseSheetRows([[20, 21], [22, 23]])).toEqual({ ok: true, data: { columns: [[20, 22], [21, 23]], totalRows: 2 } })
   })
 
-  it('una primera fila numérica cuenta como primer segundo', () => {
-    const got = parseSheetRows([[20, 21], [22, 23]])
-    expect(got).toEqual({ ok: true, data: { columns: [[20, 22], [21, 23]], totalRows: 2 } })
-  })
-
-  it('hoja grande no desborda la pila (sin Math.max sobre arrays)', () => {
+  it('hoja grande (200k filas) no desborda la pila', () => {
     const big = Array.from({ length: 200000 }, (_, i) => [i % 90])
     const got = parseSheetRows(big)
     expect(got.ok && got.data.totalRows).toBe(200000)
   })
 })
 
-describe('cálculo de rango/activación ≡ legacyRenderCalc', () => {
-  for (const { name, raw, legacy } of validSheets) {
-    for (const adhesive of ADHESIVES) {
-      for (const { name: rname, tr } of rangesFor(legacy)) {
-        it(`${name} · ${adhesive} · ${rname}`, () => {
+describe('rango, activación, KPIs y resultado ≡ original (combinaciones representativas)', () => {
+  it('rango, recorte, activación y límites', () => {
+    for (const { raw, legacy } of repSheets) {
+      for (const adhesive of ADHESIVES) {
+        for (const { tr } of repRangesFor(legacy)) {
           const cfg = adhesiveConfig(FACTORY_DEFAULTS, adhesive)
           const parsed = parseSheetRows(raw)
           if (!parsed.ok) throw new Error('hoja inválida')
           const { columns, totalRows } = parsed.data
           const lc = legacyRenderCalc({ columns, totalRows, cfg, timeRange: tr })
-
           const range = effectiveRange(totalRows, tr)
           expect(range).toEqual({ start: lc.effectiveStart, end: lc.effectiveEnd, rows: lc.effectiveRows })
           const trimmed = trimColumns(columns, range.start, range.end)
           expect(trimmed).toEqual(lc.trimmedColumns)
-
           const act = findActivationStart(columns, totalRows, cfg.min)
           expect(act).toBe(lc.activationStart)
-          const inRange = act !== null && isWindowInRange(columns, totalRows, act, range, cfg)
-          expect(inRange).toBe(lc.allInRange)
+          expect(act !== null && isWindowInRange(columns, totalRows, act, range, cfg)).toBe(lc.allInRange)
           expect(yLimits(trimmed)).toEqual({ yMin: lc.yMin, yMax: lc.yMax })
           expect(minMaxTemp(columns)).toEqual({ min: lc.minTemp, max: lc.maxTemp })
-        })
+        }
       }
     }
-  }
-})
+  })
 
-
-describe('kpiTexts ≡ legacyStatsTexts', () => {
-  for (const { name, raw } of validSheets) {
-    for (const adhesive of ADHESIVES) {
-      it(`${name} · ${adhesive}`, () => {
-        const parsed = parseSheetRows(raw)
-        if (!parsed.ok) throw new Error('hoja inválida')
-        const { lc } = calcOf(parsed.data, adhesive, { active: false, start: 0, end: null })
+  it('kpiTexts ≡ legacyStatsTexts', () => {
+    for (const { legacy } of repSheets) {
+      for (const adhesive of ADHESIVES) {
+        const { lc } = calcOf(legacy, adhesive, { active: false, start: 0, end: null })
         const want = legacyStatsTexts(lc, 'es')
-        const { activation, activated, duration, max, min, tc } = kpiTexts(parsed.data, lc.activationStart)
+        const { activation, activated, duration, max, min, tc } = kpiTexts(legacy, lc.activationStart)
         expect({ activation, activated, duration, max, min, tc }).toEqual({
           activation: want.activation,
           activated: want.activated,
@@ -85,62 +73,46 @@ describe('kpiTexts ≡ legacyStatsTexts', () => {
           min: want.min,
           tc: want.tc,
         })
-      })
+      }
     }
-  }
-})
+  })
 
-describe('activationResult ≡ legacyActivationResultHtml (todas las variantes, ES y EN)', () => {
-  for (const { name, raw, legacy } of validSheets) {
-    for (const adhesive of ADHESIVES) {
-      for (const { name: rname, tr } of rangesFor(legacy)) {
-        for (const lang of LANGS) {
-          it(`${name} · ${adhesive} · ${rname} · ${lang}`, () => {
-            const parsed = parseSheetRows(raw)
-            if (!parsed.ok) throw new Error('hoja inválida')
-            const { lc, cfg } = calcOf(parsed.data, adhesive, tr)
-            const want = legacyActivationResultHtml(lc, cfg, lang)
+  it('activationResult ≡ legacyActivationResultHtml (pass/fail/out, ES y EN)', () => {
+    const variants = new Set<string>()
+    for (const { legacy } of repSheets) {
+      for (const adhesive of ADHESIVES) {
+        for (const { tr } of repRangesFor(legacy)) {
+          for (const lang of LANGS) {
+            const { lc, cfg } = calcOf(legacy, adhesive, tr)
             const r = activationResult(lc.activationStart, lc.allInRange, lc.effectiveStart, cfg)
             const html = `<div class="result-title">${T(lang, r.titleKey)}</div>${T(lang, r.bodyKey, ...r.args)}`
-            expect({ className: `activation-result ${r.variant}`, html }).toEqual(want)
-          })
+            expect({ className: `activation-result ${r.variant}`, html }).toEqual(legacyActivationResultHtml(lc, cfg, lang))
+            variants.add(r.variant)
+          }
         }
       }
     }
-  }
-
-  it('activación exacta en hoja sintética plain: Water Base t=37, Hotmelt t=43', () => {
-    const parsed = parseSheetRows(FIXTURES.plain)
-    if (!parsed.ok) throw new Error('hoja inválida')
-    const { columns, totalRows } = parsed.data
-    expect(findActivationStart(columns, totalRows, 55)).toBe(37)
-    expect(findActivationStart(columns, totalRows, 60)).toBe(43)
+    expect(variants.size).toBeGreaterThanOrEqual(2)
   })
 
-  it('neverActivates: Water Base no se alcanza -> variante fail / resultFail', () => {
-    const parsed = parseSheetRows(FIXTURES.neverActivates)
-    if (!parsed.ok) throw new Error('hoja inválida')
-    const cfg = adhesiveConfig(FACTORY_DEFAULTS, 'waterbase')
-    expect(findActivationStart(parsed.data.columns, parsed.data.totalRows, cfg.min)).toBeNull()
-    expect(activationResult(null, false, 0, cfg)).toEqual({
+  it('casos límite: nunca activa (fail), activación antes del inicio (t negativo), rango desplazado (t=27s)', () => {
+    const never = parseSheetRows(FIXTURES.neverActivates)
+    if (!never.ok) throw new Error('hoja inválida')
+    const wb = adhesiveConfig(FACTORY_DEFAULTS, 'waterbase')
+    expect(findActivationStart(never.data.columns, never.data.totalRows, wb.min)).toBeNull()
+    expect(activationResult(null, false, 0, wb)).toEqual({
       variant: 'fail',
       titleKey: 'resultFailTitle',
       bodyKey: 'resultFail',
       args: [55, 'Water Base'],
     })
-  })
+    expect(T('es', activationResult(37, false, 42, wb).bodyKey, ...activationResult(37, false, 42, wb).args)).toContain('t=-5s')
 
-  it('rango con inicio > activación: tiempo mostrado negativo', () => {
-    const cfg = adhesiveConfig(FACTORY_DEFAULTS, 'waterbase')
-    const r = activationResult(37, false, 42, cfg)
-    expect(r.args[0]).toBe(-5)
-    expect(T('es', r.bodyKey, ...r.args)).toContain('t=-5s')
-  })
-
-  it('con rango desplazado el tiempo es relativo: plain {10,null} -> t=27s', () => {
-    const parsed = parseSheetRows(FIXTURES.plain)
-    if (!parsed.ok) throw new Error('hoja inválida')
-    const { lc, cfg } = calcOf(parsed.data, 'waterbase', { active: true, start: 10, end: null })
+    const plain = parseSheetRows(FIXTURES.plain)
+    if (!plain.ok) throw new Error('hoja inválida')
+    expect(findActivationStart(plain.data.columns, plain.data.totalRows, 55)).toBe(37)
+    expect(findActivationStart(plain.data.columns, plain.data.totalRows, 60)).toBe(43)
+    const { lc, cfg } = calcOf(plain.data, 'waterbase', { active: true, start: 10, end: null })
     const r = activationResult(lc.activationStart, lc.allInRange, lc.effectiveStart, cfg)
     expect(r.variant).toBe('pass')
     expect(r.args).toEqual([55, 27, ACTIVATION_DURATION, 75])

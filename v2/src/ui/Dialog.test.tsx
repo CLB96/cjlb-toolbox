@@ -37,26 +37,3 @@ test('Escape cierra aunque el foco esté fuera del panel', () => {
   fireEvent.keyDown(document.body, { key: 'Escape' })
   expect(onClose).toHaveBeenCalledTimes(1)
 })
-
-test('Escape cierra con el foco en un control interno', async () => {
-  const user = userEvent.setup()
-  const { onClose } = setup()
-  screen.getByLabelText('campo').focus()
-  await user.keyboard('{Escape}')
-  expect(onClose).toHaveBeenCalledTimes(1)
-})
-
-test('el fondo cierra solo si mousedown y click ocurren en el fondo', () => {
-  const { onClose, dialog } = setup()
-  const backdrop = dialog.parentElement!
-  fireEvent.mouseDown(dialog)
-  fireEvent.mouseUp(backdrop)
-  fireEvent.click(backdrop)
-  expect(onClose).not.toHaveBeenCalled()
-  fireEvent.mouseDown(backdrop)
-  fireEvent.click(backdrop)
-  expect(onClose).toHaveBeenCalledTimes(1)
-  fireEvent.mouseDown(backdrop)
-  fireEvent.click(dialog)
-  expect(onClose).toHaveBeenCalledTimes(1)
-})

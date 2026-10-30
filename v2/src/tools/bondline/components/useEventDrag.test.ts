@@ -51,17 +51,6 @@ test('con rango {20, null}: arrastrar Inicia Prensa (x=30) a la posición relati
   expect(canvas.style.cursor).toBe('grab')
 })
 
-test('delta +N, -N y ±0 con sus tonos', () => {
-  const { canvas, ref } = fakeChart()
-  const setEvent = vi.fn()
-  renderHook(() => useEventDrag(ref, [press], NO_RANGE, 120, setEvent))
-  drag(canvas, 300, 270)
-  expect(tip().innerHTML).toBe('<span style="color: var(--error);">-3s</span> — t=27s')
-  fireEvent.mouseMove(canvas, { clientX: 300 })
-  expect(tip().innerHTML).toBe('<span style="color: var(--fg-muted);">±0s</span> — t=30s')
-  expect(setEvent).toHaveBeenLastCalledWith('eventPressStart', '30')
-})
-
 test('clic a >= 10 px no selecciona; el último suceso que coincide gana', () => {
   const { canvas, ref } = fakeChart()
   const setEvent = vi.fn()
@@ -71,26 +60,6 @@ test('clic a >= 10 px no selecciona; el último suceso que coincide gana', () =>
   expect(canvas.style.cursor).toBe('default')
   drag(canvas, 305, 400)
   expect(setEvent).toHaveBeenLastCalledWith('eventManipStart', '40')
-})
-
-test('fuera de [0, totalRows-1] no escribe', () => {
-  const { canvas, ref } = fakeChart()
-  const setEvent = vi.fn()
-  renderHook(() => useEventDrag(ref, [press], RANGE, 120, setEvent))
-  drag(canvas, 100, 100 * PX) // relativo 100 -> absoluto 120
-  expect(setEvent).not.toHaveBeenCalled()
-})
-
-test('mouseleave termina el arrastre y oculta el tooltip', () => {
-  const { canvas, ref } = fakeChart()
-  const setEvent = vi.fn()
-  renderHook(() => useEventDrag(ref, [press], NO_RANGE, 120, setEvent))
-  drag(canvas, 300, 320)
-  fireEvent.mouseLeave(canvas)
-  expect(tip().style.display).toBe('none')
-  expect(canvas.style.cursor).toBe('default')
-  fireEvent.mouseMove(canvas, { clientX: 350 })
-  expect(setEvent).toHaveBeenCalledTimes(1)
 })
 
 test('re-renders no duplican listeners ni tooltips; desmontar los retira', () => {

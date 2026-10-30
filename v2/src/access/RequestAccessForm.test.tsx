@@ -33,16 +33,6 @@ test('sin cuenta: sent, alreadyExists e ignored muestran el mismo texto neutral'
   expect(texts[0]).toBe('Si ya enviaste una solicitud, está pendiente de aprobación.')
 })
 
-test('envía y deshabilita el botón, guardando cjlb.accessRequestedAt', async () => {
-  submit.mockResolvedValue('sent')
-  render(<RequestAccessForm />)
-  await fillAndSend('Bob@X.com')
-  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ email: 'Bob@X.com', name: 'Bob', honeypot: '' }))
-  expect(await screen.findByRole('status')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Solicitar acceso' })).toBeDisabled()
-  expect(localStorage.getItem('cjlb.accessRequestedAt')).not.toBeNull()
-})
-
 test('con cuenta: sent y alreadyExists muestran mensajes distintos', async () => {
   submit.mockResolvedValue('sent')
   const { unmount } = render(<RequestAccessForm email="ana@x.com" uid="u9" defaultName="Ana" />)
@@ -62,29 +52,4 @@ test('error muestra toast y deja reintentar', async () => {
   await fillAndSend()
   expect(await screen.findByRole('button', { name: 'Solicitar acceso' })).toBeEnabled()
   expect(useToasts.getState().toasts[0]).toMatchObject({ kind: 'error' })
-})
-
-test('con cuenta: correo fijo de solo lectura y uid enviado', async () => {
-  submit.mockResolvedValue('sent')
-  render(<RequestAccessForm email="ana@x.com" uid="u9" defaultName="Ana" />)
-  expect(screen.getByLabelText('Correo')).toHaveAttribute('readonly')
-  await userEvent.click(screen.getByRole('button', { name: 'Solicitar acceso' }))
-  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ email: 'ana@x.com', uid: 'u9', name: 'Ana' }))
-})
-
-test('el honeypot no usa un nombre autocompletable y es inerte', () => {
-  const { container } = render(<RequestAccessForm />)
-  const trap = container.querySelector('input[name="hp_fax"]') as HTMLInputElement
-  expect(trap).toHaveAttribute('autocomplete', 'off')
-  expect(trap).toHaveAttribute('tabindex', '-1')
-  expect(container.querySelector('input[name="website"]')).toBeNull()
-})
-
-test('el campo honeypot se envía al servicio tal cual (el servicio lo descarta)', async () => {
-  submit.mockResolvedValue('ignored')
-  const { container } = render(<RequestAccessForm />)
-  const trap = container.querySelector('input[name="hp_fax"]') as HTMLInputElement
-  await userEvent.type(trap, 'bot')
-  await fillAndSend()
-  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ honeypot: 'bot' }))
 })

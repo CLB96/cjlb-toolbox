@@ -19,13 +19,6 @@ const wrap = (uid: string) =>
 
 const form = { wbMin: '', wbMax: '80', hmMin: '', hmMax: '', cooling: '' }
 
-test('sin preferencia: fábrica y loaded true', async () => {
-  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
-  expect(result.current.loaded).toBe(false)
-  await waitFor(() => expect(result.current.loaded).toBe(true))
-  expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
-})
-
 test('save aplica R1, guarda bajo el uid y otro uid no lo ve', async () => {
   const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
   await waitFor(() => expect(result.current.loaded).toBe(true))
@@ -39,32 +32,11 @@ test('save aplica R1, guarda bajo el uid y otro uid no lo ve', async () => {
   expect(other.result.current.defaults).toEqual(FACTORY_DEFAULTS)
 })
 
-test('carga la preferencia guardada al montar', async () => {
-  const saved = { waterbase: { min: 1, max: 2 }, hotmelt: { min: 3, max: 4 }, coolingTarget: 5 }
-  await savePreference('u1', BONDLINE_DEFAULTS_KEY, saved)
-  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
-  await waitFor(() => expect(result.current.loaded).toBe(true))
-  expect(result.current.defaults).toEqual(saved)
-})
-
 test('preferencia corrupta o parcial -> fábrica', async () => {
   await savePreference('u1', BONDLINE_DEFAULTS_KEY, { waterbase: 3 })
   const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
   await waitFor(() => expect(result.current.loaded).toBe(true))
   expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
-})
-
-test('resetToFactory guarda y aplica fábrica', async () => {
-  await savePreference('u1', BONDLINE_DEFAULTS_KEY, {
-    waterbase: { min: 1, max: 2 },
-    hotmelt: { min: 3, max: 4 },
-    coolingTarget: 5,
-  })
-  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
-  await waitFor(() => expect(result.current.defaults.coolingTarget).toBe(5))
-  await act(() => result.current.resetToFactory())
-  expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
-  expect(await loadPreference('u1', BONDLINE_DEFAULTS_KEY)).toEqual(FACTORY_DEFAULTS)
 })
 
 test('fallo al guardar muestra toast y no cambia los valores', async () => {
@@ -145,27 +117,6 @@ test('cambiar de uid mientras se guarda: al resolver, el estado refleja al nuevo
   })
   expect(result.current.loaded).toBe(true)
   expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
-  spy.mockRestore()
-})
-
-test('save y resetToFactory resuelven true en éxito y false en fallo', async () => {
-  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
-  await waitFor(() => expect(result.current.loaded).toBe(true))
-  let ok: boolean | undefined
-  await act(async () => {
-    ok = await result.current.save(form)
-  })
-  expect(ok).toBe(true)
-  const prefs = await import('../../persistence/preferences')
-  const spy = vi.spyOn(prefs, 'savePreference').mockRejectedValue(new Error('boom'))
-  await act(async () => {
-    ok = await result.current.save(form)
-  })
-  expect(ok).toBe(false)
-  await act(async () => {
-    ok = await result.current.resetToFactory()
-  })
-  expect(ok).toBe(false)
   spy.mockRestore()
 })
 

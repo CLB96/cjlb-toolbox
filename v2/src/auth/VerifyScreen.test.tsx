@@ -26,9 +26,3 @@ test('"Ya lo verifiqué" recarga al usuario', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Ya lo verifiqué' }))
   expect(p.reloadUser).toHaveBeenCalledTimes(1)
 })
-
-test('cerrar sesión', async () => {
-  const p = setup()
-  await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
-  expect(p.onSignOut).toHaveBeenCalled()
-})

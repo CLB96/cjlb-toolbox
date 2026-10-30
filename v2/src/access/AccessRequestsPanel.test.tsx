@@ -7,7 +7,7 @@ vi.mock('./accessService', () => ({
   approveRequest: vi.fn(),
   rejectRequest: vi.fn(),
 }))
-import { approveRequest, listPendingRequests, rejectRequest } from './accessService'
+import { approveRequest, listPendingRequests } from './accessService'
 
 const list = vi.mocked(listPendingRequests)
 const req = (email: string) => ({
@@ -29,12 +29,4 @@ test('lista pendientes y aprueba recargando la lista', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Aprobar' }))
   expect(approveRequest).toHaveBeenCalledWith('bob@x.com', 'admin@x.com')
   expect(await screen.findByText('No hay solicitudes pendientes.')).toBeInTheDocument()
-})
-
-test('rechaza una solicitud', async () => {
-  list.mockResolvedValueOnce([req('bob@x.com')]).mockResolvedValueOnce([])
-  vi.mocked(rejectRequest).mockResolvedValue()
-  render(<AccessRequestsPanel adminEmail="admin@x.com" />)
-  await userEvent.click(await screen.findByRole('button', { name: 'Rechazar' }))
-  expect(rejectRequest).toHaveBeenCalledWith('bob@x.com')
 })

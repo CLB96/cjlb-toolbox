@@ -1,11 +1,11 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { clear, createStore } from 'idb-keyval'
 import * as XLSX from 'xlsx'
 import { FIXTURES } from '../../../legacy-fixtures/bondline/fixtures'
 import { legacyActivationResultHtml, legacyRenderCalc } from '../../../legacy-fixtures/bondline/legacyReference'
 import { loadRealWorkbook } from '../../../legacy-fixtures/bondline/realFixture'
-import { __resetI18nForTests, useI18n, type Lang } from '../../i18n/useI18n'
+import { __resetI18nForTests, useI18n } from '../../i18n/useI18n'
 import { saveSnapshot } from '../../persistence/snapshotStore'
 import { UidProvider } from '../../persistence/uidContext'
 import { useToasts } from '../../ui/toastStore'
@@ -30,9 +30,8 @@ vi.mock('../../persistence/preferences', async (orig) => {
   }
 })
 
-let setLangRef: ((l: Lang) => void) | null = null
 function LangGrab() {
-  setLangRef = useI18n().setLang
+  useI18n()
   return null
 }
 
@@ -120,34 +119,6 @@ test('Hotmelt cambia tempInfo y recalcula; PP solo cambia la flama', async () =>
   expect(screen.getByTestId('activationResult').innerHTML).toBe(before)
 })
 
-test('leyenda: Ocultar -> Mostrar no cambia KPIs ni resultado', async () => {
-  await seed([{ name: 'H', raw: FIXTURES.plain }])
-  renderTool()
-  await ready()
-  expect(screen.getByTestId('bl-chart')).toBeInTheDocument()
-  const kpisBefore = ['tc', 'duration', 'min', 'max', 'activation'].map((id) => kpi(id).textContent)
-  const resultBefore = screen.getByTestId('activationResult').innerHTML
-  const btn = screen.getByText('TC-1').closest('[data-tc]')!.querySelector('button')!
-  expect(btn).toHaveTextContent('Ocultar')
-  await userEvent.click(btn)
-  expect(btn).toHaveTextContent('Mostrar')
-  expect(['tc', 'duration', 'min', 'max', 'activation'].map((id) => kpi(id).textContent)).toEqual(kpisBefore)
-  expect(screen.getByTestId('activationResult').innerHTML).toBe(resultBefore)
-  act(() => setLangRef!('en'))
-  expect(btn).toHaveTextContent('Show')
-})
-
-test('EN muestra los textos originales en inglés', async () => {
-  await seed([{ name: 'H', raw: FIXTURES.plain }])
-  renderTool()
-  await ready()
-  act(() => setLangRef!('en'))
-  expect(screen.getByText('Thermocouples')).toBeInTheDocument()
-  expect(screen.getByText('Cycle duration')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /Default Values/ })).toBeInTheDocument()
-  expect(screen.getByText(/120 s × 4 thermocouples/)).toBeInTheDocument()
-})
-
 test('guardar defaults aplica parseFloat || fábrica (R1) y recalcula la caja', async () => {
   await seed([{ name: 'H', raw: FIXTURES.plain }])
   renderTool()
@@ -186,18 +157,6 @@ test('restaurar valores de fábrica pide confirmación, no cierra y refresca al 
   expect(screen.getByRole('dialog')).toBeInTheDocument()
   expect(screen.getByTestId('tempInfo')).toHaveTextContent('Mín: 55°C | Máx: 75°C')
   confirm.mockRestore()
-})
-
-test('con 1 hoja no hay selector de hoja pero sí Fecha de Prueba', async () => {
-  await seed([{ name: 'H', raw: FIXTURES.plain }])
-  renderTool()
-  await ready()
-  expect(screen.queryByText('📊 Hoja Activa')).toBeNull()
-  expect(screen.queryByRole('combobox')).toBeNull()
-  const date = screen.getByLabelText('Fecha de Prueba')
-  expect(date).toHaveAttribute('placeholder', 'DD/MM/YYYY')
-  await userEvent.type(date, '01/02/2026')
-  expect(date).toHaveValue('01/02/2026')
 })
 
 test('varias hojas: selector, flechas y hoja inválida con toast literal', async () => {

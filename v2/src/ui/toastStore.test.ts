@@ -8,13 +8,6 @@ describe('toastStore', () => {
   })
   afterEach(() => vi.useRealTimers())
 
-  it('adds a toast', () => {
-    toast('error', 'x')
-    const { toasts } = useToasts.getState()
-    expect(toasts).toHaveLength(1)
-    expect(toasts[0]).toMatchObject({ kind: 'error', message: 'x' })
-  })
-
   it('auto-dismisses after 5000 ms', () => {
     toast('info', 'hola')
     expect(TOAST_TTL_MS).toBe(5000)

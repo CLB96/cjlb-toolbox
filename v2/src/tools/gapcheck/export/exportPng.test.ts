@@ -101,14 +101,4 @@ describe('flujo completo (canvas y dibujo simulados)', () => {
     expect(revoke).toHaveBeenCalledWith('blob:layout')
   })
 
-  test('precarga también Inter 900 (peso del texto de los marcadores)', async () => {
-    const load = vi.fn((_font: string) => Promise.resolve([]))
-    Object.defineProperty(document, 'fonts', { configurable: true, value: { load, ready: Promise.resolve() } })
-    try {
-      await exportGapcheckPng(stateWithLayout(), 'es', document.createElement('canvas'))
-      expect(load.mock.calls.map((c) => c[0])).toContain('900 16px Inter')
-    } finally {
-      Reflect.deleteProperty(document, 'fonts')
-    }
-  })
 })

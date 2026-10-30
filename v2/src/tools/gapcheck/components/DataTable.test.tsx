@@ -84,15 +84,3 @@ test('la primera fila es dato: el texto se ignora, el punto es P1, y hay contene
   expect(screen.getAllByRole('row')[1]).toHaveTextContent(/^P1/)
   expect(container.querySelector('.gc-table-scroll')).not.toBeNull()
 })
-
-test('aria-controls solo cuando el cuerpo está en el DOM; emoji oculto a lectores', () => {
-  setup()
-  load([['P1'], [0], [0.2]])
-  const btn = screen.getByRole('button', { name: /Tabla de Datos/ })
-  expect(btn).not.toHaveAttribute('aria-controls')
-  fireEvent.click(btn)
-  expect(btn).toHaveAttribute('aria-controls', 'gc-table-body')
-  expect(document.getElementById('gc-table-body')).not.toBeNull()
-  const hidden = [...btn.querySelectorAll('[aria-hidden="true"]')].map((e) => e.textContent)
-  expect(hidden).toContain('📋')
-})

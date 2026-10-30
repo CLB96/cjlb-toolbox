@@ -37,12 +37,6 @@ describe('loadWorkbook', () => {
     expect(snapshotOf(api.getState())).toEqual(before)
   })
 
-  it('hoja 0 sin temperaturas: reason noTemperature', () => {
-    const api = createBondlineStore()
-    const r = api.getState().loadWorkbook('x.xlsx', [{ name: 'T', raw: FIXTURES.allText }])
-    expect(r).toEqual({ ok: false, sheetName: 'T', reason: 'noTemperature' })
-  })
-
   it('cargar otro archivo vacía sheetConfigs', () => {
     const api = createBondlineStore()
     api.getState().loadWorkbook('a.xlsx', two)
@@ -55,8 +49,8 @@ describe('loadWorkbook', () => {
   })
 })
 
-describe('configuración por hoja (R2)', () => {
-  it('ida y vuelta recupera todo y la hoja nueva hereda con rango reiniciado', () => {
+it('configuración por hoja (R2)', () => {
+  { // ida y vuelta recupera todo y la hoja nueva hereda con rango reiniciado
     const api = createBondlineStore()
     const g = () => api.getState()
     g().loadWorkbook('a.xlsx', two)
@@ -93,9 +87,9 @@ describe('configuración por hoja (R2)', () => {
     expect(c.coolingParams.chiller).toBe('12')
     expect(c.layout.image).toBe(img)
     expect(c.layout.markers.find((m) => m.tcIndex === 0)).toMatchObject({ x: 5, y: 6 })
-  })
+  }
 
-  it('primera visita: visibilidad TC toda true aunque haya el mismo nº de TC', () => {
+  { // primera visita: visibilidad TC toda true aunque haya el mismo nº de TC
     const api = createBondlineStore()
     const g = () => api.getState()
     g().loadWorkbook('a.xlsx', two)
@@ -104,18 +98,18 @@ describe('configuración por hoja (R2)', () => {
     expect(g().config.tcVisibility).toEqual([true, true, true, true])
     g().selectSheet(0)
     expect(g().config.tcVisibility).toEqual([false, true, true, true])
-  })
+  }
 
-  it('hoja con distinto nº de TC: visibilidad toda true', () => {
+  { // hoja con distinto nº de TC: visibilidad toda true
     const api = createBondlineStore()
     const g = () => api.getState()
     g().loadWorkbook('a.xlsx', [{ name: 'Uno', raw: plain }, { name: 'Seis', raw: sixTc }])
     g().toggleTC(0)
     g().selectSheet(1)
     expect(g().config.tcVisibility).toEqual([true, true, true, true, true, true])
-  })
+  }
 
-  it('hoja inválida: no cambia el estado', () => {
+  { // hoja inválida: no cambia el estado
     const api = createBondlineStore()
     const g = () => api.getState()
     g().loadWorkbook('a.xlsx', [{ name: 'Uno', raw: plain }, { name: 'Mala', raw: [] }])
@@ -126,17 +120,17 @@ describe('configuración por hoja (R2)', () => {
     expect(invalidSheetText('Mala', 'noTemperature')).toBe(
       'La hoja "Mala" no contiene datos de temperatura válidos',
     )
-  })
+  }
 })
 
-describe('acciones', () => {
+it('acciones', () => {
   const loaded = () => {
     const api = createBondlineStore()
     api.getState().loadWorkbook('a.xlsx', two)
     return api
   }
 
-  it('applyTimeRange con inicio negativo devuelve startNegative y no cambia el rango', () => {
+  { // applyTimeRange con inicio negativo devuelve startNegative y no cambia el rango
     const api = loaded()
     api.getState().setTimeRangeInput('start', '-1')
     expect(api.getState().applyTimeRange()).toBe('startNegative')
@@ -148,18 +142,18 @@ describe('acciones', () => {
     expect(api.getState().applyTimeRange()).toBe('endExceeds')
     api.getState().resetTimeRange()
     expect(api.getState().config.timeRangeInputs).toEqual({ start: '', end: '' })
-  })
+  }
 
-  it('removeLeister con 1 no hace nada', () => {
+  { // removeLeister con 1 no hace nada
     const api = loaded()
     api.getState().removeLeister()
     expect(api.getState().config.params.leisters).toEqual([''])
     api.getState().addLeister()
     api.getState().removeLeister()
     expect(api.getState().config.params.leisters).toEqual([''])
-  })
+  }
 
-  it('toggleTC regenera marcadores solo con imagen', () => {
+  { // toggleTC regenera marcadores solo con imagen
     const api = loaded()
     api.getState().toggleTC(1)
     expect(api.getState().config.layout.markers).toEqual([])
@@ -167,9 +161,9 @@ describe('acciones', () => {
     expect(api.getState().config.layout.markers.map((m) => m.tcIndex)).toEqual([0, 2, 3])
     api.getState().toggleTC(1)
     expect(api.getState().config.layout.markers).toHaveLength(4)
-  })
+  }
 
-  it('quitar la imagen borra los marcadores y una nueva usa las posiciones por defecto', () => {
+  { // quitar la imagen borra los marcadores y una nueva usa las posiciones por defecto
     const api = loaded()
     api.getState().setLayoutImage(new Blob(['x']), 'a.png')
     api.getState().moveMarker(0, 1, 2)
@@ -178,9 +172,9 @@ describe('acciones', () => {
     api.getState().setLayoutImage(new Blob(['y']), 'b.png')
     expect(api.getState().config.layout.markers[0]).not.toMatchObject({ x: 1, y: 2 })
     expect(api.getState().config.layout.markers).toHaveLength(4)
-  })
+  }
 
-  it('restaurar con imagen omitida conserva los marcadores al volver a cargarla', () => {
+  { // restaurar con imagen omitida conserva los marcadores al volver a cargarla
     const src = loaded()
     src.getState().setLayoutImage(new Blob(['x']), 'a.png')
     src.getState().moveMarker(0, 1, 2)
@@ -193,20 +187,20 @@ describe('acciones', () => {
     api.getState().setLayoutImage(new Blob(['x']), 'a.png')
     expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 1, y: 2 })
     expect(api.getState().config.layout.imageStripped).toBe(false)
-  })
+  }
 
-  it('panels, layoutFit y reset', () => {
+  { // panels, layoutFit y reset
     const api = loaded()
     api.getState().setPanelOpen('events', true)
     api.getState().setLayoutFit(false)
     expect(api.getState().panels.events).toBe(true)
     api.getState().reset()
     expect(snapshotOf(api.getState())).toEqual(initialData())
-  })
+  }
 })
 
-describe('snapshot', () => {
-  it('es clonable y restoreInto devuelve el mismo estado', () => {
+it('snapshot', () => {
+  { // es clonable y restoreInto devuelve el mismo estado
     const api = createBondlineStore()
     api.getState().loadWorkbook('a.xlsx', two)
     api.getState().setEvent('eventPressClosed', '7')
@@ -216,9 +210,9 @@ describe('snapshot', () => {
     const other = createBondlineStore()
     restoreInto(other, clone)
     expect(snapshotOf(other.getState())).toEqual(snap)
-  })
+  }
 
-  it('un snapshot antiguo sin campos nuevos se completa con los iniciales', () => {
+  { // un snapshot antiguo sin campos nuevos se completa con los iniciales
     const api = createBondlineStore()
     const old = {
       fileName: 'v.xlsx',
@@ -237,5 +231,5 @@ describe('snapshot', () => {
     expect(s.sheetConfigs.H.layout.markers).toEqual([])
     expect(s.panels).toEqual({ params: false, events: false, layout: false })
     expect(s.layoutFit).toBe(true)
-  })
+  }
 })

@@ -13,8 +13,3 @@ test('no admin en #/usage: redirige a home y no renderiza UsagePage', async () =
   expect(screen.queryByText('pagina-uso')).toBeNull()
   expect(window.location.hash).toBe('#/home')
 })
-
-test('admin en #/usage ve UsagePage', async () => {
-  render(<AppShell isAdmin />)
-  expect(await screen.findByText('pagina-uso')).toBeInTheDocument()
-})

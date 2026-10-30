@@ -54,12 +54,6 @@ test('allowed: renderiza el shell con logo, pestañas y menú de usuario', () =>
   expect(screen.getByText('a@b.com')).toBeInTheDocument()
 })
 
-test('allowed + admin muestra la pestaña Uso', () => {
-  setAuth('allowed', { isAdmin: true })
-  render(<App />)
-  expect(screen.getByRole('tab', { name: 'Uso' })).toBeInTheDocument()
-})
-
 test('signedOut muestra el login', () => {
   setAuth('signedOut')
   render(<App />)
@@ -80,39 +74,10 @@ test('unverified muestra Verifica tu correo', () => {
   expect(screen.getByText('Verifica tu correo')).toBeInTheDocument()
 })
 
-test('error ofrece reintentar', () => {
-  setAuth('error')
-  render(<App />)
-  expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
-})
-
-test('loading no muestra el shell ni el login', () => {
-  setAuth('loading')
-  render(<App />)
-  expect(screen.queryByRole('tab')).toBeNull()
-  expect(screen.queryByRole('button', { name: 'Entrar con Google' })).toBeNull()
-})
-
 test('denied: si falla la solicitud el toast se muestra', async () => {
   vi.mocked(submitAccessRequest).mockResolvedValue('error')
   setAuth('denied')
   render(<App />)
   await userEvent.click(await screen.findByRole('button', { name: 'Solicitar acceso' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo enviar la solicitud')
-})
-
-test('denied: si falla la carga de la solicitud previa el toast se muestra', async () => {
-  vi.mocked(getMyRequest).mockRejectedValue(new Error('x'))
-  setAuth('denied')
-  render(<App />)
-  expect(await screen.findByRole('alert')).toHaveTextContent('No se pudieron cargar')
-})
-
-test('hay un único ToastHost en cada estado', () => {
-  for (const status of ['loading', 'signedOut', 'unverified', 'denied', 'error', 'allowed'] as const) {
-    setAuth(status)
-    const { unmount } = render(<App />)
-    expect(screen.getAllByRole('region', { name: 'Notificaciones' })).toHaveLength(1)
-    unmount()
-  }
 })

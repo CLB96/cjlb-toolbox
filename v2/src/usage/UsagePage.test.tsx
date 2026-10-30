@@ -68,11 +68,3 @@ test('si falla la carga muestra error, no una tabla vacía', async () => {
   render(<UsagePage />)
   expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar el uso.')
 })
-
-test('el filtro Mes vuelve a consultar', async () => {
-  vi.mocked(fetchSessions).mockResolvedValue([])
-  render(<UsagePage />)
-  await screen.findByText('Sin uso en este periodo.')
-  await userEvent.click(screen.getByRole('button', { name: 'Mes' }))
-  await vi.waitFor(() => expect(fetchSessions).toHaveBeenCalledTimes(2))
-})

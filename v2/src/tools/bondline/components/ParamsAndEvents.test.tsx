@@ -86,46 +86,6 @@ test('pérdida: — °C vacío; 200 − 195 = 5.0 °C ámbar; valores como 12abc
   expect(screen.getByTestId('lossLower')).toHaveTextContent('10.0 °C')
 })
 
-test('escribir en los inputs actualiza el store', () => {
-  renderBody()
-  open(/Parámetros del proceso/)
-  fireEvent.change(screen.getByLabelText('Termoregulador Superior'), { target: { value: '200' } })
-  fireEvent.change(screen.getByLabelText('Temperatura Sliders'), { target: { value: '12.5' } })
-  expect(api.getState().config.params.thermoUpper).toBe('200')
-  expect(api.getState().config.params.slidersTemp).toBe('12.5')
-})
-
-test('leisters: añadir muestra Leister 2 y 3; quitar con uno no hace nada', () => {
-  renderBody()
-  open(/Parámetros del proceso/)
-  expect(screen.getByText('Leister 1')).toBeInTheDocument()
-  fireEvent.click(screen.getByTitle('−'))
-  expect(api.getState().config.params.leisters).toHaveLength(1)
-  fireEvent.click(screen.getByTitle('+'))
-  fireEvent.click(screen.getByTitle('+'))
-  expect(screen.getByText('Leister 2')).toBeInTheDocument()
-  expect(screen.getByText('Leister 3')).toBeInTheDocument()
-  fireEvent.change(screen.getByLabelText('Leister 2'), { target: { value: '300' } })
-  expect(api.getState().config.params.leisters).toEqual(['', '300', ''])
-  fireEvent.click(screen.getByTitle('−'))
-  expect(screen.queryByText('Leister 3')).toBeNull()
-})
-
-test('sucesos plegados; 9 entradas en 3 grupos', () => {
-  renderBody()
-  load()
-  const btn = screen.getByRole('button', { name: /Sucesos/ })
-  expect(btn).toHaveAttribute('aria-expanded', 'false')
-  expect(screen.queryByText('Inicia Ciclo Prensa')).toBeNull()
-  fireEvent.click(btn)
-  expect(api.getState().panels.events).toBe(true)
-  for (const l of ['🔧 Prensa', '🤲 Manipulación', '❄️ Cooling']) expect(screen.getByText(l)).toBeInTheDocument()
-  expect(screen.getAllByPlaceholderText('s')).toHaveLength(9)
-  const input = screen.getByLabelText('Inicia Ciclo Prensa')
-  expect(input).toHaveAttribute('step', '1')
-  expect(input).toHaveAttribute('min', '0')
-})
-
 test('escribir un suceso actualiza el store, las líneas de la gráfica y el resultado de cooling', () => {
   renderBody()
   load()

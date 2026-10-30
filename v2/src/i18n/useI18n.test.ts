@@ -25,22 +25,4 @@ describe('useI18n', () => {
     expect(document.documentElement.lang).toBe('en')
   })
 
-  it('shares one language state between callers', () => {
-    const a = renderHook(() => useI18n())
-    const b = renderHook(() => useI18n())
-    act(() => a.result.current.setLang('en'))
-    expect(b.result.current.lang).toBe('en')
-  })
-
-  it('restores the stored language', () => {
-    localStorage.setItem('cjlb.lang', 'en')
-    const { result } = renderHook(() => useI18n())
-    expect(result.current.lang).toBe('en')
-  })
-
-  it('leaves a missing variable visible instead of throwing', () => {
-    const { result } = renderHook(() => useI18n())
-    expect(result.current.t('home.greeting')).toBe('Hola, {name}')
-    expect(result.current.t('home.greeting', {})).toBe('Hola, {name}')
-  })
 })

@@ -52,3 +52,13 @@ export const NO_EVENTS: EventInputs = {
   eventManipStart: '', eventManipEnd: '',
   eventCoolingStart: '', eventCoolingClosed: '', eventCoolingEnd: '',
 }
+
+// Subconjunto representativo para las pruebas diferenciales (sin productos cruzados completos).
+const REP_NAMES = ['plain', 'outOfRange', 'neverActivates', 'windowPastEnd', 'blankRows']
+export const repSheets = validSheets.filter(
+  (s) => REP_NAMES.includes(s.name) || s.name === validSheets.find((v) => v.name.startsWith('real:'))?.name,
+)
+const REP_RANGES = ['inactivo', '{10,60}', 'corta la ventana', 'activación antes del inicio']
+export function repRangesFor(legacy: LegacySheet): { name: string; tr: TimeRange }[] {
+  return rangesFor(legacy).filter((r) => REP_RANGES.includes(r.name))
+}

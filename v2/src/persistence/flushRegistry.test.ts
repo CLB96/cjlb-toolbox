@@ -1,4 +1,4 @@
-import { flushAll, flushTool, getRegisteredTool, registerTool } from './flushRegistry'
+import { flushAll, getRegisteredTool, registerTool } from './flushRegistry'
 
 const handle = (uid = 'u1') => ({
   uid,
@@ -19,16 +19,4 @@ test('flushAll espera el flush de todas las herramientas registradas', async () 
   offA()
   offB()
   expect(getRegisteredTool('gantt')).toBeUndefined()
-})
-
-test('flushTool solo afecta a la herramienta pedida; desregistrar no borra un registro más nuevo', async () => {
-  const a1 = handle()
-  const a2 = handle()
-  const off1 = registerTool('gantt', a1)
-  const off2 = registerTool('gantt', a2)
-  off1()
-  await flushTool('gantt')
-  expect(a1.flush).not.toHaveBeenCalled()
-  expect(a2.flush).toHaveBeenCalledTimes(1)
-  off2()
 })

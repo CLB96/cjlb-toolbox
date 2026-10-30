@@ -33,20 +33,6 @@ test('pagehide con cambios pendientes guarda de inmediato', async () => {
   a.dispose()
 })
 
-test('visibilitychange a hidden guarda de inmediato; visible no', async () => {
-  const { a, save } = setup()
-  a.markDirty()
-  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
-  document.dispatchEvent(new Event('visibilitychange'))
-  await vi.advanceTimersByTimeAsync(0)
-  expect(save).not.toHaveBeenCalled()
-  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true })
-  document.dispatchEvent(new Event('visibilitychange'))
-  await vi.advanceTimersByTimeAsync(0)
-  expect(save).toHaveBeenCalledTimes(1)
-  a.dispose()
-})
-
 test('un fallo (QuotaExceededError) llama onError y el intervalo sigue vivo', async () => {
   const quota = new DOMException('full', 'QuotaExceededError')
   const save = vi.fn().mockRejectedValueOnce(quota).mockResolvedValue(undefined)

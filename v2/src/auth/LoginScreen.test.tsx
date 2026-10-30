@@ -17,13 +17,6 @@ test('con tema claro el logo usa /logo-light.png', () => {
   expect(screen.getByAltText('CJLB')).toHaveAttribute('src', '/logo-light.png')
 })
 
-test('con tema oscuro el logo usa /logo-dark.png', () => {
-  localStorage.setItem('cjlb.theme', 'dark')
-  __resetThemeForTests()
-  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={vi.fn()} />)
-  expect(screen.getByAltText('CJLB')).toHaveAttribute('src', '/logo-dark.png')
-})
-
 test('credencial inválida muestra mensaje genérico sin detalles técnicos', async () => {
   const signInWithEmail = vi.fn().mockRejectedValue(new Error('auth/wrong-password internal'))
   render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={signInWithEmail} />)

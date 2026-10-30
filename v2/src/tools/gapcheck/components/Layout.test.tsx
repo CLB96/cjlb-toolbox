@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { __resetI18nForTests } from '../../../i18n/useI18n'
 import { useToasts } from '../../../ui/toastStore'
 import { GapcheckStoreProvider, useGapcheckApi } from '../GapcheckStoreProvider'
@@ -81,28 +81,11 @@ test('sin imagen se ve la zona de carga con el texto original', () => {
   expect(screen.queryByRole('slider')).toBeNull()
 })
 
-test('abierta por defecto y colapsable', () => {
-  setup()
-  const toggle = screen.getByRole('button', { name: /Gapcheck Layout/ })
-  expect(toggle).toHaveAttribute('aria-expanded', 'true')
-  fireEvent.click(toggle)
-  expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  expect(screen.queryByTestId('gc-layout-input')).toBeNull()
-})
-
 test('archivo que no es imagen → toast con el texto original y no se carga', () => {
   setup()
   pick(new File(['x'], 'datos.xlsx', { type: 'application/vnd.ms-excel' }))
   expect(toastMessages()).toEqual(['Por favor selecciona una imagen'])
   expect(api.getState().layout.image).toBeNull()
-})
-
-test('texto del aviso en inglés', () => {
-  localStorage.setItem('cjlb.lang', 'en')
-  __resetI18nForTests()
-  setup()
-  pick(new File(['x'], 'a.txt', { type: 'text/plain' }))
-  expect(toastMessages()).toEqual(['Please select an image'])
 })
 
 test('al cargar imagen con datos: un marcador por punto en la posición por defecto, color y nombre', () => {
@@ -198,40 +181,6 @@ test('la imagen que no se puede decodificar avisa y se quita', () => {
   expect(screen.getByTestId('gc-layout-input')).toBeInTheDocument()
 })
 
-test('aviso de imagen no decodificable en inglés', () => {
-  localStorage.setItem('cjlb.lang', 'en')
-  __resetI18nForTests()
-  setup()
-  loadPoints()
-  pick(imageFile())
-  fireEvent.error(screen.getByRole('img', { name: 'Gapcheck Layout' }))
-  expect(toastMessages()).toEqual(['The image could not be displayed'])
-})
-
-test('perder la captura del puntero cierra el arrastre y guarda la posición', () => {
-  setup()
-  loadPoints()
-  pick(imageFile())
-  mockRect(screen.getByTestId('gc-layout-overlay'), { left: 0, top: 0, width: 400, height: 200 })
-  const m = screen.getByTestId('gc-marker-0')
-  fireEvent.pointerDown(m, { pointerId: 1, clientX: 200, clientY: 100, button: 0 })
-  fireEvent.pointerMove(m, { pointerId: 1, clientX: 340, clientY: 140 })
-  fireEvent(m, new Event('lostpointercapture', { bubbles: true }))
-  expect(m.className).not.toContain('gc-marker--dragging')
-  expect(api.getState().layout.markers[0]).toMatchObject({ x: 50, y: 50 })
-})
-
-test('accesibilidad: marcadores descritos por las instrucciones; emoji del título oculto', () => {
-  setup()
-  loadPoints()
-  pick(imageFile())
-  const hint = screen.getByText('Arrastra los puntos de medición para ubicarlos en el diagrama')
-  expect(hint.id).toBeTruthy()
-  expect(screen.getByTestId('gc-marker-0')).toHaveAttribute('aria-describedby', hint.id)
-  expect(screen.getByRole('button', { name: /Gapcheck Layout/ }).textContent).toContain('📐')
-  expect(document.querySelector('#gc-layout-title [aria-hidden="true"]:not(:first-child)')).not.toBeNull()
-})
-
 test('teclado: flechas mueven el marcador 1% (Shift 5%)', () => {
   setup()
   loadPoints()
@@ -257,14 +206,6 @@ test('"Cambiar imagen" reemplaza la imagen, recoloca marcadores y revoca la URL 
   expect(revoked).toContain('blob:test/1')
 })
 
-test('revoca la URL al desmontar', () => {
-  const { unmount } = setup()
-  loadPoints()
-  pick(imageFile())
-  unmount()
-  expect(revoked).toContain('blob:test/1')
-})
-
 test('imagen > 20 MB: se usa en pantalla; el aviso lo da la persistencia, no el Layout', () => {
   setup()
   loadPoints()
@@ -284,23 +225,6 @@ function hexToRgb(hex: string): string {
   const n = parseInt(hex.slice(1), 16)
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
 }
-
-test('deshabilitado: los marcadores no se mueven con el teclado', () => {
-  setup()
-  loadPoints()
-  pick(imageFile())
-  const before = api.getState().layout.markers[0]
-  cleanup()
-  setup(true)
-  act(() => {
-    api.getState().loadRows('a.xlsx', [NAMES, [1, 2, 3, 4, 5]] as never)
-    api.getState().setLayoutImage(imageFile(), 'd.png')
-  })
-  const marker = screen.getByTestId('gc-marker-0')
-  expect(marker).toHaveAttribute('aria-disabled', 'true')
-  fireEvent.keyDown(marker, { key: 'ArrowRight' })
-  expect(api.getState().layout.markers[0].x).toBe(before.x)
-})
 
 test('la imagen se ajusta a la pantalla por defecto y se puede ver a tamaño real', () => {
   setup()

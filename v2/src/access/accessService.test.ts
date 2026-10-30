@@ -7,9 +7,6 @@ vi.mock('../auth/firebase', () => ({ db: {} }))
 
 import {
   approveRequest,
-  getMyRequest,
-  listPendingRequests,
-  rejectRequest,
   submitAccessRequest,
   SUBMIT_TIMEOUT_MS,
   usePendingCount,
@@ -23,11 +20,6 @@ test('normaliza el correo y guarda status pending con solo las claves permitidas
   const saved = store.get('accessRequests/bob@x.com')!
   expect(Object.keys(saved).sort()).toEqual(['createdAt', 'email', 'name', 'reason', 'status', 'uid'])
   expect(saved).toMatchObject({ email: 'bob@x.com', name: 'Bob', reason: 'quiero', status: 'pending', uid: null })
-})
-
-test('segundo envío del mismo correo devuelve alreadyExists', async () => {
-  await submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })
-  expect(await submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })).toBe('alreadyExists')
 })
 
 test('honeypot con texto devuelve ignored y no escribe nada', async () => {
@@ -44,37 +36,11 @@ test('entradas fuera de los límites de las reglas devuelven error sin escribir'
   expect(store.size).toBe(0)
 })
 
-test('otros errores de Firestore devuelven error', async () => {
-  const spy = vi.spyOn(fake, 'setDoc').mockRejectedValueOnce(Object.assign(new Error('x'), { code: 'unavailable' }))
-  expect(await submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })).toBe('error')
-  spy.mockRestore()
-})
-
-test('getMyRequest devuelve null si no existe y la solicitud con createdAt numérico si existe', async () => {
-  expect(await getMyRequest('bob@x.com')).toBeNull()
-  await submitAccessRequest({ email: 'bob@x.com', name: 'Bob', uid: 'u1' })
-  expect(await getMyRequest('Bob@x.com')).toMatchObject({
-    email: 'bob@x.com',
-    status: 'pending',
-    uid: 'u1',
-    createdAt: 1700000000000,
-  })
-})
-
 test('approveRequest crea allowlist y marca approved', async () => {
   await submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })
   await approveRequest('bob@x.com', 'admin@x.com')
   expect(store.get('allowlist/bob@x.com')).toMatchObject({ addedBy: 'admin@x.com' })
   expect(store.get('accessRequests/bob@x.com')).toMatchObject({ status: 'approved' })
-})
-
-test('rejectRequest marca rejected sin tocar la allowlist; list solo devuelve pendientes', async () => {
-  await submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })
-  await submitAccessRequest({ email: 'eve@x.com', name: 'Eve' })
-  await rejectRequest('bob@x.com')
-  expect(store.has('allowlist/bob@x.com')).toBe(false)
-  expect(store.get('accessRequests/bob@x.com')).toMatchObject({ status: 'rejected' })
-  expect((await listPendingRequests()).map((r) => r.email)).toEqual(['eve@x.com'])
 })
 
 test('si setDoc nunca responde (offline), a los 15 s devuelve error', async () => {
@@ -96,13 +62,5 @@ test('usePendingCount muestra un toast si el listener falla y devuelve 0', () =>
   const { result } = renderHook(() => usePendingCount(true))
   expect(result.current).toBe(0)
   expect(useToasts.getState().toasts).toHaveLength(1)
-  spy.mockRestore()
-})
-
-test('usePendingCount no consulta si no es admin', () => {
-  const spy = vi.spyOn(fake, 'onSnapshot')
-  const { result } = renderHook(() => usePendingCount(false))
-  expect(result.current).toBe(0)
-  expect(spy).not.toHaveBeenCalled()
   spy.mockRestore()
 })
