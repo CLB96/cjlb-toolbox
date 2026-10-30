@@ -3,6 +3,26 @@ import userEvent from '@testing-library/user-event'
 vi.mock('../access/accessService', () => ({ submitAccessRequest: vi.fn() }))
 
 import { LoginScreen } from './LoginScreen'
+import { __resetThemeForTests } from '../theme/useTheme'
+
+afterEach(() => {
+  localStorage.removeItem('cjlb.theme')
+  __resetThemeForTests()
+})
+
+test('con tema claro el logo usa /logo-light.png', () => {
+  localStorage.setItem('cjlb.theme', 'light')
+  __resetThemeForTests()
+  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={vi.fn()} />)
+  expect(screen.getByAltText('CJLB')).toHaveAttribute('src', '/logo-light.png')
+})
+
+test('con tema oscuro el logo usa /logo-dark.png', () => {
+  localStorage.setItem('cjlb.theme', 'dark')
+  __resetThemeForTests()
+  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={vi.fn()} />)
+  expect(screen.getByAltText('CJLB')).toHaveAttribute('src', '/logo-dark.png')
+})
 
 test('credencial inválida muestra mensaje genérico sin detalles técnicos', async () => {
   const signInWithEmail = vi.fn().mockRejectedValue(new Error('auth/wrong-password internal'))

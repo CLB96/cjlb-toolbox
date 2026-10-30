@@ -4,6 +4,7 @@ import { GlassPanel } from '../ui/GlassPanel'
 import { Button } from '../ui/Button'
 import { useI18n, type MessageKey } from '../i18n/useI18n'
 import { RequestAccessForm } from '../access/RequestAccessForm'
+import { useTheme } from '../theme/useTheme'
 
 type Props = {
   signInWithGoogle: () => Promise<void>
@@ -12,6 +13,8 @@ type Props = {
 
 export function LoginScreen({ signInWithGoogle, signInWithEmail }: Props) {
   const { t } = useI18n()
+  const { resolved } = useTheme()
+  const logoSrc = resolved === 'dark' ? '/logo-dark.png' : '/logo-light.png'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null)
@@ -42,6 +45,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail }: Props) {
         <Starfield />
         <main className="auth-screen">
           <GlassPanel className="auth-card">
+            <img className="auth-card__logo" src={logoSrc} alt="CJLB" height={40} />
             <h1 className="auth-card__title">{t('auth.title')}</h1>
             <RequestAccessForm onBack={() => setRequesting(false)} />
           </GlassPanel>
@@ -55,7 +59,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail }: Props) {
       <Starfield />
       <main className="auth-screen">
         <GlassPanel className="auth-card">
-          <img className="auth-card__logo" src="/logo-dark.png" alt="CJLB" height={40} />
+          <img className="auth-card__logo" src={logoSrc} alt="CJLB" height={40} />
           <h1 className="auth-card__title">{t('auth.title')}</h1>
           <Button disabled={busy} onClick={() => void run(signInWithGoogle, 'auth.googleFailed')}>
             {t('auth.google')}
