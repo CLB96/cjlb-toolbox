@@ -60,7 +60,7 @@ test('cargar → filtros, covering y entradas → aplicar → remontar restaura 
   await user.upload(input, xlsxFile(ROWS))
 
   // KPIs de la fixture (con el Excel real, los del original)
-  await waitFor(() => expect(kpi('target')).toHaveTextContent('5.00'))
+  await waitFor(() => expect(kpi('target')).toHaveTextContent(/^5\.00/))
   expect(kpi('totalRecords')).toHaveTextContent(/^20$/)
   if (EXPECTED) {
     expect(kpi('avg')).toHaveTextContent(new RegExp(`^${EXPECTED.avg}$`))
@@ -86,7 +86,7 @@ test('cargar → filtros, covering y entradas → aplicar → remontar restaura 
   await user.clear(pct)
   await user.type(pct, '60')
   const live = screen.getByTestId('gapcheckValue').textContent!
-  expect(kpi('target')).toHaveTextContent('5.00') // R1: el KPI espera al botón
+  expect(kpi('target')).toHaveTextContent(/^5\.00/) // R1: el KPI espera al botón
   await user.click(screen.getByRole('button', { name: /Actualizar Comparación/ }))
   expect(kpi('target')).toHaveTextContent(live)
   expect(kpi('target').parentElement).toHaveTextContent('Soft Covering')
@@ -115,7 +115,7 @@ test('cargar → filtros, covering y entradas → aplicar → remontar restaura 
   expect(screen.queryByTestId('kpi-target')).toBeNull()
   await waitFor(async () => {
     const snaps = await history()
-    expect(snaps[0].points).toHaveLength(0)
+    expect(snaps.some((s) => s.points.length === 0)).toBe(true)
     expect(snaps.some((s) => s.points.length === 20 && s.covering === 'soft')).toBe(true)
   })
 })

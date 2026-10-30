@@ -46,7 +46,7 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 ### 8. Los marcadores del Layout ignoran los filtros de puntos (§12.12)
 - **Qué pasa hoy:** si ocultas un punto en la gráfica, su marcador sigue visible en el diagrama.
 - **Qué se ganaría:** diagrama y gráfica coherentes con lo que se está mirando.
-- **Estado:** conservado.
+- **Estado:** conservado. Ojo: esto es solo en **pantalla**. El PNG exportado sí oculta los marcadores de los puntos filtrados, en el original (§12.13) y en la v2 (igual).
 
 ### 9. Los marcadores vuelven a su sitio al cargar otro Excel (§12.12)
 - **Qué pasa hoy:** al cargar un archivo nuevo con una imagen ya puesta, las posiciones que arrastraste se pierden y vuelven a la distribución por defecto.
@@ -72,11 +72,6 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 - **Qué pasa hoy:** se calculan con `Math.min(...lista)`, que falla con cientos de miles de valores.
 - **Qué se ganaría:** ninguna falla con archivos enormes (no ocurre con los archivos reales de ~200 valores).
 - **Estado:** conservado.
-
-### 14. Eje derecho de compresión (§12.9)
-- **Qué pasa hoy:** el eje derecho se calcula con valores del eje izquierdo; en el original podía quedar desfasado en la primera construcción.
-- **Qué se ganaría:** eje siempre correcto desde el primer dibujo.
-- **Estado:** en la v2 el eje se construye de nuevo con cada cambio, así que el desfase no se espera; la v2 usa el covering y los valores **aplicados** (R1). Pendiente de revisión visual con el Excel real.
 
 ### 15. Cosas del original que no se portaron
 - Código muerto del original (`toggleTheme` duplicado, `rawData`, textos sin usar; §12.1) y el login con contraseña fija `CJLB` en el navegador (§12.14): la v2 usa el login y el tema de la app (Plan 1).
@@ -116,6 +111,16 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 - **Qué se ganaría:** agregar la unidad es trivial si la quieres.
 - **Estado:** conservado (decisión P2-D).
 
+### 21b. Borde de la caja del Layout en el PNG (§12.13)
+- **Qué pasa hoy (original):** la caja del layout en el PNG se dibujaba con el borde que hubiera quedado del dibujo anterior (estado sobrante del canvas), así que el estilo era accidental.
+- **Qué hace la v2:** dibuja un borde propio y explícito (cristal translúcido de 1 px, igual que las tarjetas).
+- **Estado:** cambiado en el port, aprobado por regla R5 (composición Nebulosa).
+
+### 21c. Eje derecho de compresión (§12.9)
+- **Antes:** en el original el eje derecho podía quedar desalineado en la primera construcción.
+- **Ahora:** en la v2 se calcula desde la escala de la misma gráfica. Verificado en navegador el 2026-10-30 con el Excel real: al abrir, tras cargar, tras pasar a Soft + Actualizar Comparación y tras recargar la página, los ticks del eje derecho quedan alineados con los del izquierdo (Hard: 50 %…85 %, Soft: 50 %…120 %).
+- **Estado:** cambiado en el port (verificado).
+
 ---
 
 ## C. Comportamientos nuevos añadidos en el port
@@ -130,7 +135,7 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 | 27 | Se quitó el alto mínimo y el ajuste "object-fit" de la imagen: la imagen se ve a su proporción real (los % de los marcadores dependen de eso). | Marcadores exactos sobre la imagen. | Nuevo |
 | 28 | El PNG usa el objetivo y el covering **aplicados** (los de las tarjetas y la gráfica); el original usaba los que estaban escritos en ese momento aunque no se hubiera pulsado el botón. | PNG coherente con lo que se ve en pantalla. Solo difiere si se escribió sin pulsar "Actualizar". | Cambiado en el port (consecuencia de R1) |
 | 29 | Si el PNG falla, el aviso también existe en inglés ("Export failed. Check that the uploaded images are not remote (CORS)."); el original solo lo tenía en español. | Mensaje en el idioma activo. | Nuevo (texto nuevo) |
-| 30 | Si la imagen del Layout no carga al exportar, el PNG se genera igual sin la caja del Layout (como hacía el original). | No se pierde el export por una imagen. | Conservado |
+| 30 | Si la imagen del Layout no carga al exportar, el PNG se genera igual sin la caja del Layout. Es **silencioso**: no sale ningún aviso (igual que el original). Mejora propuesta: un toast tipo "No se pudo cargar la imagen del layout; se exportó sin ella". | No se pierde el export por una imagen y se sabe por qué falta. | Conservado (el aviso es solo propuesta) |
 | 31 | Cabecera con nombre del archivo, "{n} iteraciones × {m} puntos", **Cambiar archivo**, **Historial** e indicador de guardado (textos `fileDims`, `changeFile`, `history`). Los análisis se guardan solos y se pueden restaurar. | Reabrir donde se dejó; volver a versiones previas. | Nuevo (textos nuevos) |
 | 32 | Imágenes de Layout de más de 20 MB se usan en pantalla pero no se guardan en el historial; el aviso lo da el sistema de guardado una sola vez. | No llenar el almacenamiento del navegador. | Nuevo |
 | 33 | Títulos de ejes de la gráfica ("Medición de Espesor (mm)", "Compresión Real (%)") tomados literalmente del original, con traducción EN. Colores de texto, rejilla y tooltip salen del tema día/noche; en tema claro el borde del tooltip es más oscuro para verse. | Gráfica legible en ambos temas. | Nuevo (la paleta de datos no cambió) |

@@ -2,10 +2,14 @@ import { useI18n } from '../../i18n/useI18n'
 
 /**
  * Diccionario copiado literal del original (gapcheck/index.html 1702-1795, inventario §10).
- * Añadidos de la v2: `importFailed` (aviso de lectura), `noNumericData` (aviso cuando el archivo no trae números; el original no hacía nada), `fileDims`, `changeFile` y `history`
- * (cabecera aprobada en el mockup); `selectImage` (alert literal de handleGapLayoutImage 2646) y `changeImage` (nuevo, Task 7). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
- * `exportNoData`/`exportFailed`: alerts literales de exportToPNG (1841, 2076); `exportFailed` EN es nuevo
- * (el original solo lo tenía en español).
+ * Añadidos de la v2:
+ * - `importFailed`: aviso de lectura.
+ * - `noNumericData`: aviso cuando el archivo no trae números (el original no hacía nada).
+ * - `fileDims`, `changeFile`, `history`: cabecera aprobada en el mockup.
+ * - `selectImage`: alert literal de handleGapLayoutImage (2646). `changeImage`: nuevo (Task 7).
+ * - `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
+ * - `exportNoData`/`exportFailed`: alerts literales de exportToPNG (1841, 2076);
+ *   `exportFailed` EN es nuevo (el original solo lo tenía en español).
  */
 const es = {
   loginEnter: 'Ingresar',
