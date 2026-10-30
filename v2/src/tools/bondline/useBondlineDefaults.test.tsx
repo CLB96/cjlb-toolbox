@@ -19,7 +19,7 @@ const wrap = (uid: string) =>
 
 const form = { wbMin: '', wbMax: '80', hmMin: '', hmMax: '', cooling: '' }
 
-test('sin preferencia: fÃ¡brica y loaded true', async () => {
+test('sin preferencia: fábrica y loaded true', async () => {
   const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
   expect(result.current.loaded).toBe(false)
   await waitFor(() => expect(result.current.loaded).toBe(true))
@@ -47,14 +47,14 @@ test('carga la preferencia guardada al montar', async () => {
   expect(result.current.defaults).toEqual(saved)
 })
 
-test('preferencia corrupta o parcial -> fÃ¡brica', async () => {
+test('preferencia corrupta o parcial -> fábrica', async () => {
   await savePreference('u1', BONDLINE_DEFAULTS_KEY, { waterbase: 3 })
   const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
   await waitFor(() => expect(result.current.loaded).toBe(true))
   expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
 })
 
-test('resetToFactory guarda y aplica fÃ¡brica', async () => {
+test('resetToFactory guarda y aplica fábrica', async () => {
   await savePreference('u1', BONDLINE_DEFAULTS_KEY, {
     waterbase: { min: 1, max: 2 },
     hotmelt: { min: 3, max: 4 },
