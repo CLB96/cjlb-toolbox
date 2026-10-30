@@ -5,6 +5,7 @@
 // - timeStartNegative, timeEndNotAfterStart, timeEndExceeds: alerts literales de applyTimeRange (ES/EN, §6).
 // - defaultsConfirmReset: confirm literal de resetDefaults (ES/EN, §6).
 // - layoutRealSize: botón "Tamaño real" del layout (R4, como GapCheck).
+// - selectImage: alert literal de handleLayoutImage (2860); changeImage, imageLoadFailed: nuevos (como GapCheck).
 import { useI18n } from '../../i18n/useI18n'
 import type { Lang } from './logic/types'
 
@@ -140,6 +141,9 @@ const es = {
     timeEndExceeds: (total: A) => `El tiempo final no puede exceder ${total}s`,
     defaultsConfirmReset: '¿Restaurar valores de fábrica?',
     layoutRealSize: 'Tamaño real',
+    selectImage: 'Por favor selecciona una imagen',
+    changeImage: 'Cambiar imagen',
+    imageLoadFailed: 'No se pudo mostrar la imagen',
 }
 
 export type BondlineKey = keyof typeof es
@@ -275,6 +279,9 @@ const en: Record<BondlineKey, Entry> = {
     timeEndExceeds: (total: A) => `End time cannot exceed ${total}s`,
     defaultsConfirmReset: 'Restore factory values?',
     layoutRealSize: 'Actual size',
+    selectImage: 'Please select an image',
+    changeImage: 'Change image',
+    imageLoadFailed: 'The image could not be displayed',
 }
 
 export const BONDLINE_I18N: Record<Lang, Record<BondlineKey, Entry>> = { es, en }

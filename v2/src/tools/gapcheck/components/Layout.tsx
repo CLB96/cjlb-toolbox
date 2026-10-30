@@ -6,7 +6,7 @@ import { toast } from '../../../ui/toastStore'
 import { useGapcheck, useGapcheckApi } from '../GapcheckStoreProvider'
 import { useGapcheckT } from '../i18n'
 import { POINT_COLORS } from '../logic/chartStyle'
-import { Marker } from './Marker'
+import { Marker } from '../../../ui/Marker'
 import { RichText } from '../../../ui/RichText'
 
 const MARKER_MIN = 20
@@ -178,7 +178,8 @@ export function Layout({ disabled }: { disabled: boolean }) {
                     {markers.map((m) => (
                       <Marker
                         key={m.pointIndex}
-                        index={m.pointIndex}
+                        className="gc-marker"
+                        testId={`gc-marker-${m.pointIndex}`}
                         name={points[m.pointIndex]?.name ?? ''}
                         color={POINT_COLORS[m.pointIndex % POINT_COLORS.length]}
                         x={m.x}

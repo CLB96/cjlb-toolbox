@@ -18,6 +18,7 @@ import { EmptyState } from './components/EmptyState'
 import { Events } from './components/Events'
 import { Header } from './components/Header'
 import { Kpis } from './components/Kpis'
+import { Layout } from './components/Layout'
 import { Legend } from './components/Legend'
 import { ProcessParams } from './components/ProcessParams'
 import { RawMaterial } from './components/RawMaterial'
@@ -90,7 +91,7 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
           </div>
           <ProcessParams disabled={disabled} />
           <Events disabled={disabled} />
-          {/* Layout plegable: Task 8 */}
+          <Layout disabled={disabled} />
         </>
       ) : (
         <EmptyState disabled={disabled} onFile={(f) => void onFile(f)} />

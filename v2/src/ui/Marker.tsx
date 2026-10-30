@@ -11,12 +11,20 @@ interface Pos {
 }
 
 interface Props {
-  index: number
+  /** Clase base del marcador (aporta cada herramienta: `gc-marker`, `bl-marker`); el arrastre añade `<base>--dragging`. */
+  className: string
+  testId: string
+  /** Texto accesible del botón. */
   name: string
+  /** Texto visible (por defecto, `name`). */
+  label?: string
+  /** Etiqueta flotante opcional (`data-label`, p. ej. TC-n en Bondline). */
+  dataLabel?: string
   color: string
   x: number
   y: number
-  size: number
+  /** Tamaño en px; sin él, el tamaño lo da el CSS de la herramienta. */
+  size?: number
   disabled?: boolean
   /** id del texto de instrucciones que describe al marcador. */
   describedBy?: string
@@ -37,7 +45,7 @@ export const markerBoxStyle = (size: number) => ({
  * Marcador arrastrable centrado en su punto (translate(-50%,-50%) igual que las cuentas),
  * así no salta al agarrarlo (bug (a) del inventario §8).
  */
-export function Marker({ index, name, color, x, y, size, disabled = false, describedBy, getImageRect, onMove }: Props) {
+export function Marker({ className, testId, name, label, dataLabel, color, x, y, size, disabled = false, describedBy, getImageRect, onMove }: Props) {
   const [drag, setDrag] = useState<Pos | null>(null)
   const grab = useRef<Pos>({ x: 0, y: 0 })
   const last = useRef<Pos | null>(null)
@@ -117,9 +125,10 @@ export function Marker({ index, name, color, x, y, size, disabled = false, descr
       aria-disabled={disabled || undefined}
       aria-label={name}
       aria-describedby={describedBy}
-      data-testid={`gc-marker-${index}`}
-      className={`gc-marker${drag ? ' gc-marker--dragging' : ''}`}
-      style={{ left: `${pos.x}%`, top: `${pos.y}%`, backgroundColor: color, ...markerBoxStyle(size) }}
+      data-testid={testId}
+      data-label={dataLabel}
+      className={`${className}${drag ? ` ${className}--dragging` : ''}`}
+      style={{ left: `${pos.x}%`, top: `${pos.y}%`, backgroundColor: color, ...(size === undefined ? {} : markerBoxStyle(size)) }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={finish}
@@ -127,7 +136,7 @@ export function Marker({ index, name, color, x, y, size, disabled = false, descr
       onLostPointerCapture={onLostCapture}
       onKeyDown={onKeyDown}
     >
-      {name}
+      {label ?? name}
     </div>
   )
 }
