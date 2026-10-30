@@ -77,3 +77,67 @@ test('fallo al guardar muestra toast y no cambia los valores', async () => {
   expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
   spy.mockRestore()
 })
+
+test('cambiar de uid mientras se guarda no deja el hook atascado', async () => {
+  let uid = 'u1'
+  const Wrapper = ({ children }: { children: ReactNode }) => <UidProvider uid={uid}>{children}</UidProvider>
+  const { result, rerender } = renderHook(() => useBondlineDefaults(), { wrapper: Wrapper })
+  await waitFor(() => expect(result.current.loaded).toBe(true))
+  let pending: Promise<boolean> | undefined
+  act(() => {
+    pending = result.current.save(form)
+  })
+  uid = 'u2'
+  rerender()
+  await act(async () => {
+    await pending
+  })
+  await waitFor(() => expect(result.current.loaded).toBe(true))
+  expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
+})
+
+test('un guardado durante la carga inicial gana sobre el valor cargado', async () => {
+  await savePreference('u1', BONDLINE_DEFAULTS_KEY, {
+    waterbase: { min: 1, max: 2 },
+    hotmelt: { min: 3, max: 4 },
+    coolingTarget: 5,
+  })
+  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
+  await act(async () => {
+    await result.current.save(form)
+  })
+  await new Promise((r) => setTimeout(r, 50))
+  expect(result.current.defaults.waterbase).toEqual({ min: 55, max: 80 })
+  expect(result.current.loaded).toBe(true)
+})
+
+test('save y resetToFactory resuelven true en éxito y false en fallo', async () => {
+  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.loaded).toBe(true))
+  let ok: boolean | undefined
+  await act(async () => {
+    ok = await result.current.save(form)
+  })
+  expect(ok).toBe(true)
+  const prefs = await import('../../persistence/preferences')
+  const spy = vi.spyOn(prefs, 'savePreference').mockRejectedValue(new Error('boom'))
+  await act(async () => {
+    ok = await result.current.save(form)
+  })
+  expect(ok).toBe(false)
+  await act(async () => {
+    ok = await result.current.resetToFactory()
+  })
+  expect(ok).toBe(false)
+  spy.mockRestore()
+})
+
+test('fallo al cargar muestra toast y usa fábrica', async () => {
+  const prefs = await import('../../persistence/preferences')
+  const spy = vi.spyOn(prefs, 'loadPreference').mockRejectedValueOnce(new Error('boom'))
+  const { result } = renderHook(() => useBondlineDefaults(), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.loaded).toBe(true))
+  expect(result.current.defaults).toEqual(FACTORY_DEFAULTS)
+  expect(useToasts.getState().toasts.some((x) => x.kind === 'error')).toBe(true)
+  spy.mockRestore()
+})

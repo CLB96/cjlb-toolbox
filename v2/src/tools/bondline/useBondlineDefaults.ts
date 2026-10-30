@@ -11,8 +11,9 @@ export const BONDLINE_DEFAULTS_KEY = 'bondline.defaults'
 export interface BondlineDefaultsApi {
   defaults: BondlineDefaults
   loaded: boolean
-  save(form: DefaultsForm): Promise<void>
-  resetToFactory(): Promise<void>
+  /** Resuelven true si se guardó; false si falló (ya se avisó con un toast). */
+  save(form: DefaultsForm): Promise<boolean>
+  resetToFactory(): Promise<boolean>
 }
 
 export function useBondlineDefaults(): BondlineDefaultsApi {
@@ -20,10 +21,14 @@ export function useBondlineDefaults(): BondlineDefaultsApi {
   const { t } = useI18n()
   const tRef = useRef(t)
   tRef.current = t
+  const uidRef = useRef(uid)
+  uidRef.current = uid
+  const writesRef = useRef(0)
   const [state, setState] = useState<{ uid: string; defaults: BondlineDefaults } | null>(null)
 
   useEffect(() => {
     let cancelled = false
+    const writesAtStart = writesRef.current
     loadPreference<unknown>(uid, BONDLINE_DEFAULTS_KEY)
       .then((raw) => normalizeDefaults(raw))
       .catch(() => {
@@ -31,7 +36,7 @@ export function useBondlineDefaults(): BondlineDefaultsApi {
         return normalizeDefaults(undefined)
       })
       .then((defaults) => {
-        if (!cancelled) setState({ uid, defaults })
+        if (!cancelled && writesRef.current === writesAtStart) setState({ uid, defaults })
       })
     return () => {
       cancelled = true
@@ -39,12 +44,15 @@ export function useBondlineDefaults(): BondlineDefaultsApi {
   }, [uid])
 
   const persist = useCallback(
-    async (next: BondlineDefaults) => {
+    async (next: BondlineDefaults): Promise<boolean> => {
+      writesRef.current += 1
       try {
         await savePreference(uid, BONDLINE_DEFAULTS_KEY, next)
-        setState({ uid, defaults: next })
+        if (uidRef.current === uid) setState({ uid, defaults: next })
+        return true
       } catch {
         toast('error', tRef.current('prefs.saveFailed'))
+        return false
       }
     },
     [uid],
