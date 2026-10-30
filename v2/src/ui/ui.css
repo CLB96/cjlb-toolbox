@@ -102,3 +102,17 @@
 .topbar__logo { height: 32px; width: auto; }
 .topbar__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .tool-host { position: relative; z-index: 1; padding: 0 12px 24px; }
+
+.auth-screen { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.auth-card { width: min(400px, 100%); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+.auth-card__title { font-size: 22px; }
+.auth-card__sep, .auth-card__muted { color: var(--fg-muted); text-align: center; }
+.auth-card__form { display: flex; flex-direction: column; gap: 12px; }
+.auth-card__form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.auth-card__form input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--fg-muted); background: var(--glass-dense); color: var(--fg); }
+.auth-card__error { color: var(--error); font-size: 14px; }
+.user-menu { position: relative; }
+.user-menu__avatar { list-style: none; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-1); color: #fff; font-weight: 600; }
+.user-menu__avatar::-webkit-details-marker { display: none; }
+.user-menu__panel { position: absolute; right: 0; top: 40px; min-width: 220px; padding: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 5; }
+.user-menu__email { color: var(--fg-muted); font-size: 13px; word-break: break-all; }

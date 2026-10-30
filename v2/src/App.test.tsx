@@ -1,10 +1,74 @@
 import { render, screen } from '@testing-library/react'
+import type { AuthStatus } from './auth/useAuth'
+
+const authState = vi.hoisted(() => ({ value: {} as Record<string, unknown> }))
+vi.mock('./auth/useAuth', () => ({ useAuth: () => authState.value }))
+
 import App from './App'
 
-test('renderiza el shell con logo y pestañas', () => {
+const user = { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true }
+function setAuth(status: AuthStatus, extra: Record<string, unknown> = {}) {
+  authState.value = {
+    status,
+    user: status === 'signedOut' || status === 'loading' ? null : user,
+    isAdmin: false,
+    signInWithGoogle: vi.fn(),
+    signInWithEmail: vi.fn(),
+    signOut: vi.fn(),
+    sendVerification: vi.fn(),
+    reloadUser: vi.fn(),
+    retry: vi.fn(),
+    ...extra,
+  }
+}
+
+beforeEach(() => {
   window.location.hash = '#/home'
+})
+
+test('allowed: renderiza el shell con logo, pestañas y menú de usuario', () => {
+  setAuth('allowed')
   render(<App />)
   expect(screen.getByAltText('CJLB')).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: 'Inicio' })).toBeInTheDocument()
   expect(screen.queryByRole('tab', { name: 'Uso' })).toBeNull()
+  expect(screen.getByText('a@b.com')).toBeInTheDocument()
+})
+
+test('allowed + admin muestra la pestaña Uso', () => {
+  setAuth('allowed', { isAdmin: true })
+  render(<App />)
+  expect(screen.getByRole('tab', { name: 'Uso' })).toBeInTheDocument()
+})
+
+test('signedOut muestra el login', () => {
+  setAuth('signedOut')
+  render(<App />)
+  expect(screen.getByRole('button', { name: 'Entrar con Google' })).toBeInTheDocument()
+  expect(screen.queryByRole('tab', { name: 'Inicio' })).toBeNull()
+})
+
+test('denied muestra Sin acceso', () => {
+  setAuth('denied')
+  render(<App />)
+  expect(screen.getByText('Sin acceso')).toBeInTheDocument()
+})
+
+test('unverified muestra Verifica tu correo', () => {
+  setAuth('unverified')
+  render(<App />)
+  expect(screen.getByText('Verifica tu correo')).toBeInTheDocument()
+})
+
+test('error ofrece reintentar', () => {
+  setAuth('error')
+  render(<App />)
+  expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+})
+
+test('loading no muestra el shell ni el login', () => {
+  setAuth('loading')
+  render(<App />)
+  expect(screen.queryByRole('tab')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Entrar con Google' })).toBeNull()
 })
