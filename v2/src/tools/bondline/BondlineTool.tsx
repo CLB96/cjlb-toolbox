@@ -9,9 +9,10 @@ import { BondlineStoreProvider, useBondlineApi } from './BondlineStoreProvider'
 import { importWorkbook } from './importWorkbook'
 import { fileReadErrorText } from './i18n'
 import { invalidSheetText, type SheetResult } from './store'
+import { exportBondlinePng } from './export/exportPng'
 import { useBondlineDefaults } from './useBondlineDefaults'
 import { useBondlinePersistence } from './useBondlinePersistence'
-import { BondlineDefaultsContext, useBondlineView } from './useBondlineView'
+import { BondlineDefaultsContext, useBondlineDefaultsCtx, useBondlineView } from './useBondlineView'
 import { BondlineChart } from './components/Chart'
 import { DefaultsDialog } from './components/DefaultsDialog'
 import { EmptyState } from './components/EmptyState'
@@ -36,6 +37,7 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
   const { t: tApp, lang } = useI18n()
   const api = useBondlineApi()
   const view = useBondlineView()
+  const { defaults } = useBondlineDefaultsCtx()
   const { lastSavedAt, restoreVersion, restored } = useBondlinePersistence()
   const [historyOpen, setHistoryOpen] = useState(false)
   const [defaultsOpen, setDefaultsOpen] = useState(false)
@@ -72,6 +74,7 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
         onSelectSheet={(i) => report(api.getState().selectSheet(i))}
         onDefaults={() => setDefaultsOpen(true)}
         onHistory={() => setHistoryOpen(true)}
+        onExport={() => void exportBondlinePng(api.getState(), defaults, lang)}
       />
       {view ? (
         <>
