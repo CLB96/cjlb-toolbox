@@ -139,6 +139,25 @@ export async function rejectRequest(email: string): Promise<void> {
   await batch.commit()
 }
 
+/**
+ * Escucha la entrada propia en la allowlist. Llama a `onAllowed` cuando existe,
+ * para que un usuario recién aprobado entre sin recargar. Devuelve la función
+ * para cancelar la suscripción.
+ */
+export function watchMyAllowlist(
+  email: string,
+  onAllowed: () => void,
+  onError: (e: unknown) => void,
+): () => void {
+  return onSnapshot(
+    doc(db, 'allowlist', normalizeEmail(email)),
+    (snap) => {
+      if (snap.exists()) onAllowed()
+    },
+    onError,
+  )
+}
+
 /** Cuenta de pendientes en vivo; sin consultas si no es admin. */
 export function usePendingCount(isAdmin: boolean): number {
   const { t } = useI18n()

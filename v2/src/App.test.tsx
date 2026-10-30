@@ -11,6 +11,7 @@ vi.mock('./access/accessService', () => ({
   usePendingCount: () => 0,
   getMyRequest: vi.fn().mockResolvedValue(null),
   submitAccessRequest: vi.fn(),
+  watchMyAllowlist: () => () => {},
 }))
 
 vi.mock('./usage/usageService', () => ({

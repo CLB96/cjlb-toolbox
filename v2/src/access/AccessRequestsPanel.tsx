@@ -40,20 +40,25 @@ export function AccessRequestsPanel({ adminEmail }: Props) {
   }
 
   return (
-    <section aria-labelledby="access-requests-title">
+    <section className="access-panel" aria-labelledby="access-requests-title">
       <h2 id="access-requests-title">{t('access.panel.title')}</h2>
-      {items !== null && items.length === 0 && <p>{t('access.panel.empty')}</p>}
-      <ul>
+      {items !== null && items.length === 0 && <p className="access-panel__empty">{t('access.panel.empty')}</p>}
+      <ul className="access-panel__list">
         {(items ?? []).map((r) => (
-          <li key={r.email}>
-            <strong>{r.name}</strong> <span>{r.email}</span>
-            {r.reason && <p>{r.reason}</p>}
-            <Button disabled={busy} onClick={() => void act(() => approveRequest(r.email, adminEmail))}>
-              {t('access.approve')}
-            </Button>
-            <Button variant="danger" disabled={busy} onClick={() => void act(() => rejectRequest(r.email))}>
-              {t('access.reject')}
-            </Button>
+          <li key={r.email} className="access-panel__item">
+            <div className="access-panel__who">
+              <strong>{r.name}</strong>
+              <span className="access-panel__email">{r.email}</span>
+            </div>
+            <div className="access-panel__actions">
+              <Button disabled={busy} onClick={() => void act(() => approveRequest(r.email, adminEmail))}>
+                {t('access.approve')}
+              </Button>
+              <Button variant="danger" disabled={busy} onClick={() => void act(() => rejectRequest(r.email))}>
+                {t('access.reject')}
+              </Button>
+            </div>
+            {r.reason && <p className="access-panel__reason">{r.reason}</p>}
           </li>
         ))}
       </ul>

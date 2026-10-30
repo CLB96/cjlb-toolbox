@@ -60,7 +60,15 @@ function renderBranch(auth: Auth, session: Session | null): ReactNode {
     )
   }
   if (status === 'denied') {
-    return <DeniedScreen email={user.email} uid={user.uid} displayName={user.displayName} onSignOut={onSignOut} />
+    return (
+      <DeniedScreen
+        email={user.email}
+        uid={user.uid}
+        displayName={user.displayName}
+        onSignOut={onSignOut}
+        onRecheck={auth.retry}
+      />
+    )
   }
   if (status === 'error' || !session) return <CheckFailed auth={auth} onSignOut={onSignOut} />
 

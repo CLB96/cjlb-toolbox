@@ -19,7 +19,7 @@
 
 .home__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 18px;
 }
 .tool-card { padding: 0; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
@@ -48,12 +48,14 @@
 .tool-card__icon-img { width: 40px; height: 40px; object-fit: contain; }
 .tool-card__name { font: 600 1.25rem var(--font-display); }
 .tool-card__desc { color: var(--fg-muted); font-size: 0.92rem; white-space: pre-line; }
-.tool-card__badges { display: flex; gap: 8px; min-height: 24px; }
+.tool-card__badges { display: flex; align-items: flex-start; gap: 8px; min-height: 26px; }
 .pill {
-  font: 600 0.72rem var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  font: 600 0.72rem/1 var(--font-body);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 3px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--edge);
 }

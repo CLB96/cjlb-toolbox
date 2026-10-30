@@ -4,15 +4,32 @@ import { GlassPanel } from '../ui/GlassPanel'
 import { Button } from '../ui/Button'
 import { toast } from '../ui/toastStore'
 import { useI18n } from '../i18n/useI18n'
-import { getMyRequest, type AccessRequest } from '../access/accessService'
+import { getMyRequest, watchMyAllowlist, type AccessRequest } from '../access/accessService'
 import { RequestAccessForm } from '../access/RequestAccessForm'
 
-type Props = { email: string; uid: string; displayName: string | null; onSignOut: () => void }
+interface Props {
+  email: string
+  uid: string
+  displayName: string | null
+  onSignOut: () => void
+  /** Vuelve a evaluar el acceso (p. ej. tras una aprobación). */
+  onRecheck: () => void
+}
 
-export function DeniedScreen({ email, uid, displayName, onSignOut }: Props) {
+export function DeniedScreen({ email, uid, displayName, onSignOut, onRecheck }: Props) {
   const { t } = useI18n()
   // undefined = cargando; null = sin solicitud previa
   const [request, setRequest] = useState<AccessRequest | null | undefined>(undefined)
+
+  // Al aprobarse la solicitud aparece la entrada en la allowlist: entra solo.
+  useEffect(
+    () =>
+      watchMyAllowlist(email, onRecheck, () => {
+        toast('error', t('access.loadFailed'))
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [email, onRecheck],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +68,9 @@ export function DeniedScreen({ email, uid, displayName, onSignOut }: Props) {
           {request === null && (
             <RequestAccessForm email={email} uid={uid} defaultName={displayName ?? ''} />
           )}
+          <Button variant="ghost" onClick={onRecheck}>
+            {t('access.recheck')}
+          </Button>
           <Button variant="ghost" onClick={onSignOut}>
             {t('auth.signOut')}
           </Button>
