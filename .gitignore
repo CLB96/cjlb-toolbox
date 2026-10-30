@@ -7,3 +7,4 @@ v2/node_modules/
 v2/dist/
 v2/.env.local
 v2/legacy-fixtures/private/
+v2/*.tsbuildinfo
