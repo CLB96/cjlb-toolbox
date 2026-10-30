@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/useI18n'
 import type { ToolId } from '../app/routes'
 import { Button } from '../ui/Button'
 import { GlassPanel } from '../ui/GlassPanel'
+import { toast } from '../ui/toastStore'
 import { listSnapshots, type SnapshotMeta } from './snapshotStore'
 import { useUid } from './uidContext'
 
@@ -21,12 +22,24 @@ export function HistoryPanel({ toolId, onRestore }: Props) {
     let active = true
     listSnapshots(uid, toolId).then(
       (list) => active && setItems(list),
-      () => active && setItems([]),
+      () => {
+        if (!active) return
+        setItems([])
+        toast('error', t('persist.historyLoadFailed'))
+      },
     )
     return () => {
       active = false
     }
   }, [uid, toolId])
+
+  const restore = async (id: string) => {
+    try {
+      await onRestore(id)
+    } catch {
+      toast('error', t('persist.restoreFailed'))
+    }
+  }
 
   const fmt = new Intl.DateTimeFormat(lang, { dateStyle: 'short', timeStyle: 'medium' })
   return (
@@ -39,7 +52,7 @@ export function HistoryPanel({ toolId, onRestore }: Props) {
           {items.map((m) => (
             <li key={m.id}>
               <time dateTime={new Date(m.savedAt).toISOString()}>{fmt.format(m.savedAt)}</time>
-              <Button variant="ghost" onClick={() => void onRestore(m.id)}>
+              <Button variant="ghost" onClick={() => void restore(m.id)}>
                 {t('persist.restore')}
               </Button>
             </li>

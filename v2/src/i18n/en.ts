@@ -18,4 +18,5 @@ export const en: Record<MessageKey, string> = {
   'persist.historyEmpty': 'No saved versions yet.',
   'persist.restore': 'Restore',
   'persist.largeFilesSkipped': 'Files larger than 20 MB are not kept in the history.',
+  'persist.historyLoadFailed': 'Could not load the version history.',
 }

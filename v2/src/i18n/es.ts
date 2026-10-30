@@ -16,6 +16,7 @@ export const es = {
   'persist.historyEmpty': 'Aún no hay versiones guardadas.',
   'persist.restore': 'Restaurar',
   'persist.largeFilesSkipped': 'Los archivos de más de 20 MB no se guardan en el historial.',
+  'persist.historyLoadFailed': 'No se pudo cargar el historial de versiones.',
 } as const
 
 export type MessageKey = keyof typeof es
