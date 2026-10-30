@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   collection,
   doc,
@@ -14,6 +14,19 @@ import {
 import { db } from '../auth/firebase'
 import { normalizeEmail } from '../auth/email'
 import { LIMITS } from './limits'
+import { toast } from '../ui/toastStore'
+import { useI18n } from '../i18n/useI18n'
+
+/** Sin red setDoc no se resuelve nunca: se aborta la espera a los 15 s. */
+export const SUBMIT_TIMEOUT_MS = 15_000
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { code: 'timeout' })), ms)
+  })
+  return Promise.race([p, timeout]).finally(() => clearTimeout(timer))
+}
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected'
 
@@ -45,7 +58,9 @@ export interface SubmitInput {
 }
 
 function errorCode(e: unknown): string | undefined {
-  return typeof e === 'object' && e !== null && 'code' in e ? String((e as { code: unknown }).code) : undefined
+  return typeof e === 'object' && e !== null && 'code' in e
+    ? String((e as { code: unknown }).code)
+    : undefined
 }
 
 export async function submitAccessRequest(input: SubmitInput): Promise<SubmitResult> {
@@ -64,14 +79,17 @@ export async function submitAccessRequest(input: SubmitInput): Promise<SubmitRes
     return 'error'
   }
   try {
-    await setDoc(doc(db, 'accessRequests', email), {
-      email,
-      name,
-      reason,
-      uid: input.uid ?? null,
-      status: 'pending',
-      createdAt: serverTimestamp(),
-    })
+    await withTimeout(
+      setDoc(doc(db, 'accessRequests', email), {
+        email,
+        name,
+        reason,
+        uid: input.uid ?? null,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      }),
+      SUBMIT_TIMEOUT_MS,
+    )
     return 'sent'
   } catch (e) {
     return errorCode(e) === 'permission-denied' ? 'alreadyExists' : 'error'
@@ -105,19 +123,27 @@ export async function listPendingRequests(): Promise<AccessRequest[]> {
 export async function approveRequest(email: string, adminEmail: string): Promise<void> {
   const id = normalizeEmail(email)
   const batch = writeBatch(db)
-  batch.set(doc(db, 'allowlist', id), { addedAt: serverTimestamp(), addedBy: normalizeEmail(adminEmail) })
+  batch.set(doc(db, 'allowlist', id), {
+    addedAt: serverTimestamp(),
+    addedBy: normalizeEmail(adminEmail),
+  })
   batch.update(doc(db, 'accessRequests', id), { status: 'approved' })
   await batch.commit()
 }
 
 export async function rejectRequest(email: string): Promise<void> {
   const batch = writeBatch(db)
-  batch.update(doc(db, 'accessRequests', normalizeEmail(email)), { status: 'rejected' })
+  batch.update(doc(db, 'accessRequests', normalizeEmail(email)), {
+    status: 'rejected',
+  })
   await batch.commit()
 }
 
 /** Cuenta de pendientes en vivo; sin consultas si no es admin. */
 export function usePendingCount(isAdmin: boolean): number {
+  const { t } = useI18n()
+  const tRef = useRef(t)
+  tRef.current = t
   const [count, setCount] = useState(0)
   useEffect(() => {
     if (!isAdmin) {
@@ -127,7 +153,10 @@ export function usePendingCount(isAdmin: boolean): number {
     return onSnapshot(
       query(collection(db, 'accessRequests'), where('status', '==', 'pending')),
       (snap) => setCount(snap.size),
-      () => setCount(0),
+      () => {
+        setCount(0)
+        toast('error', tRef.current('access.loadFailed'))
+      },
     )
   }, [isAdmin])
   return isAdmin ? count : 0

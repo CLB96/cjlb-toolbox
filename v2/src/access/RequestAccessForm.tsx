@@ -53,13 +53,18 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
       return
     }
     setResult(r)
-    if (r === 'sent' || r === 'alreadyExists') {
-      markRequested()
-      setLocked(true)
-    }
+    setLocked(true)
+    if (r !== 'ignored') markRequested()
   }
 
-  const message = result === 'sent' ? t('access.sent') : result === 'alreadyExists' ? t('access.pending') : null
+  // Sin cuenta, todos los resultados muestran el mismo texto para no revelar si el correo ya solicitó.
+  const signedIn = fixedEmail !== undefined
+  const message =
+    result === null
+      ? null
+      : signedIn && result === 'sent'
+        ? t('access.sent')
+        : t('access.pending')
 
   return (
     <form className="auth-card__form" onSubmit={onSubmit}>
@@ -84,7 +89,7 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
       </label>
       <input
         className="hp-field"
-        name="website"
+        name="hp_fax"
         tabIndex={-1}
         autoComplete="off"
         aria-hidden="true"

@@ -1,4 +1,6 @@
+import { renderHook } from '@testing-library/react'
 import { fake, resetStore, store } from './fakeFirestore'
+import { useToasts } from '../ui/toastStore'
 
 vi.mock('firebase/firestore', async () => (await import('./fakeFirestore')).fake)
 vi.mock('../auth/firebase', () => ({ db: {} }))
@@ -9,6 +11,8 @@ import {
   listPendingRequests,
   rejectRequest,
   submitAccessRequest,
+  SUBMIT_TIMEOUT_MS,
+  usePendingCount,
 } from './accessService'
 
 beforeEach(() => resetStore())
@@ -71,4 +75,34 @@ test('rejectRequest marca rejected sin tocar la allowlist; list solo devuelve pe
   expect(store.has('allowlist/bob@x.com')).toBe(false)
   expect(store.get('accessRequests/bob@x.com')).toMatchObject({ status: 'rejected' })
   expect((await listPendingRequests()).map((r) => r.email)).toEqual(['eve@x.com'])
+})
+
+test('si setDoc nunca responde (offline), a los 15 s devuelve error', async () => {
+  vi.useFakeTimers()
+  const spy = vi.spyOn(fake, 'setDoc').mockReturnValueOnce(new Promise(() => {}))
+  const p = submitAccessRequest({ email: 'bob@x.com', name: 'Bob' })
+  await vi.advanceTimersByTimeAsync(SUBMIT_TIMEOUT_MS)
+  expect(await p).toBe('error')
+  spy.mockRestore()
+  vi.useRealTimers()
+})
+
+test('usePendingCount muestra un toast si el listener falla y devuelve 0', () => {
+  useToasts.setState({ toasts: [] })
+  const spy = vi.spyOn(fake, 'onSnapshot').mockImplementationOnce(((_q: unknown, _n: unknown, err: () => void) => {
+    err()
+    return () => {}
+  }) as never)
+  const { result } = renderHook(() => usePendingCount(true))
+  expect(result.current).toBe(0)
+  expect(useToasts.getState().toasts).toHaveLength(1)
+  spy.mockRestore()
+})
+
+test('usePendingCount no consulta si no es admin', () => {
+  const spy = vi.spyOn(fake, 'onSnapshot')
+  const { result } = renderHook(() => usePendingCount(false))
+  expect(result.current).toBe(0)
+  expect(spy).not.toHaveBeenCalled()
+  spy.mockRestore()
 })
