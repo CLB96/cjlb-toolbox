@@ -6,7 +6,13 @@ import { Dialog } from '../../ui/Dialog'
 import { GlassPanel } from '../../ui/GlassPanel'
 import { toast } from '../../ui/toastStore'
 import type { ToolProps } from '../types'
-import { GapcheckStoreProvider, useGapcheck, useGapcheckApi } from './GapcheckStoreProvider'
+import {
+  GapcheckStoreProvider,
+  useGapcheck,
+  useGapcheckApi,
+  useGapcheckChartCanvas,
+} from './GapcheckStoreProvider'
+import { exportGapcheckPng } from './export/exportPng'
 import { useGapcheckPersistence } from './useGapcheckPersistence'
 import { importExcelFile } from './importExcel'
 import { useGapcheckT } from './i18n'
@@ -22,16 +28,13 @@ import './gapcheck.css'
 
 interface Props {
   toolId: ToolProps['toolId']
-  /** Exportar PNG: lo conecta la Task 8. */
-  onExport?: () => void
 }
 
-const noop = () => undefined
-
-function GapcheckBody({ toolId, onExport = noop }: Props) {
+function GapcheckBody({ toolId }: Props) {
   const t = useGapcheckT()
-  const { t: tApp } = useI18n()
+  const { t: tApp, lang } = useI18n()
   const api = useGapcheckApi()
+  const chartCanvas = useGapcheckChartCanvas()
   const { lastSavedAt, restoreVersion, restored } = useGapcheckPersistence()
   const [historyOpen, setHistoryOpen] = useState(false)
   const file = useGapcheck(
@@ -52,6 +55,10 @@ function GapcheckBody({ toolId, onExport = noop }: Props) {
     } catch {
       toast('error', t('importFailed'))
     }
+  }
+
+  const onExport = () => {
+    void exportGapcheckPng(api.getState(), lang, chartCanvas.current)
   }
 
   const onRestore = async (id: string) => {

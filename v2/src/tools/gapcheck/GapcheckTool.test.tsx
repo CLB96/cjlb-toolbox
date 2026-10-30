@@ -14,6 +14,8 @@ import { GAPCHECK_TEXTS } from './i18n'
 
 // la gráfica tiene sus propias pruebas con Chart.js simulado (jsdom no tiene canvas)
 vi.mock('./components/Chart', () => ({ GapcheckChart: () => <div data-testid="gc-chart" /> }))
+const exportMock = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+vi.mock('./export/exportPng', () => ({ exportGapcheckPng: exportMock }))
 
 let setLangRef: ((l: Lang) => void) | null = null
 function LangGrab() {
@@ -132,4 +134,20 @@ test('subir un Excel carga los datos; un archivo ilegible avisa con toast', asyn
       GAPCHECK_TEXTS.es.importFailed,
     ),
   )
+})
+
+test('el botón Exportar PNG exporta el estado actual en el idioma activo', async () => {
+  exportMock.mockClear()
+  await seed(FIXTURES.header)
+  renderTool()
+  await screen.findByTestId('kpi-target')
+  act(() => setLangRef!('en'))
+  const btn = screen.getByRole('button', { name: /Export to PNG/ })
+  await waitFor(() => expect(btn).toBeEnabled())
+  await userEvent.click(btn)
+  expect(exportMock).toHaveBeenCalledTimes(1)
+  const [state, lang, canvas] = exportMock.mock.calls[0] as unknown as [{ points: unknown[] }, string, unknown]
+  expect(state.points).toHaveLength(4)
+  expect(lang).toBe('en')
+  expect(canvas).toBeNull() // gráfica simulada sin canvas: exportGapcheckPng avisa "sin datos"
 })

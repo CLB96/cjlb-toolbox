@@ -4,6 +4,8 @@ import { useI18n } from '../../i18n/useI18n'
  * Diccionario copiado literal del original (gapcheck/index.html 1702-1795, inventario §10).
  * Añadidos de la v2: `importFailed` (aviso de lectura), `fileDims`, `changeFile` y `history`
  * (cabecera aprobada en el mockup); `selectImage` (alert literal de handleGapLayoutImage 2646) y `changeImage` (nuevo, Task 7). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
+ * `exportNoData`/`exportFailed`: alerts literales de exportToPNG (1841, 2076); `exportFailed` EN es nuevo
+ * (el original solo lo tenía en español).
  */
 const es = {
   loginEnter: 'Ingresar',
@@ -58,6 +60,8 @@ const es = {
   history: 'Historial',
   axisThickness: 'Medición de Espesor (mm)',
   axisCompression: 'Compresión Real (%)',
+  exportNoData: 'No hay datos para exportar.',
+  exportFailed: 'Error al exportar. Comprueba que las imágenes subidas no sean remotas (CORS).',
 } as const
 
 export type GapcheckKey = keyof typeof es
@@ -115,6 +119,8 @@ const en: Record<GapcheckKey, string> = {
   history: 'History',
   axisThickness: 'Thickness Measurement (mm)',
   axisCompression: 'Actual Compression (%)',
+  exportNoData: 'No data to export.',
+  exportFailed: 'Export failed. Check that the uploaded images are not remote (CORS).',
 }
 
 export const GAPCHECK_TEXTS: Record<'es' | 'en', Record<GapcheckKey, string>> = { es, en }
