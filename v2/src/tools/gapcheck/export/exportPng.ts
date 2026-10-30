@@ -7,7 +7,7 @@ import { renderExportChart } from './exportChart'
 import { buildExportModel } from './exportModel'
 
 const LOGO_URL = `${import.meta.env.BASE_URL}logo-dark.png`
-const FONTS = ['700 36px "Space Grotesk"', '500 16px Inter', '800 10px Inter']
+const FONTS = ['700 36px "Space Grotesk"', '500 16px Inter', '800 10px Inter', '900 16px Inter']
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -48,7 +48,8 @@ async function render(state: GapcheckState, lang: Lang, now: Date): Promise<void
   if (!model) return
   await waitForFonts()
   const [layoutImage, logo] = await Promise.all([
-    state.layout.image ? loadBlobImage(state.layout.image) : Promise.resolve(null),
+    // como el original: si la imagen del layout no carga, se dibuja el resto sin su caja
+    state.layout.image ? loadBlobImage(state.layout.image).catch(() => null) : Promise.resolve(null),
     loadImage(LOGO_URL).catch(() => null), // sin logo el PNG sigue siendo válido
   ])
   const chart = renderExportChart(state, lang)

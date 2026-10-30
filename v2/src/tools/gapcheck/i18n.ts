@@ -2,7 +2,7 @@ import { useI18n } from '../../i18n/useI18n'
 
 /**
  * Diccionario copiado literal del original (gapcheck/index.html 1702-1795, inventario §10).
- * Añadidos de la v2: `importFailed` (aviso de lectura), `fileDims`, `changeFile` y `history`
+ * Añadidos de la v2: `importFailed` (aviso de lectura), `noNumericData` (aviso cuando el archivo no trae números; el original no hacía nada), `fileDims`, `changeFile` y `history`
  * (cabecera aprobada en el mockup); `selectImage` (alert literal de handleGapLayoutImage 2646) y `changeImage` (nuevo, Task 7). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
  * `exportNoData`/`exportFailed`: alerts literales de exportToPNG (1841, 2076); `exportFailed` EN es nuevo
  * (el original solo lo tenía en español).
@@ -55,6 +55,7 @@ const es = {
   languageTitle: 'Idioma',
   footerCredit: 'Desarrollado por CJLB',
   importFailed: 'No se pudo leer el archivo',
+  noNumericData: 'El archivo no contiene datos numéricos',
   fileDims: '{n} iteraciones × {m} puntos',
   changeFile: 'Cambiar archivo',
   history: 'Historial',
@@ -114,6 +115,7 @@ const en: Record<GapcheckKey, string> = {
   languageTitle: 'Language',
   footerCredit: 'Developed by CJLB',
   importFailed: 'The file could not be read',
+  noNumericData: 'The file contains no numeric data',
   fileDims: '{n} iterations × {m} points',
   changeFile: 'Change file',
   history: 'History',

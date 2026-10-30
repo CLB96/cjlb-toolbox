@@ -136,6 +136,23 @@ test('subir un Excel carga los datos; un archivo ilegible avisa con toast', asyn
   )
 })
 
+test('un archivo sin datos numéricos avisa con toast y no cambia nada', async () => {
+  renderTool()
+  const input = screen.getByLabelText(/Clic para subir/)
+  await waitFor(() => expect(input).toBeEnabled())
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['solo', 'texto'], ['a', 'b']]), 'S')
+  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+  await userEvent.upload(input, new File([buf], 'texto.xlsx'))
+  await waitFor(() =>
+    expect(useToasts.getState().toasts.map((t) => t.message)).toEqual([
+      GAPCHECK_TEXTS.es.noNumericData,
+    ]),
+  )
+  expect(GAPCHECK_TEXTS.en.noNumericData).toBe('The file contains no numeric data')
+  expect(screen.queryByTestId('kpi-target')).toBeNull()
+})
+
 test('el botón Exportar PNG exporta el estado actual en el idioma activo', async () => {
   exportMock.mockClear()
   await seed(FIXTURES.header)

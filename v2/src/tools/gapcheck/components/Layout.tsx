@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { useI18n } from '../../../i18n/useI18n'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { toast } from '../../../ui/toastStore'
 import { useGapcheck, useGapcheckApi } from '../GapcheckStoreProvider'
@@ -9,8 +8,6 @@ import { POINT_COLORS } from '../logic/chartStyle'
 import { Marker } from './Marker'
 import { RichText } from './RichText'
 
-/** Límite de Plan 1: archivos mayores no entran en el snapshot guardado. */
-const MAX_PERSISTED_BYTES = 20 * 1024 * 1024
 const MARKER_MIN = 20
 const MARKER_MAX = 60
 const MARKER_STEP = 2
@@ -57,7 +54,6 @@ function ImageInput({ disabled, testId, onFile }: ImageInputProps) {
 /** Gapcheck Layout (inventario §8): imagen del diagrama + marcadores arrastrables por punto. */
 export function Layout({ disabled }: { disabled: boolean }) {
   const t = useGapcheckT()
-  const { t: tApp } = useI18n()
   const api = useGapcheckApi()
   const [open, setOpen] = useState(true)
   const [over, setOver] = useState(false)
@@ -80,8 +76,8 @@ export function Layout({ disabled }: { disabled: boolean }) {
       toast('error', t('selectImage'))
       return
     }
+    // >20 MB: la persistencia avisa una sola vez al autoguardar (persist.largeFilesSkipped)
     api.getState().setLayoutImage(file, file.name)
-    if (file.size > MAX_PERSISTED_BYTES) toast('warn', tApp('persist.largeFilesSkipped'))
   }
 
   const onDrop = (e: DragEvent) => {
@@ -171,6 +167,7 @@ export function Layout({ disabled }: { disabled: boolean }) {
                         x={m.x}
                         y={m.y}
                         size={markerSize}
+                        disabled={disabled}
                         getImageRect={getImageRect}
                         onMove={moveMarker(m.pointIndex)}
                       />

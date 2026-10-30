@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { __resetI18nForTests } from '../../../i18n/useI18n'
 import { useToasts } from '../../../ui/toastStore'
 import { GapcheckStoreProvider, useGapcheckApi } from '../GapcheckStoreProvider'
@@ -220,14 +220,14 @@ test('revoca la URL al desmontar', () => {
   expect(revoked).toContain('blob:test/1')
 })
 
-test('imagen > 20 MB: se usa en pantalla y avisa que no se guarda', () => {
+test('imagen > 20 MB: se usa en pantalla; el aviso lo da la persistencia, no el Layout', () => {
   setup()
   loadPoints()
   const big = imageFile('grande.png')
   Object.defineProperty(big, 'size', { value: 20 * 1024 * 1024 + 1 })
   pick(big)
   expect(api.getState().layout.image).toBe(big)
-  expect(toastMessages()).toEqual(['Los archivos de más de 20 MB no se guardan en el historial.'])
+  expect(toastMessages()).toEqual([])
 })
 
 test('deshabilitado hasta restaurar: no acepta archivos', () => {
@@ -239,3 +239,20 @@ function hexToRgb(hex: string): string {
   const n = parseInt(hex.slice(1), 16)
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
 }
+
+test('deshabilitado: los marcadores no se mueven con el teclado', () => {
+  setup()
+  loadPoints()
+  pick(imageFile())
+  const before = api.getState().layout.markers[0]
+  cleanup()
+  setup(true)
+  act(() => {
+    api.getState().loadRows('a.xlsx', [NAMES, [1, 2, 3, 4, 5]] as never)
+    api.getState().setLayoutImage(imageFile(), 'd.png')
+  })
+  const marker = screen.getByTestId('gc-marker-0')
+  expect(marker).toHaveAttribute('aria-disabled', 'true')
+  fireEvent.keyDown(marker, { key: 'ArrowRight' })
+  expect(api.getState().layout.markers[0].x).toBe(before.x)
+})

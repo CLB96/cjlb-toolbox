@@ -17,6 +17,7 @@ interface Props {
   x: number
   y: number
   size: number
+  disabled?: boolean
   /** Rectángulo de la imagen mostrada (las posiciones son % de él, Ruling R4). */
   getImageRect: () => DOMRect | null
   onMove: (x: number, y: number) => void
@@ -34,7 +35,7 @@ export const markerBoxStyle = (size: number) => ({
  * Marcador arrastrable centrado en su punto (translate(-50%,-50%) igual que las cuentas),
  * así no salta al agarrarlo (bug (a) del inventario §8).
  */
-export function Marker({ index, name, color, x, y, size, getImageRect, onMove }: Props) {
+export function Marker({ index, name, color, x, y, size, disabled = false, getImageRect, onMove }: Props) {
   const [drag, setDrag] = useState<Pos | null>(null)
   const grab = useRef<Pos>({ x: 0, y: 0 })
   const last = useRef<Pos | null>(null)
@@ -49,7 +50,7 @@ export function Marker({ index, name, color, x, y, size, getImageRect, onMove }:
   }
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return
+    if (disabled || e.button !== 0) return
     const r = getImageRect()
     if (!r) return
     e.preventDefault()
@@ -83,6 +84,7 @@ export function Marker({ index, name, color, x, y, size, getImageRect, onMove }:
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (disabled) return
     const step = e.shiftKey ? KEY_STEP_FAST : KEY_STEP
     const delta: Record<string, Pos> = {
       ArrowLeft: { x: -step, y: 0 },
@@ -100,7 +102,8 @@ export function Marker({ index, name, color, x, y, size, getImageRect, onMove }:
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled || undefined}
       aria-label={name}
       data-testid={`gc-marker-${index}`}
       className={`gc-marker${drag ? ' gc-marker--dragging' : ''}`}

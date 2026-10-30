@@ -19,7 +19,8 @@ describe('chartTheme', () => {
     expect(t.tooltipBg).toBe('#f3eeff')
     expect(t.tooltipTitle).toBe('#251a40')
     expect(t.tooltipBody).toBe('#6d6290')
-    expect(t.tooltipBorder).toBe('rgba(255, 255, 255, 0.9)')
+    expect(t.tooltipBorder).toBe('rgba(37, 26, 64, 0.18)') // visible sobre el cristal claro
+    expect(getChartTheme('dark').tooltipBorder).toBe('rgba(255, 255, 255, 0.16)')
   })
 
   it('fallback mirror matches tokens.css for both themes', () => {

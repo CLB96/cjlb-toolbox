@@ -50,8 +50,8 @@ function GapcheckBody({ toolId }: Props) {
     if (!restored) return
     try {
       const rows = await importExcelFile(picked)
-      // sin datos numéricos el original no hace nada (inventario §3)
-      api.getState().loadRows(picked.name, rows)
+      // el original no avisaba si no había datos numéricos (inventario §3); la v2 sí
+      if (!api.getState().loadRows(picked.name, rows)) toast('warn', t('noNumericData'))
     } catch {
       toast('error', t('importFailed'))
     }

@@ -43,6 +43,8 @@ export const FALLBACK_TOKENS: Record<ResolvedTheme, Record<string, string>> = {
   },
 }
 
+const LIGHT_TOOLTIP_BORDER = 'rgba(37, 26, 64, 0.18)'
+
 export function getChartTheme(resolved: ResolvedTheme): ChartTheme {
   const style = getComputedStyle(document.documentElement)
   const read = (name: string) =>
@@ -57,6 +59,7 @@ export function getChartTheme(resolved: ResolvedTheme): ChartTheme {
     tooltipBg: read('--glass-solid'),
     tooltipTitle: read('--fg'),
     tooltipBody: read('--fg-muted'),
-    tooltipBorder: read('--edge'),
+    // --edge en claro es casi blanco sobre blanco: el tooltip necesita un borde visible
+    tooltipBorder: resolved === 'dark' ? read('--edge') : LIGHT_TOOLTIP_BORDER,
   }
 }
