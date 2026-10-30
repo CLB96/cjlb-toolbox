@@ -8,3 +8,4 @@ v2/dist/
 v2/.env.local
 v2/legacy-fixtures/private/
 v2/*.tsbuildinfo
+v2/*-debug.log

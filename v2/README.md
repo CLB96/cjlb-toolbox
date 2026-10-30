@@ -4,9 +4,9 @@ Aplicación React + Vite + TypeScript con Firebase (Auth + Firestore). Esta carp
 
 ## Antes de publicar
 
-**Las pruebas de las reglas de seguridad de Firestore NUNCA se han ejecutado.** El emulador de Firestore necesita Java y no está instalado en la máquina de desarrollo. Antes de publicar:
+Las pruebas de las reglas de seguridad de Firestore (25) pasan contra el emulador (verificado el 2026-10-29 con JDK 27). Vuelve a correrlas antes de desplegar cualquier cambio en `firestore.rules`:
 
-1. Instala un JDK 17 o superior (por ejemplo Eclipse Temurin 17) y verifica con `java -version`.
+1. Necesitas un JDK 17 o superior; verifica con `java -version`.
 2. Ejecuta:
 
    ```bash
@@ -14,8 +14,19 @@ Aplicación React + Vite + TypeScript con Firebase (Auth + Firestore). Esta carp
    npm run test:rules
    ```
 
-   (usa `vitest.rules.config.ts` dentro de `firebase emulators:exec`).
-3. No despliegues `firestore.rules` hasta que esas pruebas pasen.
+   (usa `vitest.rules.config.ts` dentro de `firebase emulators:exec`). Los mensajes `PERMISSION_DENIED` en la salida son esperados: vienen de las pruebas que comprueban que las reglas rechazan lo indebido.
+3. No despliegues `firestore.rules` si alguna prueba falla.
+
+Si falla al arrancar el emulador:
+
+- `Could not spawn 'java -version'`: Java no está en el PATH de esa terminal. Cierra y vuelve a abrir la terminal (o la app) después de instalar Java.
+- `Unable to establish loopback connection` en `firestore-debug.log`: Java no puede crear su socket temporal. Usa una carpeta corta para él y reintenta (PowerShell):
+
+  ```powershell
+  New-Item -ItemType Directory -Force C:\tmp\jdk-uds | Out-Null
+  $env:JAVA_TOOL_OPTIONS = "-Djdk.net.unixdomain.tmpdir=C:\tmp\jdk-uds"
+  npm run test:rules
+  ```
 
 Otros puntos previos:
 

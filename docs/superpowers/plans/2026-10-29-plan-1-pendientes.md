@@ -3,7 +3,7 @@
 Generado al cerrar el Plan 1. Ítems menores diferidos y decisiones abiertas que los planes 2–6 deben considerar.
 
 ## Antes de publicar
-- Instalar JDK 17+ y ejecutar `cd v2 && npm run test:rules`: las reglas de Firestore nunca se han ejecutado.
+- Reglas de Firestore: 25 pruebas pasan contra el emulador (2026-10-29, JDK 27). Repetir `cd v2 && npm run test:rules` antes de cada despliegue de reglas.
 - Recorrido manual de login/allowlist/uso con Firebase real o emuladores.
 
 ## Diferidos y estacionados

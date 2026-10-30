@@ -4,7 +4,7 @@ Todo esto es para un entorno de **prueba nuevo**. No toques el proyecto Vercel a
 
 ## 0. Requisito: Java
 
-Instala un JDK 17+ (p. ej. Eclipse Temurin 17) y ejecuta `cd v2 && npm run test:rules`. Las reglas de seguridad nunca se han probado; no las despliegues hasta que pasen.
+Necesitas un JDK 17+. Antes de desplegar reglas ejecuta `cd v2 && npm run test:rules` (25 pruebas; pasaron el 2026-10-29) y no las despliegues si alguna falla. Si el emulador no arranca, mira "Si falla al arrancar el emulador" en el README.
 
 ## 1. Proyecto Firebase
 
