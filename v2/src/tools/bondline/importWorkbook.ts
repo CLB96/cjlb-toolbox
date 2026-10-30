@@ -15,13 +15,28 @@ export interface RawSheet {
   raw: unknown[][]
 }
 
-/** Lee todas las hojas del libro como filas (header: 1), en el orden del archivo. Rechaza si no se puede leer. */
+/** Fallo de lectura del libro (archivo ilegible o sin hojas); la UI lo muestra con `fileReadErrorText`. */
+export class WorkbookReadError extends Error {
+  readonly cause: unknown
+
+  constructor(cause?: unknown) {
+    super('workbook read failed')
+    this.name = 'WorkbookReadError'
+    this.cause = cause
+  }
+}
+
+/** Lee todas las hojas del libro como filas (header: 1), en el orden del archivo. Rechaza con WorkbookReadError. */
 export async function importWorkbook(file: File): Promise<RawSheet[]> {
-  const buf = await readBuffer(file)
-  const workbook = XLSX.read(new Uint8Array(buf), { type: 'array' })
-  if (!workbook.SheetNames.length) throw new Error('empty workbook')
-  return workbook.SheetNames.map((name) => ({
-    name,
-    raw: XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: null }) as unknown[][],
-  }))
+  try {
+    const buf = await readBuffer(file)
+    const workbook = XLSX.read(new Uint8Array(buf), { type: 'array' })
+    if (!workbook.SheetNames.length) throw new Error('empty workbook')
+    return workbook.SheetNames.map((name) => ({
+      name,
+      raw: XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: null }) as unknown[][],
+    }))
+  } catch (error) {
+    throw new WorkbookReadError(error)
+  }
 }

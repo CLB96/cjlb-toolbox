@@ -61,6 +61,10 @@ describe('configuración por hoja (R2)', () => {
     const g = () => api.getState()
     g().loadWorkbook('a.xlsx', two)
     g().setAdhesive('hotmelt')
+    g().setTestDate('2026-03-04')
+    g().setSubstrate('pp')
+    g().toggleTC(2)
+    g().setCoolingParam('chiller', '12')
     g().setTimeRangeInput('start', '10')
     g().setTimeRangeInput('end', '60')
     expect(g().applyTimeRange()).toBeNull()
@@ -68,7 +72,8 @@ describe('configuración por hoja (R2)', () => {
     g().setLeister(0, '120')
     g().addLeister()
     g().setLeister(1, '130')
-    g().setLayoutImage(new Blob(['x']), 'p.png')
+    const img = new Blob(['x'])
+    g().setLayoutImage(img, 'p.png')
     g().moveMarker(0, 5, 6)
 
     g().selectSheet(1)
@@ -82,7 +87,23 @@ describe('configuración por hoja (R2)', () => {
     expect(c.timeRange).toEqual({ active: true, start: 10, end: 60 })
     expect(c.events.eventPressClosed).toBe('42')
     expect(c.params.leisters).toEqual(['120', '130'])
+    expect(c.testDate).toBe('2026-03-04')
+    expect(c.substrate).toBe('pp')
+    expect(c.tcVisibility).toEqual([true, true, false, true])
+    expect(c.coolingParams.chiller).toBe('12')
+    expect(c.layout.image).toBe(img)
     expect(c.layout.markers.find((m) => m.tcIndex === 0)).toMatchObject({ x: 5, y: 6 })
+  })
+
+  it('primera visita: visibilidad TC toda true aunque haya el mismo nº de TC', () => {
+    const api = createBondlineStore()
+    const g = () => api.getState()
+    g().loadWorkbook('a.xlsx', two)
+    g().toggleTC(0)
+    g().selectSheet(1)
+    expect(g().config.tcVisibility).toEqual([true, true, true, true])
+    g().selectSheet(0)
+    expect(g().config.tcVisibility).toEqual([false, true, true, true])
   })
 
   it('hoja con distinto nº de TC: visibilidad toda true', () => {
@@ -146,6 +167,32 @@ describe('acciones', () => {
     expect(api.getState().config.layout.markers.map((m) => m.tcIndex)).toEqual([0, 2, 3])
     api.getState().toggleTC(1)
     expect(api.getState().config.layout.markers).toHaveLength(4)
+  })
+
+  it('quitar la imagen borra los marcadores y una nueva usa las posiciones por defecto', () => {
+    const api = loaded()
+    api.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    api.getState().moveMarker(0, 1, 2)
+    api.getState().setLayoutImage(null, null)
+    expect(api.getState().config.layout.markers).toEqual([])
+    api.getState().setLayoutImage(new Blob(['y']), 'b.png')
+    expect(api.getState().config.layout.markers[0]).not.toMatchObject({ x: 1, y: 2 })
+    expect(api.getState().config.layout.markers).toHaveLength(4)
+  })
+
+  it('restaurar con imagen omitida conserva los marcadores al volver a cargarla', () => {
+    const src = loaded()
+    src.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    src.getState().moveMarker(0, 1, 2)
+    const snap = snapshotOf(src.getState())
+    const stripped = { ...snap, config: { ...snap.config, layout: { ...snap.config.layout, image: null } } }
+    const { imageStripped: _flag, ...layout } = stripped.config.layout
+    const api = createBondlineStore()
+    restoreInto(api, { ...stripped, config: { ...stripped.config, layout } } as never)
+    expect(api.getState().config.layout.imageStripped).toBe(true)
+    api.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 1, y: 2 })
+    expect(api.getState().config.layout.imageStripped).toBe(false)
   })
 
   it('panels, layoutFit y reset', () => {

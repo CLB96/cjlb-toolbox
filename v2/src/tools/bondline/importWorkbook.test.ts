@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
-import { importWorkbook } from './importWorkbook'
+import { fileReadErrorText } from './i18n'
+import { importWorkbook, WorkbookReadError } from './importWorkbook'
 
 function xlsxFile(sheets: Record<string, unknown[][]>): File {
   const wb = XLSX.utils.book_new()
@@ -21,5 +22,10 @@ test('devuelve todas las hojas en orden', async () => {
 test('si la lectura del archivo falla, rechaza', async () => {
   const file = new File(['x'], 'x.xlsx')
   Object.defineProperty(file, 'arrayBuffer', { value: () => Promise.reject(new Error('boom')) })
-  await expect(importWorkbook(file)).rejects.toThrow('boom')
+  await expect(importWorkbook(file)).rejects.toBeInstanceOf(WorkbookReadError)
+})
+
+test('el rechazo se muestra con el texto de i18n (ES literal, EN nuevo)', () => {
+  expect(fileReadErrorText('es')).toBe('Error al leer el archivo. Por favor intenta de nuevo.')
+  expect(fileReadErrorText('en')).toBe('Error reading the file. Please try again.')
 })

@@ -22,6 +22,8 @@ export interface SheetLayout {
   image: Blob | null
   imageName: string | null
   markers: LayoutMarker[]
+  /** true cuando al restaurar se omitió una imagen demasiado grande pero se conservaron sus marcadores. */
+  imageStripped: boolean
 }
 
 export interface CoolingParams {
@@ -135,7 +137,7 @@ export const initialConfig = (): SheetConfig => ({
     slidersTemp: '',
     leisters: [''],
   },
-  layout: { image: null, imageName: null, markers: [] },
+  layout: { image: null, imageName: null, markers: [], imageStripped: false },
 })
 
 export const initialData = (): BondlineState => ({
@@ -174,16 +176,19 @@ export function invalidSheetText(sheetName: string, reason: SheetFailure, lang: 
     : `La hoja "${sheetName}" no contiene datos de temperatura válidos`
 }
 
-/** Hereda la configuración activa con rango reiniciado y visibilidad reiniciada si cambia el nº de TC (R2). */
+/** Primera visita (R2, como el original): hereda la configuración con rango y visibilidad TC reiniciados. */
 function inheritConfig(current: SheetConfig, data: ParsedSheet): SheetConfig {
-  const tcVisibility =
-    current.tcVisibility.length === data.columns.length ? current.tcVisibility : allVisible(data.columns.length)
+  const tcVisibility = allVisible(data.columns.length)
   return {
     ...current,
     tcVisibility,
     timeRange: { ...NO_RANGE },
     timeRangeInputs: { start: '', end: '' },
-    layout: { ...current.layout, markers: current.layout.image ? markersFor(tcVisibility) : [] },
+    layout: {
+      ...current.layout,
+      markers: current.layout.image ? markersFor(tcVisibility) : [],
+      imageStripped: false,
+    },
   }
 }
 
@@ -288,15 +293,11 @@ export const createBondlineStore = (): BondlineApi =>
       setLayoutImage(image, imageName) {
         set((s) => {
           const { layout, tcVisibility } = s.config
-          const visibleCount = tcVisibility.filter(Boolean).length
-          // sin imagen (p. ej. una de >20 MB omitida al restaurar) pero con marcadores guardados: se conservan
-          const keepSaved = layout.image === null && layout.markers.length === visibleCount
-          const recolocate = image !== null && visibleCount > 0 && !keepSaved
+          // quitar la imagen borra los marcadores; solo una imagen omitida al restaurar los conserva
+          const keep = image !== null && layout.imageStripped
+          const markers = image === null ? [] : keep ? layout.markers : markersFor(tcVisibility)
           return {
-            config: {
-              ...s.config,
-              layout: { image, imageName, markers: recolocate ? markersFor(tcVisibility) : layout.markers },
-            },
+            config: { ...s.config, layout: { image, imageName, markers, imageStripped: false } },
           }
         })
       },
@@ -347,7 +348,11 @@ function mergeConfig(saved: Partial<SheetConfig> | undefined): SheetConfig {
       ...c.params,
       leisters: c.params?.leisters?.length ? c.params.leisters : base.params.leisters,
     },
-    layout: { ...base.layout, ...c.layout },
+    layout: {
+      ...base.layout,
+      ...c.layout,
+      imageStripped: c.layout?.imageStripped ?? (!c.layout?.image && (c.layout?.markers?.length ?? 0) > 0),
+    },
   }
 }
 
