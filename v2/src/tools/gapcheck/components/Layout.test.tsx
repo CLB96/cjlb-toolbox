@@ -301,3 +301,25 @@ test('deshabilitado: los marcadores no se mueven con el teclado', () => {
   fireEvent.keyDown(marker, { key: 'ArrowRight' })
   expect(api.getState().layout.markers[0].x).toBe(before.x)
 })
+
+test('la imagen se ajusta a la pantalla por defecto y se puede ver a tamaño real', () => {
+  setup()
+  loadPoints()
+  pick(imageFile())
+  const scroll = document.querySelector('.gc-layout__scroll')!
+  expect(scroll).toHaveClass('gc-layout__scroll--fit')
+  const toggle = screen.getByRole('button', { name: 'Tamaño real' })
+  expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  fireEvent.click(toggle)
+  expect(scroll).not.toHaveClass('gc-layout__scroll--fit')
+  expect(api.getState().layout.fit).toBe(false)
+  expect(screen.getByRole('button', { name: 'Tamaño real' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('el modo de ajuste se guarda con la herramienta', () => {
+  setup()
+  act(() => api.getState().setLayoutFit(false))
+  expect(api.getState().layout.fit).toBe(false)
+  act(() => api.getState().reset())
+  expect(api.getState().layout.fit).toBe(true)
+})

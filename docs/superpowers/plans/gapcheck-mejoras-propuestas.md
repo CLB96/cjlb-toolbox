@@ -23,10 +23,11 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 - **Qué se ganaría:** cada medición se queda en su iteración real; la gráfica y la tabla mostrarían un hueco en lugar de mover datos.
 - **Estado:** conservado.
 
-### 4. Lectura permisiva de números (`parseFloat`) (§12.6)
-- **Qué pasa hoy:** "12abc" se lee como 12 y "1,5" (coma decimal) se lee como 1. Una primera fila de solo números se trata como dato, no como encabezado.
-- **Qué se ganaría:** no aceptar texto mezclado en silencio y entender la coma decimal; o al menos avisar de las celdas que se descartaron.
-- **Estado:** conservado.
+### 4. Lectura de números y primera fila (§12.6) — decidido por el dueño (2026-10-30)
+- **Lectura permisiva:** "12abc" se lee como 12. **Se conserva a propósito:** la idea es poder anotar "12mm" y que la app lo entienda como 12.
+- **Coma decimal:** "1,5" se lee como 1. **Se conserva:** en México no se usa la coma como separador decimal.
+- **Primera fila:** en el original, si la primera fila tenía algún texto se tomaba como encabezado (nombres de los puntos) y no como datos. **Cambiado:** la primera fila **siempre es dato**, porque la persona sube el Excel sin modificar, solo con números. Los puntos se llaman siempre P1, P2… por columna; un texto en la primera fila se ignora como cualquier otra celda no numérica.
+- **Estado:** lectura permisiva y coma: conservado (decisión del dueño). Primera fila: cambiado (decisión del dueño).
 
 ### 5. Volver a elegir el mismo archivo no lo recarga (§12.7)
 - **Qué pasa hoy:** si eliges el mismo archivo dos veces seguidas, la segunda vez no pasa nada (por ejemplo, tras corregir el Excel y guardarlo).
@@ -88,7 +89,7 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 
 ### 16. Tabla con scroll y nombres de punto como texto (§12.11)
 - **Antes:** la tabla se cortaba a 1500 px de alto sin scroll; el nombre de un punto con HTML se interpretaba como HTML.
-- **Ahora:** scroll dentro de la tabla; los nombres se muestran como texto.
+- **Ahora:** scroll dentro de la tabla. (Desde que la primera fila siempre es dato —ítem 4— los nombres son siempre P1…Pn.)
 - **Estado:** cambiado en el port, aprobado por regla R6.
 
 ### 17. Layout: posiciones relativas a la imagen y arrastre sin salto (§12.12)
@@ -142,7 +143,7 @@ Estados: **conservado** (igual que el original), **cambiado en el port, aprobado
 | 27 | Botón **Cambiar imagen** en el Layout; el original no permitía reemplazar la imagen (§12.12). | No hay que recargar la herramienta. | Nuevo (texto nuevo) |
 | 28 | Los marcadores se pueden mover con las flechas del teclado (1 %; con Shift, 5 %). | Accesibilidad y ajuste fino. | Nuevo |
 | 29 | Se muestra el nombre de la imagen del Layout. | Saber qué imagen está puesta. | Nuevo |
-| 30 | Se quitó el alto mínimo y el ajuste "object-fit" de la imagen: la imagen se ve a su proporción real (los % de los marcadores dependen de eso). | Marcadores exactos sobre la imagen. | Nuevo |
+| 30 | La imagen del layout se **ajusta a la pantalla por defecto** (cabe entera en el ancho y en ~70% del alto, sin tener que desplazarse). El botón **"Tamaño real"** la muestra a su tamaño natural, con scroll, para colocar puntos con más detalle. La preferencia se guarda con el análisis. En los dos modos los puntos quedan en el mismo lugar de la imagen. Pedido por el dueño (2026-10-30). | Imágenes grandes se ven completas sin navegar; detalle cuando se necesita. | Nuevo |
 | 31 | El PNG usa el objetivo y el covering **aplicados** (los de las tarjetas y la gráfica); el original usaba los que estaban escritos en ese momento aunque no se hubiera pulsado el botón. | PNG coherente con lo que se ve en pantalla. Solo difiere si se escribió sin pulsar "Actualizar". | Cambiado en el port (consecuencia de R1) |
 | 32 | Si el PNG falla, el aviso también existe en inglés ("Export failed. Check that the uploaded images are not remote (CORS)."); el original solo lo tenía en español. | Mensaje en el idioma activo. | Nuevo (texto nuevo) |
 | 33 | Si la imagen del Layout no carga al exportar, el PNG se genera igual sin la caja del Layout. Es **silencioso**: no sale ningún aviso (igual que el original). Mejora propuesta: un toast tipo "No se pudo cargar la imagen del layout; se exportó sin ella". | No se pierde el export por una imagen y se sabe por qué falta. | Conservado (el aviso es solo propuesta) |

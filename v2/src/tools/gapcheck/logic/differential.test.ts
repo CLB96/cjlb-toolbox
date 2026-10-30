@@ -27,12 +27,30 @@ if (real) allFixtures.real = real
 const COVERINGS: CoveringType[] = ['hard', 'soft']
 const GRID = ['10', '50', '', '0', '12.5', '101', '-5']
 
-describe('parseRows ≡ legacyProcessData', () => {
+// Regla del dueño (2026-10-30): la primera fila siempre es dato, nunca encabezado.
+// Equivale al original con una fila vacía delante (sin cabecera detectable).
+const legacyNoHeader = (rows: unknown[][]) => legacyProcessData([[], ...rows])
+
+describe('parseRows ≡ legacyProcessData (primera fila como dato)', () => {
   for (const [name, rows] of Object.entries(allFixtures)) {
     it(`fixture ${name}`, () => {
-      expect(parseRows(rows)).toEqual(legacyProcessData(rows))
+      expect(parseRows(rows)).toEqual(legacyNoHeader(rows))
     })
   }
+
+  it('una primera fila de texto no se usa como nombres: los puntos son P1…Pn', () => {
+    const rows: unknown[][] = [['Punto A', 'Punto B'], [2.1, 2.2], [2.3, 2.4]]
+    const got = parseRows(rows)
+    expect(got?.points.map((p) => p.name)).toEqual(['P1', 'P2'])
+    expect(got?.points[0].values).toEqual([2.1, 2.3])
+  })
+
+  it('la primera fila numérica cuenta como primera iteración', () => {
+    const rows: unknown[][] = [[2.4, '12abc'], [2.44, 1.7]]
+    const got = parseRows(rows)
+    expect(got?.points[0].values).toEqual([2.4, 2.44])
+    expect(got?.points[1].values).toEqual([12, 1.7])
+  })
 
   it('primera fila solo con strings numéricos (sin cabecera)', () => {
     const rows: unknown[][] = [['5', ' 3 ', ''], ['6', '4', '2'], [' 7', '', '1.5']]

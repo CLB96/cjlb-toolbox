@@ -6,7 +6,7 @@ import { useI18n } from '../../i18n/useI18n'
  * - `importFailed`: aviso de lectura.
  * - `noNumericData`: aviso cuando el archivo no trae números (el original no hacía nada).
  * - `fileDims`, `changeFile`, `history`: cabecera aprobada en el mockup.
- * - `selectImage`: alert literal de handleGapLayoutImage (2646). `changeImage`: nuevo (Task 7).
+ * - `selectImage`: alert literal de handleGapLayoutImage (2646). `changeImage`: nuevo (Task 7). `layoutRealSize`: nuevo (ajuste de imagen, 2026-10-30).
  * - `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
  * - `exportNoData`/`exportFailed`: alerts literales de exportToPNG (1841, 2076);
  *   `exportFailed` EN es nuevo (el original solo lo tenía en español).
@@ -50,6 +50,7 @@ const es = {
   markerSizeLabel: 'Tamaño de Puntos:',
   selectImage: 'Por favor selecciona una imagen',
   changeImage: 'Cambiar imagen',
+  layoutRealSize: 'Tamaño real',
   imageLoadFailed: 'No se pudo mostrar la imagen',
   toggleTheme: 'Tema Oscuro / Claro',
   changeLanguage: 'Cambiar Idioma',
@@ -111,6 +112,7 @@ const en: Record<GapcheckKey, string> = {
   markerSizeLabel: 'Point Size:',
   selectImage: 'Please select an image',
   changeImage: 'Change image',
+  layoutRealSize: 'Actual size',
   imageLoadFailed: 'The image could not be displayed',
   toggleTheme: 'Dark / Light Mode',
   changeLanguage: 'Change Language',

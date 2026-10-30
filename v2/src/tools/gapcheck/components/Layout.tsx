@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { GlassPanel } from '../../../ui/GlassPanel'
+import { Button } from '../../../ui/Button'
 import { toast } from '../../../ui/toastStore'
 import { useGapcheck, useGapcheckApi } from '../GapcheckStoreProvider'
 import { useGapcheckT } from '../i18n'
@@ -60,13 +61,14 @@ export function Layout({ disabled }: { disabled: boolean }) {
   const overlay = useRef<HTMLDivElement>(null)
   const sliderId = useId()
   const hintId = useId()
-  const { points, image, imageName, markers, markerSize } = useGapcheck(
+  const { points, image, imageName, markers, markerSize, fit } = useGapcheck(
     useShallow((s) => ({
       points: s.points,
       image: s.layout.image,
       imageName: s.layout.imageName,
       markers: s.layout.markers,
       markerSize: s.layout.markerSize,
+      fit: s.layout.fit,
     })),
   )
   const url = useObjectUrl(image)
@@ -155,13 +157,21 @@ export function Layout({ disabled }: { disabled: boolean }) {
                     <strong>{imageName}</strong>
                   </span>
                 )}
+                <Button
+                  variant="ghost"
+                  aria-pressed={!fit}
+                  disabled={disabled}
+                  onClick={() => api.getState().setLayoutFit(!fit)}
+                >
+                  {t('layoutRealSize')}
+                </Button>
                 <label className={`btn btn--ghost gc-pick${disabled ? ' gc-pick--disabled' : ''}`}>
                   {t('changeImage')}
                   <ImageInput disabled={disabled} testId="gc-layout-change" onFile={onFile} />
                 </label>
               </div>
               <p id={hintId} className="gc-layout__hint">{t('gapLayoutInstructions')}</p>
-              <div className="gc-layout__scroll">
+              <div className={`gc-layout__scroll${fit ? ' gc-layout__scroll--fit' : ''}`}>
                 <div className="gc-layout__stage">
                   {url && <img className="gc-layout__img" src={url} alt="Gapcheck Layout" draggable={false} onError={onImageError} />}
                   <div ref={overlay} className="gc-layout__overlay" data-testid="gc-layout-overlay">

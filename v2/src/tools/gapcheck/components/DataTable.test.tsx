@@ -75,12 +75,13 @@ test('respeta filtros visibles y omite valores vacíos', () => {
   expect(within(rows[0]).getAllByRole('cell')[1].textContent).toBe('2')
 })
 
-test('nombres con HTML se muestran como texto (R6) y hay contenedor con scroll', () => {
+test('la primera fila es dato: el texto se ignora, el punto es P1, y hay contenedor con scroll (R6)', () => {
   const { container } = setup()
   load([['<b>X</b>'], [0]])
   act(() => api.getState().setTableOpen(true))
-  expect(screen.getByText('<b>X</b>')).toBeInTheDocument()
+  expect(screen.queryByText('<b>X</b>')).toBeNull()
   expect(container.querySelector('table b')).toBeNull()
+  expect(screen.getAllByRole('row')[1]).toHaveTextContent(/^P1/)
   expect(container.querySelector('.gc-table-scroll')).not.toBeNull()
 })
 

@@ -118,7 +118,7 @@ test('chips de punto e iteración con los textos originales y su efecto', () => 
   load()
   expect(screen.getByText('Puntos')).toBeInTheDocument()
   expect(screen.getByText('Iteraciones')).toBeInTheDocument()
-  const p = screen.getByRole('button', { name: 'B2' })
+  const p = screen.getByRole('button', { name: 'P2' })
   fireEvent.click(p)
   expect(api.getState().visiblePoints).toEqual([0, 2, 3])
   expect(p).toHaveAttribute('aria-pressed', 'false')
@@ -135,8 +135,8 @@ test('los chips reflejan el filtro real al reconstruir (R2)', () => {
   act(() => api.getState().applyComparison())
   expect(screen.getByRole('button', { name: 'Iter 1' })).toHaveAttribute('aria-pressed', 'false')
   expect(screen.getByRole('button', { name: 'Iter 2' })).toHaveAttribute('aria-pressed', 'true')
-  expect(screen.getByRole('button', { name: 'B2' })).toHaveAttribute('aria-pressed', 'false')
-  expect(screen.getByRole('button', { name: 'A1' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: 'P2' })).toHaveAttribute('aria-pressed', 'false')
+  expect(screen.getByRole('button', { name: 'P1' })).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('el chip de iteración activo usa el color de la paleta', () => {

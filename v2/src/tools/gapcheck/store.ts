@@ -24,6 +24,8 @@ export interface LayoutState {
   imageName: string | null
   markers: LayoutMarker[]
   markerSize: number
+  /** true: la imagen se ajusta al alto de la pantalla; false: tamaño real con scroll. */
+  fit: boolean
 }
 
 /** Datos persistibles (arrays en vez de Set para ser clonables). */
@@ -53,6 +55,7 @@ export interface GapcheckActions {
   setLayoutImage(image: Blob | null, name: string | null): void
   moveMarker(pointIndex: number, x: number, y: number): void
   setMarkerSize(size: number): void
+  setLayoutFit(fit: boolean): void
   reset(): void
 }
 
@@ -71,6 +74,7 @@ const initialLayout = (): LayoutState => ({
   imageName: null,
   markers: [],
   markerSize: DEFAULT_MARKER_SIZE,
+  fit: true,
 })
 
 export const initialData = (): GapcheckState => ({
@@ -153,6 +157,7 @@ export const createGapcheckStore = (): GapcheckApi =>
       })),
 
     setMarkerSize: (markerSize) => set((s) => ({ layout: { ...s.layout, markerSize } })),
+    setLayoutFit: (fit) => set((s) => ({ layout: { ...s.layout, fit } })),
 
     reset: () => set(initialData()),
   }))
@@ -181,5 +186,10 @@ export function snapshotOf(s: GapcheckState): GapcheckState {
 }
 
 export function restoreInto(api: GapcheckApi, snapshot: GapcheckState): void {
-  api.setState({ ...initialData(), ...snapshot })
+  // Snapshots anteriores no traen todos los campos del layout (p. ej. `fit`).
+  api.setState({
+    ...initialData(),
+    ...snapshot,
+    layout: { ...initialLayout(), ...snapshot.layout },
+  })
 }

@@ -182,8 +182,14 @@
   background: var(--glass-dense); font-size: 12px; color: var(--fg-muted);
 }
 .gc-layout__scroll { max-height: 800px; overflow: auto; border-radius: var(--radius-md); }
-.gc-layout__stage { position: relative; width: 100%; }
-.gc-layout__img { display: block; width: 100%; height: auto; user-select: none; pointer-events: none; }
+/* Tamaño real: la imagen a su tamaño natural, con scroll si no cabe. */
+.gc-layout__stage { position: relative; width: max-content; margin: 0 auto; }
+.gc-layout__img { display: block; max-width: none; height: auto; user-select: none; pointer-events: none; }
+/* Ajustada (por defecto): la imagen entera cabe en el ancho y en ~70% del alto de pantalla.
+   El escenario se encoge a la imagen, así la capa de marcadores sigue siendo la caja de la imagen (R4). */
+.gc-layout__scroll--fit { max-height: none; overflow: visible; }
+.gc-layout__scroll--fit .gc-layout__stage { width: fit-content; max-width: 100%; }
+.gc-layout__scroll--fit .gc-layout__img { max-width: 100%; max-height: 70vh; width: auto; }
 .gc-layout__overlay { position: absolute; inset: 0; }
 .gc-marker {
   position: absolute; display: flex; align-items: center; justify-content: center;
