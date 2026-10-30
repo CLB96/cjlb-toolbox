@@ -4,7 +4,7 @@ import { createBondlineStore, selectActiveSheet } from '../store'
 import { computeView } from '../useBondlineView'
 import { FACTORY_DEFAULTS } from '../logic/types'
 import { buildExportChartConfig } from './exportChart'
-import { buildExportModel } from './exportModel'
+import { buildExportModel, exportFileName } from './exportModel'
 
 const real = loadRealWorkbook()
 const sheets = real ?? Object.entries(FIXTURES).map(([name, raw]) => ({ name, raw }))
@@ -68,6 +68,24 @@ describe('buildExportModel', () => {
     const { state, view } = viewOf(setup())
     const m = buildExportModel(state, view, FACTORY_DEFAULTS, 'es', NOW)!
     expect(m.stats.map((s) => s.value)).toEqual(['6', '91s', '28.7°', '64.4°', 't=53s'])
+  })
+
+  test('sin fecha ni hojas el nombre usa SinFecha y Hoja1; con hoja, su nombre', () => {
+    expect(exportFileName(createBondlineStore().getState())).toBe('Bondline - SinFecha - Hoja1.png')
+    const api = createBondlineStore()
+    api.getState().loadWorkbook('a.xlsx', [{ name: 'Uno', raw: FIXTURES.plain }])
+    expect(exportFileName(api.getState())).toBe('Bondline - SinFecha - Uno.png')
+  })
+
+  test.skipIf(!real)('rango {20,80} en la hoja real: duración 60s y activación absoluta t=53s', () => {
+    const api = setup()
+    api.getState().setTimeRangeInput('start', '20')
+    api.getState().setTimeRangeInput('end', '80')
+    expect(api.getState().applyTimeRange()).toBeNull()
+    const { state, view } = viewOf(api)
+    const m = buildExportModel(state, view, FACTORY_DEFAULTS, 'es', NOW)!
+    expect(m.stats[1].value).toBe('60s')
+    expect(m.stats[4].value).toBe('t=53s')
   })
 
   test('columnas de parámetros: ▲ ▲ Superior, pérdida, Leisters numerados, Sliders y Cooling', () => {
