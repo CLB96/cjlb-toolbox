@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+vi.mock('../access/accessService', () => ({ submitAccessRequest: vi.fn() }))
+
 import { LoginScreen } from './LoginScreen'
 
 test('credencial inválida muestra mensaje genérico sin detalles técnicos', async () => {
@@ -11,4 +13,13 @@ test('credencial inválida muestra mensaje genérico sin detalles técnicos', as
   expect(await screen.findByRole('alert')).toHaveTextContent('Correo o contraseña incorrectos')
   expect(screen.queryByText(/wrong-password/)).toBeNull()
   expect(screen.queryByText(/crear cuenta/i)).toBeNull()
+})
+
+test('el enlace de solicitud muestra el formulario sin login y permite volver', async () => {
+  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={vi.fn()} />)
+  await userEvent.click(screen.getByRole('button', { name: '¿No tienes acceso? Solicítalo' }))
+  expect(screen.getByRole('button', { name: 'Solicitar acceso' })).toBeInTheDocument()
+  expect(screen.queryByLabelText('Contraseña')).toBeNull()
+  await userEvent.click(screen.getByRole('button', { name: 'Volver' }))
+  expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
 })

@@ -4,6 +4,12 @@ import type { AuthStatus } from './auth/useAuth'
 const authState = vi.hoisted(() => ({ value: {} as Record<string, unknown> }))
 vi.mock('./auth/useAuth', () => ({ useAuth: () => authState.value }))
 
+vi.mock('./access/accessService', () => ({
+  usePendingCount: () => 0,
+  getMyRequest: vi.fn().mockResolvedValue(null),
+  submitAccessRequest: vi.fn(),
+}))
+
 import App from './App'
 
 const user = { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true }
@@ -48,10 +54,11 @@ test('signedOut muestra el login', () => {
   expect(screen.queryByRole('tab', { name: 'Inicio' })).toBeNull()
 })
 
-test('denied muestra Sin acceso', () => {
+test('denied muestra Sin acceso', async () => {
   setAuth('denied')
   render(<App />)
   expect(screen.getByText('Sin acceso')).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: 'Solicitar acceso' })).toBeInTheDocument()
 })
 
 test('unverified muestra Verifica tu correo', () => {

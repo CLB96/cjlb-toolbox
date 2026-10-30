@@ -1,0 +1,62 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { RequestAccessForm } from './RequestAccessForm'
+import { useToasts } from '../ui/toastStore'
+
+vi.mock('./accessService', () => ({ submitAccessRequest: vi.fn() }))
+import { submitAccessRequest } from './accessService'
+const submit = vi.mocked(submitAccessRequest)
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  localStorage.clear()
+  useToasts.setState({ toasts: [] })
+})
+
+async function fillAndSend(email = 'bob@x.com') {
+  await userEvent.type(screen.getByLabelText('Correo'), email)
+  await userEvent.type(screen.getByLabelText('Nombre'), 'Bob')
+  await userEvent.click(screen.getByRole('button', { name: 'Solicitar acceso' }))
+}
+
+test('envía y deshabilita el botón, guardando cjlb.accessRequestedAt', async () => {
+  submit.mockResolvedValue('sent')
+  render(<RequestAccessForm />)
+  await fillAndSend('Bob@X.com')
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ email: 'Bob@X.com', name: 'Bob', honeypot: '' }))
+  expect(await screen.findByText('Solicitud enviada. Te avisaremos cuando sea aprobada.')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Solicitar acceso' })).toBeDisabled()
+  expect(localStorage.getItem('cjlb.accessRequestedAt')).not.toBeNull()
+})
+
+test('alreadyExists muestra el mensaje neutral access.pending', async () => {
+  submit.mockResolvedValue('alreadyExists')
+  render(<RequestAccessForm />)
+  await fillAndSend()
+  expect(await screen.findByText('Si ya enviaste una solicitud, está pendiente de aprobación.')).toBeInTheDocument()
+})
+
+test('error muestra toast y deja reintentar', async () => {
+  submit.mockResolvedValue('error')
+  render(<RequestAccessForm />)
+  await fillAndSend()
+  expect(await screen.findByRole('button', { name: 'Solicitar acceso' })).toBeEnabled()
+  expect(useToasts.getState().toasts[0]).toMatchObject({ kind: 'error' })
+})
+
+test('con cuenta: correo fijo de solo lectura y uid enviado', async () => {
+  submit.mockResolvedValue('sent')
+  render(<RequestAccessForm email="ana@x.com" uid="u9" defaultName="Ana" />)
+  expect(screen.getByLabelText('Correo')).toHaveAttribute('readonly')
+  await userEvent.click(screen.getByRole('button', { name: 'Solicitar acceso' }))
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ email: 'ana@x.com', uid: 'u9', name: 'Ana' }))
+})
+
+test('el campo honeypot se envía al servicio tal cual (el servicio lo descarta)', async () => {
+  submit.mockResolvedValue('ignored')
+  const { container } = render(<RequestAccessForm />)
+  const trap = container.querySelector('input[name="website"]') as HTMLInputElement
+  await userEvent.type(trap, 'bot')
+  await fillAndSend()
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ honeypot: 'bot' }))
+})

@@ -45,7 +45,7 @@ export function AuthGate() {
   }
 
   if (status === 'denied') {
-    return <DeniedScreen email={user.email} onSignOut={onSignOut} />
+    return <DeniedScreen email={user.email} uid={user.uid} displayName={user.displayName} onSignOut={onSignOut} />
   }
 
   if (status === 'error') {
@@ -71,7 +71,7 @@ export function AuthGate() {
       <AppShell
         key={user.uid}
         isAdmin={auth.isAdmin}
-        avatar={<UserMenu user={user} onSignOut={onSignOut} />}
+        avatar={<UserMenu user={user} isAdmin={auth.isAdmin} onSignOut={onSignOut} />}
       />
     </UidProvider>
   )

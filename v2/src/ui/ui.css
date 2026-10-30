@@ -116,3 +116,7 @@
 .user-menu__avatar::-webkit-details-marker { display: none; }
 .user-menu__panel { position: absolute; right: 0; top: 40px; min-width: 220px; padding: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 5; }
 .user-menu__email { color: var(--fg-muted); font-size: 13px; word-break: break-all; }
+.user-menu__avatar { position: relative; }
+.user-menu__badge { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--error); color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.auth-card__form textarea { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--fg-muted); background: var(--glass-dense); color: var(--fg); min-height: 70px; font: inherit; }
