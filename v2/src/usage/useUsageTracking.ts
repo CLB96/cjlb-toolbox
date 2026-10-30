@@ -8,9 +8,18 @@ import { beat, recordLogin, startSession } from './usageService'
 
 export const BEAT_INTERVAL_MS = 60_000
 export const IDLE_MS = 300_000
+/** Sin red las escrituras de Firestore no resuelven: se avisa a los 15 s y se sigue esperando. */
+export const SLOW_WRITE_MS = 15_000
 const INTERACTION_EVENTS = ['pointerdown', 'keydown', 'wheel'] as const
 
 /** Registra login y sesiones de uso (una por herramienta/ruta). Solo para usuarios permitidos. */
+function watchSlow<T>(p: Promise<T>, onSlow: () => void): Promise<T> {
+  const timer = setTimeout(onSlow, SLOW_WRITE_MS)
+  const clear = () => clearTimeout(timer)
+  p.then(clear, clear)
+  return p
+}
+
 export function useUsageTracking(user: AppUser): void {
   const { route } = useRoute()
   const { t } = useI18n()
@@ -21,7 +30,8 @@ export function useUsageTracking(user: AppUser): void {
   const uid = user.uid
 
   useEffect(() => {
-    recordLogin(userRef.current).catch(() => toast('warn', tRef.current('usage.trackFailed')))
+    const warn = () => toast('warn', tRef.current('usage.trackFailed'))
+    watchSlow(recordLogin(userRef.current), warn).catch(warn)
   }, [uid])
 
   useEffect(() => {
@@ -33,7 +43,7 @@ export function useUsageTracking(user: AppUser): void {
       warned = true
       toast('warn', tRef.current('usage.trackFailed'))
     }
-    const sessionP = startSession(userRef.current, route).catch(() => {
+    const sessionP = watchSlow(startSession(userRef.current, route), warnOnce).catch(() => {
       warnOnce()
       return null
     })
@@ -43,7 +53,7 @@ export function useUsageTracking(user: AppUser): void {
       const id = await sessionP
       if (!id) return
       try {
-        await beat(id, total)
+        await watchSlow(beat(id, total), warnOnce)
         pending = 0
       } catch {
         pending = total

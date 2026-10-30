@@ -68,7 +68,8 @@ export async function beat(sessionId: string, addSeconds: number): Promise<void>
     activeSeconds: increment(n),
     lastBeat: serverTimestamp(),
   })
-  lastSuccess.set(sessionId, sent)
+  // Tras resolver: así el tope por tiempo real nunca supera lo que el servidor medirá.
+  lastSuccess.set(sessionId, Date.now())
 }
 
 function millis(v: unknown): number {

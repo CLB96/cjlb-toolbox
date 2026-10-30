@@ -65,3 +65,35 @@ test('un fallo de beat avisa una sola vez por sesión y sigue registrando', asyn
   unsub()
   expect(shown).toBe(1)
 })
+
+test('si startSession no responde en 15 s avisa una vez y sigue esperando', async () => {
+  vi.mocked(startSession).mockReturnValue(new Promise(() => {}))
+  let shown = 0
+  const unsub = useToasts.subscribe((st, prev) => {
+    shown += Math.max(0, st.toasts.length - prev.toasts.length)
+  })
+  renderHook(() => useUsageTracking(user))
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(14_000)
+  })
+  expect(shown).toBe(0)
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(2_000)
+  })
+  unsub()
+  expect(shown).toBe(1)
+})
+
+test('si beat no responde en 15 s avisa una vez', async () => {
+  vi.mocked(beat).mockReturnValue(new Promise(() => {}))
+  let shown = 0
+  const unsub = useToasts.subscribe((st, prev) => {
+    shown += Math.max(0, st.toasts.length - prev.toasts.length)
+  })
+  renderHook(() => useUsageTracking(user))
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60_000 + 16_000)
+  })
+  unsub()
+  expect(shown).toBe(1)
+})
