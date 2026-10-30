@@ -10,4 +10,12 @@ export const en: Record<MessageKey, string> = {
   'shell.openCurrent': 'Open the current tool',
   'shell.loading': 'Loading…',
   'shell.lang.toggle': 'Toggle language',
+  'persist.saveFailed': 'Autosave failed. Export your work.',
+  'persist.restoreFailed': 'Could not restore the saved work.',
+  'persist.savedAgo': 'Saved {min} min ago',
+  'persist.savedJustNow': 'Saved just now',
+  'persist.history': 'Version history',
+  'persist.historyEmpty': 'No saved versions yet.',
+  'persist.restore': 'Restore',
+  'persist.largeFilesSkipped': 'Files larger than 20 MB are not kept in the history.',
 }

@@ -8,6 +8,14 @@ export const es = {
   'shell.openCurrent': 'Abrir la herramienta actual',
   'shell.loading': 'Cargando…',
   'shell.lang.toggle': 'Cambiar idioma',
+  'persist.saveFailed': 'No se pudo guardar automáticamente. Exporta tu trabajo.',
+  'persist.restoreFailed': 'No se pudo restaurar el trabajo guardado.',
+  'persist.savedAgo': 'Guardado hace {min} min',
+  'persist.savedJustNow': 'Guardado hace un momento',
+  'persist.history': 'Historial de versiones',
+  'persist.historyEmpty': 'Aún no hay versiones guardadas.',
+  'persist.restore': 'Restaurar',
+  'persist.largeFilesSkipped': 'Los archivos de más de 20 MB no se guardan en el historial.',
 } as const
 
 export type MessageKey = keyof typeof es
