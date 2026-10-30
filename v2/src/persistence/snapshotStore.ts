@@ -26,7 +26,7 @@ export const MAX_SNAPSHOTS = 10
  */
 const META_PREFIX = '~meta~:'
 const FRESH_PREFIX = '~fresh~:'
-const store = createStore('cjlb-toolbox', 'snapshots')
+export const snapshotIdbStore = createStore('cjlb-toolbox', 'snapshots')
 
 const keyOf = (uid: string, toolId: ToolId, savedAt: number) => `${uid}:${toolId}:${savedAt}`
 const metaKeyOf = (id: string) => `${META_PREFIX}${id}`
@@ -35,20 +35,20 @@ const freshKey = (uid: string, toolId: ToolId) => `${FRESH_PREFIX}${uid}:${toolI
 
 async function uniqueSavedAt(uid: string, toolId: ToolId): Promise<number> {
   let at = Date.now()
-  while ((await get(metaKeyOf(keyOf(uid, toolId, at)), store)) !== undefined) at += 1
+  while ((await get(metaKeyOf(keyOf(uid, toolId, at)), snapshotIdbStore)) !== undefined) at += 1
   return at
 }
 
 const byNewest = (a: SnapshotMeta, b: SnapshotMeta) => b.savedAt - a.savedAt
 
 async function metaKeys(): Promise<string[]> {
-  const all = await keys(store)
+  const all = await keys(snapshotIdbStore)
   return all.filter((k): k is string => typeof k === 'string' && k.startsWith(META_PREFIX))
 }
 
 async function readMetas(metaKeyList: string[]): Promise<SnapshotMeta[]> {
   if (metaKeyList.length === 0) return []
-  const records = await getMany<SnapshotMeta | undefined>(metaKeyList, store)
+  const records = await getMany<SnapshotMeta | undefined>(metaKeyList, snapshotIdbStore)
   return records.filter((r): r is SnapshotMeta => r !== undefined).sort(byNewest)
 }
 
@@ -81,11 +81,11 @@ export async function saveSnapshot<S>(
       [id, { ...meta, data: value }],
       [metaKeyOf(id), meta],
     ],
-    store,
+    snapshotIdbStore,
   )
   const all = await listSnapshots(uid, toolId)
   const stale = all.slice(MAX_SNAPSHOTS).flatMap((m) => [m.id, metaKeyOf(m.id)])
-  if (stale.length > 0) await delMany(stale, store)
+  if (stale.length > 0) await delMany(stale, snapshotIdbStore)
   return meta
 }
 
@@ -95,7 +95,7 @@ export async function loadSnapshot<S>(
   id: string,
 ): Promise<Snapshot<S> | null> {
   if (!id.startsWith(prefixOf(uid, toolId))) return null
-  return (await get<Snapshot<S>>(id, store)) ?? null
+  return (await get<Snapshot<S>>(id, snapshotIdbStore)) ?? null
 }
 
 export async function latestPerTool(uid: string, limit = 3): Promise<SnapshotMeta[]> {
@@ -110,12 +110,12 @@ export async function latestPerTool(uid: string, limit = 3): Promise<SnapshotMet
 }
 
 export async function markFreshStart(uid: string, toolId: ToolId): Promise<void> {
-  await set(freshKey(uid, toolId), true, store)
+  await set(freshKey(uid, toolId), true, snapshotIdbStore)
 }
 
 export async function consumeFreshStart(uid: string, toolId: ToolId): Promise<boolean> {
   const k = freshKey(uid, toolId)
-  const flagged = (await get(k, store)) === true
-  if (flagged) await del(k, store)
+  const flagged = (await get(k, snapshotIdbStore)) === true
+  if (flagged) await del(k, snapshotIdbStore)
   return flagged
 }

@@ -23,6 +23,8 @@ export const en: Record<MessageKey, string> = {
   'shell.retry': 'Retry',
   'persist.saveFailed': 'Autosave failed. Export your work.',
   'persist.restoreFailed': 'Could not restore the saved work.',
+  'prefs.loadFailed': 'Could not load your saved preferences. Using factory values.',
+  'prefs.saveFailed': 'Could not save your preferences.',
   'persist.savedAgo': 'Saved {min} min ago',
   'persist.savedJustNow': 'Saved just now',
   'persist.history': 'Version history',

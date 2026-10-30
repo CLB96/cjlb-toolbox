@@ -21,6 +21,8 @@ export const es = {
   'shell.retry': 'Reintentar',
   'persist.saveFailed': 'No se pudo guardar automáticamente. Exporta tu trabajo.',
   'persist.restoreFailed': 'No se pudo restaurar el trabajo guardado.',
+  'prefs.loadFailed': 'No se pudieron cargar tus preferencias guardadas. Se usan los valores de fábrica.',
+  'prefs.saveFailed': 'No se pudieron guardar tus preferencias.',
   'persist.savedAgo': 'Guardado hace {min} min',
   'persist.savedJustNow': 'Guardado hace un momento',
   'persist.history': 'Historial de versiones',
