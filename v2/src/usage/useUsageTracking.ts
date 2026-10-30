@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { AppUser } from '../auth/authService'
 import { useRoute } from '../app/useRoute'
 import { toast } from '../ui/toastStore'
@@ -12,14 +12,31 @@ export const IDLE_MS = 300_000
 export const SLOW_WRITE_MS = 15_000
 const INTERACTION_EVENTS = ['pointerdown', 'keydown', 'wheel'] as const
 
-/** Registra login y sesiones de uso (una por herramienta/ruta). Solo para usuarios permitidos. */
-function watchSlow<T>(p: Promise<T>, onSlow: () => void): Promise<T> {
-  const timer = setTimeout(onSlow, SLOW_WRITE_MS)
-  const clear = () => clearTimeout(timer)
+type Timers = { open: boolean; set: Set<ReturnType<typeof setTimeout>> }
+const newTimers = (): Timers => ({ open: true, set: new Set() })
+function closeTimers(t: Timers): void {
+  t.open = false
+  t.set.forEach(clearTimeout)
+  t.set.clear()
+}
+
+/** Avisa si p tarda más de SLOW_WRITE_MS; devuelve p intacta. Al cerrar `timers` ya no avisa. */
+function watchSlow<T>(p: Promise<T>, onSlow: () => void, timers: Timers): Promise<T> {
+  if (!timers.open) return p
+  const timer = setTimeout(() => {
+    timers.set.delete(timer)
+    onSlow()
+  }, SLOW_WRITE_MS)
+  timers.set.add(timer)
+  const clear = () => {
+    clearTimeout(timer)
+    timers.set.delete(timer)
+  }
   p.then(clear, clear)
   return p
 }
 
+/** Registra login y sesiones de uso (una por herramienta/ruta). Solo para usuarios permitidos. */
 export function useUsageTracking(user: AppUser): void {
   const { route } = useRoute()
   const { t } = useI18n()
@@ -28,22 +45,26 @@ export function useUsageTracking(user: AppUser): void {
   const userRef = useRef(user)
   userRef.current = user
   const uid = user.uid
+  /** Un solo aviso por sesión, compartido por login, apertura y beats. */
+  const warnedRef = useRef(false)
+  const warnOnce = useCallback(() => {
+    if (warnedRef.current) return
+    warnedRef.current = true
+    toast('warn', tRef.current('usage.trackFailed'))
+  }, [])
 
   useEffect(() => {
-    const warn = () => toast('warn', tRef.current('usage.trackFailed'))
-    watchSlow(recordLogin(userRef.current), warn).catch(warn)
-  }, [uid])
+    const timers = newTimers()
+    watchSlow(recordLogin(userRef.current), warnOnce, timers).catch(warnOnce)
+    return () => closeTimers(timers)
+  }, [uid, warnOnce])
 
   useEffect(() => {
     const tracker = createActivityTracker({ idleMs: IDLE_MS, now: Date.now })
-    let warned = false
+    const timers = newTimers()
+    warnedRef.current = false
     let pending = 0
-    const warnOnce = () => {
-      if (warned) return
-      warned = true
-      toast('warn', tRef.current('usage.trackFailed'))
-    }
-    const sessionP = watchSlow(startSession(userRef.current, route), warnOnce).catch(() => {
+    const sessionP = watchSlow(startSession(userRef.current, route), warnOnce, timers).catch(() => {
       warnOnce()
       return null
     })
@@ -53,7 +74,7 @@ export function useUsageTracking(user: AppUser): void {
       const id = await sessionP
       if (!id) return
       try {
-        await watchSlow(beat(id, total), warnOnce)
+        await watchSlow(beat(id, total), warnOnce, timers)
         pending = 0
       } catch {
         pending = total
@@ -72,9 +93,10 @@ export function useUsageTracking(user: AppUser): void {
 
     return () => {
       clearInterval(timer)
+      closeTimers(timers)
       INTERACTION_EVENTS.forEach((e) => document.removeEventListener(e, onInteraction))
       document.removeEventListener('visibilitychange', onVisibility)
       void flush(true)
     }
-  }, [uid, route])
+  }, [uid, route, warnOnce])
 }
