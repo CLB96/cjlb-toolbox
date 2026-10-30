@@ -1,6 +1,6 @@
 # Bondline: mejoras propuestas (para decidir)
 
-Qué es esto: al portar Bondline a la v2 se copió el comportamiento del original tal cual, salvo lo que acordamos cambiar (reglas R1–R10). Aquí está cada rareza del original (inventario §10) que se **conservó**, con qué pasa hoy y qué se ganaría si decides cambiarla. Después, lo que **se cambió por regla** y lo que es **nuevo**. Nada de la parte A está implementado: espera tu decisión.
+Qué es esto: al portar Bondline a la v2 se copió el comportamiento del original tal cual, salvo lo que acordamos cambiar (reglas R1–R10). Aquí está cada rareza del original (inventario §10) que se **conservó**, con qué pasa hoy y qué se ganaría si decides cambiarla. Después, lo que **se cambió por regla** y lo que es **nuevo**. El dueño aprobó las mejoras el 2026-10-30: las que no cambian valores calculados están implementadas; las que sí (8, 9, 10, 12 y 18) quedan pendientes de su decisión.
 
 Estados: **conservado** (igual que el original), **cambiado en el port, aprobado por regla R#**, **nuevo** (no existía).
 
@@ -18,27 +18,27 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 2. Doble triángulo en "▲ ▲ Superior" del PNG (§10.14)
 - **Qué pasa hoy:** el PNG muestra "▲ ▲ Superior" y "▼ ▼ Inferior" (el texto ya trae el triángulo y el dibujo agrega otro).
 - **Qué se ganaría:** un solo triángulo.
-- **Estado:** conservado (el contenido del PNG es idéntico al original, R9).
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. El PNG muestra "▲ Superior" / "▼ Inferior" con un solo triángulo.
 
 ### 3. Sub-etiquetas del PNG siempre en español (§10.14)
 - **Qué pasa hoy:** "Termoreg.", "Nido", "Pérdida", "Temperatura", "Nido Sup/Inf" salen en español aunque la app esté en inglés.
 - **Qué se ganaría:** PNG en el idioma activo.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. Sub-etiquetas del PNG en el idioma activo; en español, los mismos textos del original.
 
 ### 4. `exportTitle` sin uso (§10.14)
 - **Qué pasa hoy:** existe un texto de título de exportación que nunca se usa; el título del PNG es otro.
 - **Qué se ganaría:** nada visible; solo limpieza.
-- **Estado:** conservado (no se portó como texto activo).
+- **Estado:** conservado sin cambio: `exportTitle` sí se usa en la v2 como nombre accesible de la gráfica en pantalla; no hay nada que limpiar.
 
 ### 5. La línea de cooling del PNG no se ajusta al rango temporal (§10.14)
 - **Qué pasa hoy:** con un rango temporal activo, la línea objetivo de cooling del PNG usa el segundo absoluto sin restar el inicio del rango.
 - **Qué se ganaría:** línea en su sitio también con rango.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. La línea de cooling del PNG resta el inicio del rango, igual que en pantalla.
 
 ### 6. La leyenda del PNG puede salirse del ancho (§10.14)
 - **Qué pasa hoy:** con muchos termopares la leyenda no hace salto de línea y puede cortarse en el borde.
 - **Qué se ganaría:** leyenda siempre completa.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. La leyenda del PNG salta de línea al llegar al borde de la gráfica (mismo orden y espaciado).
 
 ### 7. Resolución del PNG (§10.14)
 - **Qué pasa hoy:** el original dependía de `devicePixelRatio` de la pantalla para la gráfica temporal.
@@ -48,27 +48,27 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 8. Duración y activación del PNG distintas de la pantalla (§10.11)
 - **Qué pasa hoy:** con rango temporal activo, el PNG muestra la duración del rango (p. ej. 60s con rango 20–80) y el segundo de activación **absoluto** (t=53s en el Excel real); en pantalla el resultado es relativo al inicio del rango (puede salir negativo).
 - **Qué se ganaría:** un solo criterio (siempre relativo o siempre absoluto).
-- **Estado:** conservado (verificado con prueba sobre el Excel real).
+- **Estado:** conservado — **pendiente de decisión del dueño**: cambiarlo altera valores mostrados (duración/activación del PNG, t=53s verificado) y hay que elegir el criterio (relativo o absoluto).
 
 ### 9. La validación de la ventana de activación (§10.12)
 - **Qué pasa hoy:** se validan 30 muestras (desde el inicio hasta inicio+29), la caja dibuja hasta inicio+30 y se exige que la ventana termine dentro de los datos; una ventana que se pasa del final cuenta como NOK aunque las muestras existentes estén en rango.
 - **Qué se ganaría:** criterio más claro para ventanas al final del ciclo.
-- **Estado:** conservado.
+- **Estado:** conservado — **pendiente de decisión del dueño**: cambiar el criterio altera el resultado OK/NOK calculado.
 
 ### 10. Activación, cooling, mínimo y máximo ignoran visibilidad y rango (§10.13)
 - **Qué pasa hoy:** ocultar un termopar o recortar el rango no cambia el mínimo, el máximo, la activación ni el cooling (se calculan con todos los termopares y todos los datos).
 - **Qué se ganaría:** resultados que siguen lo que se está viendo.
-- **Estado:** conservado.
+- **Estado:** conservado — **pendiente de decisión del dueño**: cambiarlo altera mínimo, máximo, activación y cooling calculados.
 
 ### 11. Eje Y fijo en 80 (§10.13)
 - **Qué pasa hoy:** `yMax` es 80; datos o adhesivos con máximo mayor quedan cortados.
 - **Qué se ganaría:** eje que se adapta a los datos.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. El eje Y sigue en 80 salvo que los datos visibles o el máximo del adhesivo lo superen (se redondea hacia arriba).
 
 ### 12. Tiempo de cooling con decimales sin redondear (§10.19)
 - **Qué pasa hoy:** con un inicio no entero, el tiempo transcurrido muestra la diferencia tal cual (decimales largos). Un inicio negativo pasa el chequeo de cooling aunque no tenga sentido.
 - **Qué se ganaría:** valores enteros y entradas validadas.
-- **Estado:** conservado.
+- **Estado:** conservado — **pendiente de decisión del dueño**: redondear o rechazar inicios negativos cambia el valor mostrado y el resultado del chequeo de cooling.
 
 ### 13. El sustrato no afecta el cálculo (§10.21)
 - **Qué pasa hoy:** PC-ABS, PP, etc. solo cambian el texto "Necesita Flama" (PP = SÍ); la activación no cambia.
@@ -78,27 +78,27 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 14. Los marcadores vuelven a su sitio por defecto (§10.10)
 - **Qué pasa hoy:** al cargar una imagen, cambiar de hoja sin configuración guardada o ocultar/mostrar un termopar, los marcadores se reacomodan en la distribución por defecto y las posiciones arrastradas se pierden.
 - **Qué se ganaría:** conservar las posiciones si el número de termopares no cambia.
-- **Estado:** conservado (R4).
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. Cambiar la imagen, ocultar/mostrar un termopar o visitar otra hoja con el mismo número de termopares conserva las posiciones arrastradas; una TC que reaparece va a su sitio por defecto.
 
 ### 15. Fecha de prueba sin sanear en el nombre del archivo (§10.16)
 - **Qué pasa hoy:** el nombre es `Bondline - {fecha} - {hoja}.png`; el nombre de la hoja sí se limpia de `/ \ : * ? " < > |`, pero la fecha se escribe tal cual (una fecha con "/" como 30/10/2026 hace que el navegador cambie esos caracteres al guardar). Sin fecha: `SinFecha`.
 - **Qué se ganaría:** nombres de archivo siempre válidos y uniformes (p. ej. 2026-10-30).
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. La fecha se limpia de `/ \ : * ? " < > |` igual que la hoja (30/10/2026 → 30-10-2026); se escribe como la tecleó el usuario, sin reformatear.
 
 ### 16. Volver a elegir el mismo archivo no lo recarga (§10.17)
 - **Qué pasa hoy:** elegir el mismo archivo dos veces seguidas no hace nada (por ejemplo, tras corregirlo y guardarlo).
 - **Qué se ganaría:** recargar el archivo corregido sin elegir otro antes.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. Elegir el mismo archivo otra vez lo recarga.
 
 ### 17. Rango temporal con decimales (§10.15)
 - **Qué pasa hoy:** el rango se lee como entero (se truncan decimales).
 - **Qué se ganaría:** aviso si se escribe un decimal.
-- **Estado:** conservado.
+- **Estado:** cambiado, aprobado por el dueño 2026-10-30. El rango se sigue truncando a entero (mismo valor), pero se avisa: "El rango usa segundos enteros: se ignoraron los decimales".
 
 ### 18. El arrastre de un suceso muestra el segundo absoluto
 - **Qué pasa hoy:** al arrastrar una línea de suceso, el tooltip muestra el segundo absoluto del ciclo (no relativo al rango), coherente con R3.
 - **Qué se ganaría:** posibilidad de mostrar el tiempo relativo si hay rango activo.
-- **Estado:** conservado.
+- **Estado:** conservado — **pendiente de decisión del dueño**: depende del criterio del ítem 8 (tiempo relativo o absoluto).
 
 ---
 
@@ -169,4 +169,4 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 | 35 | Si la imagen del Layout no se puede decodificar, aviso y vuelta a la zona de carga (antes, cuadro roto). | Se puede elegir otra imagen. | Nuevo (texto nuevo) |
 | 36 | Los marcadores se mueven con las flechas del teclado (1 %; con Shift, 5 %). | Accesibilidad y ajuste fino. | Nuevo |
 | 37 | Cambiar el rango, los sucesos, los parámetros o los valores por defecto refresca resultados y gráfica de inmediato. | Se ve el efecto al momento. | Nuevo (R8) |
-| 38 | Si la imagen del Layout no carga al exportar, el PNG se genera igual sin su caja, **sin aviso** (como el original). Mejora propuesta: un aviso "se exportó sin la imagen del layout". | No se pierde el export y se sabe por qué falta. | Conservado (el aviso es solo propuesta) |
+| 38 | Si la imagen del Layout no carga al exportar, el PNG se genera igual sin su caja y ahora avisa: "Se exportó sin la imagen del layout". | No se pierde el export y se sabe por qué falta. | Cambiado, aprobado por el dueño 2026-10-30 |

@@ -197,6 +197,9 @@ test('rango temporal: errores literales por toast y valores inválidos sin rompe
   fireEvent.change(end, { target: { value: '5' } })
   await userEvent.click(screen.getByTitle('Aplicar rango'))
   expect(toasts()).toContain('El tiempo final debe ser mayor al inicial')
+  fireEvent.change(end, { target: { value: '60.5' } })
+  await userEvent.click(screen.getByTitle('Aplicar rango'))
+  expect(toasts()).toContain('El rango usa segundos enteros: se ignoraron los decimales')
   // inicio >= total: se acepta como el original y no rompe la vista
   fireEvent.change(start, { target: { value: '200' } })
   fireEvent.change(end, { target: { value: '' } })
@@ -237,6 +240,7 @@ test('subir un libro carga los datos; ilegible o vacío avisan por toast', async
   Object.defineProperty(bad, 'arrayBuffer', { value: () => Promise.reject(new Error('boom')) })
   await userEvent.upload(change, bad)
   await waitFor(() => expect(toasts()).toContain('Error al leer el archivo. Por favor intenta de nuevo.'))
+  expect(change).toHaveValue('') // se limpia: el mismo archivo corregido se puede recargar (mejora A16)
 
   const empty = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(empty, XLSX.utils.aoa_to_sheet([]), 'Vacia')

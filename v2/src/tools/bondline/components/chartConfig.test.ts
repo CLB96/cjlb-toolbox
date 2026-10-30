@@ -69,7 +69,7 @@ test('anotaciones, etiquetas, eje Y y datos ≡ legacy (configuración represent
         expect(stripHover(annotationsOf(config))).toEqual(want)
         expect(config.data.labels).toEqual(lc.labels)
         const y = (config.options?.scales as { y: { min: number; max: number } }).y
-        expect([y.min, y.max]).toEqual([lc.yMin, 80])
+        expect([y.min, y.max]).toEqual([lc.yMin, view.yMax]) // yMax: 80 o más (mejora A11)
         config.data.datasets.forEach((ds, i) => expect(ds.data).toEqual(lc.trimmedColumns[i]))
       }
     }

@@ -55,7 +55,9 @@ describe('rango, activación, KPIs y resultado ≡ original (combinaciones repre
           const act = findActivationStart(columns, totalRows, cfg.min)
           expect(act).toBe(lc.activationStart)
           expect(act !== null && isWindowInRange(columns, totalRows, act, range, cfg)).toBe(lc.allInRange)
-          expect(yLimits(trimmed)).toEqual({ yMin: lc.yMin, yMax: lc.yMax })
+          // yMax ya no es fijo (mejora A11): 80 del original salvo que los datos lo superen
+          const peak = Math.max(...trimmed.flat().filter((v): v is number => v !== null))
+          expect(yLimits(trimmed)).toEqual({ yMin: lc.yMin, yMax: Math.max(lc.yMax, Math.ceil(peak)) })
           expect(minMaxTemp(columns)).toEqual({ min: lc.minTemp, max: lc.maxTemp })
         }
       }

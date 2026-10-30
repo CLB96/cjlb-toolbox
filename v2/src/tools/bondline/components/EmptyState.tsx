@@ -14,7 +14,7 @@ interface FileInputProps {
 export function FileInput({ disabled, onFile }: FileInputProps) {
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    // como el original: el valor no se limpia
+    e.target.value = '' // permite recargar el mismo archivo corregido (mejora A16)
     if (file) onFile(file)
   }
   return (

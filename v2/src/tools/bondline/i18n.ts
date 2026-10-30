@@ -6,6 +6,8 @@
 // - defaultsConfirmReset: confirm literal de resetDefaults (ES/EN, §6).
 // - layoutRealSize: botón "Tamaño real" del layout (R4, como GapCheck).
 // - selectImage: alert literal de handleLayoutImage (2860); changeImage, imageLoadFailed: nuevos (como GapCheck).
+// - exportThermo..exportNestLow: sub-etiquetas del PNG (ES literal del original; EN nuevo, mejora A3).
+// - timeDecimals, exportNoLayoutImage: avisos nuevos (mejoras A17 y C38).
 import { useI18n } from '../../i18n/useI18n'
 import type { Lang } from './logic/types'
 
@@ -146,6 +148,14 @@ const es = {
     selectImage: 'Por favor selecciona una imagen',
     changeImage: 'Cambiar imagen',
     imageLoadFailed: 'No se pudo mostrar la imagen',
+    exportThermo: 'Termoreg.',
+    exportNest: 'Nido',
+    exportLoss: 'Pérdida',
+    exportTemp: 'Temperatura',
+    exportNestUp: 'Nido Sup',
+    exportNestLow: 'Nido Inf',
+    timeDecimals: 'El rango usa segundos enteros: se ignoraron los decimales',
+    exportNoLayoutImage: 'Se exportó sin la imagen del layout',
 }
 
 export type BondlineKey = keyof typeof es
@@ -286,6 +296,14 @@ const en: Record<BondlineKey, Entry> = {
     selectImage: 'Please select an image',
     changeImage: 'Change image',
     imageLoadFailed: 'The image could not be displayed',
+    exportThermo: 'Thermoreg.',
+    exportNest: 'Nest',
+    exportLoss: 'Loss',
+    exportTemp: 'Temperature',
+    exportNestUp: 'Nest Up',
+    exportNestLow: 'Nest Low',
+    timeDecimals: 'The range uses whole seconds: decimals were ignored',
+    exportNoLayoutImage: 'Exported without the layout image',
 }
 
 export const BONDLINE_I18N: Record<Lang, Record<BondlineKey, Entry>> = { es, en }

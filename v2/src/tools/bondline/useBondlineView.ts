@@ -57,7 +57,7 @@ export function computeView(
   const activationEnd = activationStart !== null ? activationStart + ACTIVATION_DURATION : null
   const allInRange =
     activationStart !== null && isWindowInRange(columns, totalRows, activationStart, range, cfg)
-  const { yMin, yMax } = yLimits(trimmed)
+  const { yMin, yMax } = yLimits(trimmed, cfg.max)
   return {
     cfg,
     range,

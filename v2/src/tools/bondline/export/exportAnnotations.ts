@@ -7,7 +7,6 @@ export interface ExportAnnotationInput {
   view: BondlineView
   adhesive: AdhesiveType
   coolingTarget: number
-  totalRows: number
   t: (key: 'annotMin' | 'annotMax' | 'annotWindow', value: number) => string
 }
 
@@ -15,10 +14,10 @@ const pad = (v: number, h: number) => ({ top: v, bottom: v, left: h, right: h })
 
 /**
  * Anotaciones del PNG (downloadChart, inventario 7.6): tema oscuro fijo, trazos y fuentes
- * mayores que los de pantalla. La línea de cooling va de su inicio a `totalRows` sin ajustar.
+ * mayores que los de pantalla. La línea de cooling se ajusta al rango como en pantalla (mejora A5).
  */
 export function buildExportAnnotations(input: ExportAnnotationInput): Record<string, Annotation> {
-  const { view, adhesive, coolingTarget, totalRows, t } = input
+  const { view, adhesive, coolingTarget, t } = input
   const { cfg, range } = view
   const lc = adhesive === 'hotmelt' ? 'rgba(248,184,79,' : 'rgba(34,211,238,'
   const gc = 'rgba(89,201,127,'
@@ -101,12 +100,13 @@ export function buildExportAnnotations(input: ExportAnnotationInput): Record<str
     }
   })
 
-  if (view.cooling.show) {
+  const coolingX = view.cooling.coolingStart - range.start
+  if (view.cooling.show && coolingX < range.rows) {
     const purple = 'rgba(167,139,250,'
     out.coolingTargetLine = {
       type: 'line',
-      xMin: view.cooling.coolingStart,
-      xMax: totalRows,
+      xMin: Math.max(0, coolingX),
+      xMax: range.rows - 1,
       yMin: coolingTarget,
       yMax: coolingTarget,
       borderColor: purple + '0.95)',

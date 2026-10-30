@@ -3,6 +3,7 @@ import { loadRealWorkbook } from '../../../../legacy-fixtures/bondline/realFixtu
 import { createBondlineStore, selectActiveSheet } from '../store'
 import { computeView } from '../useBondlineView'
 import { FACTORY_DEFAULTS } from '../logic/types'
+import { legendSlots } from './drawExport'
 import { buildExportChartConfig } from './exportChart'
 import { buildExportModel } from './exportModel'
 
@@ -60,7 +61,7 @@ describe('buildExportModel', () => {
     expect(m.stats[1].value).toBe(`${view.range.rows}s`)
     expect(m.stats[4].value).toBe(view.kpis.activation)
     expect(m.footer).toBe('Desarrollado por CJLB — R&D Process Engineering')
-    expect(m.fileName).toBe(`Bondline - 30/10/2026 - ${state.sheets[0].name.replace(/[/\\:*?"<>|]/g, '-')}.png`)
+    expect(m.fileName).toBe(`Bondline - 30-10-2026 - ${state.sheets[0].name.replace(/[/\\:*?"<>|]/g, '-')}.png`)
     expect(m.legend.cooling).toBe('🎯 Cooling 35°C')
   })
 
@@ -70,11 +71,11 @@ describe('buildExportModel', () => {
     expect(m.stats.map((s) => s.value)).toEqual(['6', '91s', '28.7°', '64.4°', 't=53s'])
   })
 
-  test('columnas de parámetros: ▲ ▲ Superior, pérdida, Leisters numerados, Sliders y Cooling', () => {
+  test('columnas de parámetros: ▲ Superior, pérdida, Leisters numerados, Sliders y Cooling', () => {
     const { state, view } = viewOf(setup())
     const m = buildExportModel(state, view, FACTORY_DEFAULTS, 'es', NOW)!
     expect(m.panelWidth).toBe(1800)
-    expect(m.columns.map((c) => c.title)).toEqual(['▲ ▲ Superior', '▼ ▼ Inferior', 'Leisters', 'Sliders', '❄️ Cooling'])
+    expect(m.columns.map((c) => c.title)).toEqual(['▲ Superior', '▼ Inferior', 'Leisters', 'Sliders', '❄️ Cooling'])
     expect(m.columns[0].rows.map((r) => [r.label, r.value, !!r.warn])).toEqual([
       ['Termoreg.', '85°C', false],
       ['Nido', '80°C', false],
@@ -83,6 +84,15 @@ describe('buildExportModel', () => {
     expect(m.columns[1].rows[2]).toMatchObject({ value: '0.0 °C', warn: false })
     expect(m.columns[2].rows.map((r) => r.label)).toEqual(['Leister 1', 'Leister 3'])
     expect(m.columns[4].rows.map((r) => r.label)).toEqual(['Chiller', 'Nido Sup'])
+  })
+
+  test('sub-etiquetas del PNG en el idioma activo', () => {
+    const { state, view } = viewOf(setup())
+    const m = buildExportModel(state, view, FACTORY_DEFAULTS, 'en', NOW)!
+    expect(m.columns[0].title).toBe('▲ Upper')
+    expect(m.columns[0].rows.map((r) => r.label)).toEqual(['Thermoreg.', 'Nest', 'Loss'])
+    expect(m.columns[3].rows[0].label).toBe('Temperature')
+    expect(m.columns[4].rows.map((r) => r.label)).toEqual(['Chiller', 'Nest Up'])
   })
 
   test('con layout: panel de 1010, sin columna Cooling y sin marcadores de TC ocultas', () => {
@@ -108,7 +118,6 @@ describe('buildExportChartConfig', () => {
       tcVisibility: state.config.tcVisibility,
       adhesive: 'waterbase',
       defaults: FACTORY_DEFAULTS,
-      totalRows: data.totalRows,
       lang: 'es',
     })
     const sets = cfg.data.datasets as unknown as { label: string; borderWidth: number }[]
@@ -119,7 +128,47 @@ describe('buildExportChartConfig', () => {
     }
     const ann = plugins.annotation.annotations
     expect(ann.minLine).toMatchObject({ borderWidth: 3, borderDash: [10, 5], yMin: 55 })
-    expect(ann.coolingTargetLine).toMatchObject({ xMin: 58, xMax: data.totalRows, borderWidth: 4, borderDash: [12, 6] })
+    expect(ann.coolingTargetLine).toMatchObject({ xMin: 58, xMax: data.totalRows - 1, borderWidth: 4, borderDash: [12, 6] })
     expect(cfg.options?.responsive).toBe(false)
+  })
+
+  test('la línea de cooling se ajusta al rango temporal', () => {
+    const api = setup()
+    api.getState().setTimeRangeInput('start', '20')
+    api.getState().applyTimeRange()
+    const { state, view } = viewOf(api)
+    const cfg = buildExportChartConfig({
+      view,
+      tcVisibility: state.config.tcVisibility,
+      adhesive: 'waterbase',
+      defaults: FACTORY_DEFAULTS,
+      lang: 'es',
+    })
+    const plugins = cfg.options?.plugins as unknown as {
+      annotation: { annotations: Record<string, Record<string, unknown>> }
+    }
+    expect(plugins.annotation.annotations.coolingTargetLine).toMatchObject({ xMin: 38, xMax: view.range.rows - 1 })
+  })
+})
+
+describe('legendSlots', () => {
+  const legend = (n: number) => ({
+    tcs: Array.from({ length: n }, (_, i) => ({ label: `TC-${i + 1}`, color: '#fff' })),
+    limits: 'Límites',
+    limitsColor: '#22d3ee',
+    window: 'Ventana',
+    cooling: '🎯 Cooling 35°C',
+  })
+
+  test('pocos TC: una línea con los avances del original', () => {
+    const slots = legendSlots(legend(6))
+    expect(slots.map((s) => s.x)).toEqual([60, 160, 260, 360, 460, 560, 660, 860, 1060])
+    expect(new Set(slots.map((s) => s.y))).toEqual(new Set([1180]))
+  })
+
+  test('muchos TC: salta de línea sin salirse de la gráfica', () => {
+    const slots = legendSlots(legend(20))
+    expect(slots.every((s) => s.x + (s.kind === 'tc' ? 100 : 200) <= 1860)).toBe(true)
+    expect(slots[slots.length - 1]).toMatchObject({ kind: 'cooling', y: 1204 })
   })
 })

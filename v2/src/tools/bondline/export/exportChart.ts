@@ -28,13 +28,12 @@ export interface ExportChartInput {
   tcVisibility: readonly boolean[]
   adhesive: AdhesiveType
   defaults: BondlineDefaults
-  totalRows: number
   lang: Lang
 }
 
 /** Configuración de la gráfica del PNG (inventario 7.6): solo TC visibles, sin tooltip ni leyenda. */
 export function buildExportChartConfig(input: ExportChartInput): ChartConfiguration<'line'> {
-  const { view, adhesive, defaults, totalRows, lang } = input
+  const { view, adhesive, defaults, lang } = input
   const reset = input.tcVisibility.length !== view.trimmed.length
   const datasets = view.trimmed.flatMap((col, i) =>
     reset || input.tcVisibility[i]
@@ -78,7 +77,6 @@ export function buildExportChartConfig(input: ExportChartInput): ChartConfigurat
             view,
             adhesive,
             coolingTarget: defaults.coolingTarget,
-            totalRows,
             t: (key, value) => t(key, value),
           }),
         },

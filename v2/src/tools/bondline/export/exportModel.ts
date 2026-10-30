@@ -73,7 +73,10 @@ const DASH = '—'
 const STAT_COLORS = ['#72a8ff', '#a78bfa', '#22d3ee', '#ff7683', '#59c97f'] as const
 const STAT_FAIL_COLOR = '#ff7683'
 
+type ExportT = (k: Parameters<typeof translate>[1]) => string
+
 function zoneColumn(
+  t: ExportT,
   slot: number,
   title: string,
   thermo: string,
@@ -86,9 +89,9 @@ function zoneColumn(
     slot,
     title,
     rows: [
-      { label: 'Termoreg.', value: `${thermo}°C`, labelDx: 0, valueDx: 90, dy: 15 },
-      { label: 'Nido', value: `${nest}°C`, labelDx: 160, valueDx: 200, dy: 15 },
-      { label: 'Pérdida', value: loss.text, labelDx: 0, valueDx: 90, dy: 33, warn: loss.positive },
+      { label: t('exportThermo'), value: `${thermo}°C`, labelDx: 0, valueDx: 90, dy: 15 },
+      { label: t('exportNest'), value: `${nest}°C`, labelDx: 160, valueDx: 200, dy: 15 },
+      { label: t('exportLoss'), value: loss.text, labelDx: 0, valueDx: 90, dy: 33, warn: loss.positive },
     ],
   }
 }
@@ -97,12 +100,13 @@ function singleRows(items: { label: string; value: string }[]): ExportParamRow[]
   return items.map((it, i) => ({ ...it, labelDx: 0, valueDx: 90, dy: 15 + i * 18 }))
 }
 
-function paramColumns(state: BondlineState, t: (k: Parameters<typeof translate>[1]) => string, hasLayout: boolean) {
+function paramColumns(state: BondlineState, t: ExportT, hasLayout: boolean) {
   const { params, coolingParams } = state.config
   const or = (v: string) => v || DASH
   const columns: ExportParamColumn[] = [
-    zoneColumn(0, '▲ ' + t('paramUpper'), or(params.thermoUpper), or(params.nestUpper), params.nestUpper, params.thermoUpper),
-    zoneColumn(1, '▼ ' + t('paramLower'), or(params.thermoLower), or(params.nestLower), params.nestLower, params.thermoLower),
+    // el texto ya trae ▲/▼; el original anteponía otro (mejora A2 aprobada)
+    zoneColumn(t, 0, t('paramUpper'), or(params.thermoUpper), or(params.nestUpper), params.nestUpper, params.thermoUpper),
+    zoneColumn(t, 1, t('paramLower'), or(params.thermoLower), or(params.nestLower), params.nestLower, params.thermoLower),
   ]
   const dividers = [1, 2]
   let slot = 2
@@ -117,7 +121,7 @@ function paramColumns(state: BondlineState, t: (k: Parameters<typeof translate>[
     columns.push({
       slot,
       title: t('paramSlidersLabel'),
-      rows: singleRows([{ label: 'Temperatura', value: `${params.slidersTemp}°C` }]),
+      rows: singleRows([{ label: t('exportTemp'), value: `${params.slidersTemp}°C` }]),
     })
   }
 
@@ -125,8 +129,8 @@ function paramColumns(state: BondlineState, t: (k: Parameters<typeof translate>[
   const coolingSlot = slot + 1
   const cooling = [
     { label: 'Chiller', value: coolingParams.chiller },
-    { label: 'Nido Sup', value: coolingParams.nestUpper },
-    { label: 'Nido Inf', value: coolingParams.nestLower },
+    { label: t('exportNestUp'), value: coolingParams.nestUpper },
+    { label: t('exportNestLow'), value: coolingParams.nestLower },
   ].flatMap((r) => (r.value ? [{ label: r.label, value: `${r.value}°C` }] : []))
   const panelWidth = hasLayout ? PANEL_W_WITH_LAYOUT : PANEL_W_FULL
   // regla de cabida §7.5: colX + colW <= panelX + panelW - pad (colX relativo al panel)
@@ -140,8 +144,9 @@ function paramColumns(state: BondlineState, t: (k: Parameters<typeof translate>[
 
 export function exportFileName(state: BondlineState): string {
   const sheetName = state.sheets.length > 0 ? state.sheets[state.sheetIndex]?.name ?? 'Hoja1' : 'Hoja1'
-  const clean = sheetName.replace(/[/\\:*?"<>|]/g, '-')
-  return `Bondline - ${state.config.testDate || 'SinFecha'} - ${clean}.png`
+  const clean = (text: string) => text.replace(/[/\\:*?"<>|]/g, '-')
+  // la fecha se limpia igual que la hoja (mejora A15): 30/10/2026 -> 30-10-2026
+  return `Bondline - ${clean(state.config.testDate) || 'SinFecha'} - ${clean(sheetName)}.png`
 }
 
 /** Modelo puro del PNG: todo el texto y los valores que dibuja `drawExport` (inventario §7). */
@@ -154,7 +159,7 @@ export function buildExportModel(
 ): BondlineExportModel | null {
   const data = selectActiveSheet(state)
   if (!data || !view) return null
-  const t = (k: Parameters<typeof translate>[1]) => translate(lang, k)
+  const t: ExportT = (k) => translate(lang, k)
   const { tcVisibility, layout } = state.config
   const hasLayout = layout.image !== null
   const reset = tcVisibility.length !== data.columns.length

@@ -20,6 +20,12 @@ export type TimeRangeError = 'startNegative' | 'endNotAfterStart' | 'endExceeds'
 
 export type TimeRangeResult = { ok: true; range: TimeRange } | { ok: false; error: TimeRangeError }
 
+/** ¿El texto trae decimales que `parseInt` descartará? (aviso de la mejora A17; el valor no cambia) */
+export function hasDecimals(input: string): boolean {
+  const n = parseFloat(input)
+  return Number.isFinite(n) && !Number.isInteger(n)
+}
+
 /** Validación de "Aplicar rango" con el mismo parseo y orden de comprobaciones del original. */
 export function validateTimeRange(startInput: string, endInput: string, totalRows: number): TimeRangeResult {
   const start = parseInt(startInput) || 0

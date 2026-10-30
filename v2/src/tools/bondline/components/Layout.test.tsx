@@ -113,20 +113,21 @@ test('con imagen: un marcador por TC visible, color, texto idx+1, etiqueta TC-n 
   expect(screen.getByText('Arrastra los termopares para ubicarlos en el diagrama')).toBeInTheDocument()
 })
 
-test('ocultar una TC deja solo las visibles y regenera posiciones por defecto; conserva el número original', () => {
+test('ocultar una TC deja solo las visibles y conserva sus posiciones; conserva el número original', () => {
   setup()
   load()
   open()
   pick(imageFile())
+  act(() => api.getState().moveMarker(2, 66, 44))
   act(() => api.getState().toggleTC(1))
   expect(screen.queryByTestId('bl-marker-1')).toBeNull()
-  const pos = defaultMarkerPositions(3)
-  const visible = [0, 2, 3]
-  visible.forEach((tc, n) => {
+  const pos = defaultMarkerPositions(4)
+  ;[0, 3].forEach((tc) => {
     const m = screen.getByTestId(`bl-marker-${tc}`)
     expect(m).toHaveTextContent(String(tc + 1))
-    expect(m.style.left).toBe(`${pos[n].x}%`)
+    expect(m.style.left).toBe(`${pos[tc].x}%`)
   })
+  expect(screen.getByTestId('bl-marker-2').style.left).toBe('66%')
 })
 
 test('arrastre: % relativos a la imagen, sin salto y limitados a [0,100]', () => {
@@ -182,7 +183,7 @@ test('"Tamaño real" alterna ajuste y tamaño natural, y se guarda en el store',
   expect(screen.getByRole('button', { name: 'Tamaño real' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('"Cambiar imagen" reemplaza la imagen, recoloca marcadores y revoca la URL anterior', () => {
+test('"Cambiar imagen" reemplaza la imagen, conserva marcadores y revoca la URL anterior', () => {
   setup()
   load()
   open()
@@ -192,7 +193,7 @@ test('"Cambiar imagen" reemplaza la imagen, recoloca marcadores y revoca la URL 
   pick(second, screen.getByTestId('bl-layout-change'))
   expect(screen.getByText('Cambiar imagen')).toBeInTheDocument()
   expect(layout().image).toBe(second)
-  expect(layout().markers[0].x).toBe(defaultMarkerPositions(4)[0].x)
+  expect(layout().markers[0]).toMatchObject({ x: 90, y: 90 })
   expect(screen.getByRole('img', { name: 'Bondline Layout' })).toHaveAttribute('src', 'blob:test/2')
   expect(revoked).toContain('blob:test/1')
 })

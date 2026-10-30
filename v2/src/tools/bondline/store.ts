@@ -180,9 +180,13 @@ function keepMarkers(layout: SheetConfig['layout'], visibility: boolean[]): Layo
   return markersFor(visibility).map((m) => kept.get(m.tcIndex) ?? m)
 }
 
-/** Primera visita (R2, como el original): hereda la configuración con rango y visibilidad TC reiniciados. */
+/**
+ * Primera visita (R2, como el original): hereda la configuración con rango y visibilidad TC reiniciados.
+ * Con el mismo número de termopares se conservan las posiciones de los marcadores (mejora A14).
+ */
 function inheritConfig(current: SheetConfig, data: ParsedSheet): SheetConfig {
   const tcVisibility = allVisible(data.columns.length)
+  const sameCount = current.tcVisibility.length === data.columns.length
   return {
     ...current,
     tcVisibility,
@@ -190,7 +194,7 @@ function inheritConfig(current: SheetConfig, data: ParsedSheet): SheetConfig {
     timeRangeInputs: { start: '', end: '' },
     layout: {
       ...current.layout,
-      markers: isStripped(current.layout)
+      markers: isStripped(current.layout) || (sameCount && current.layout.image)
         ? keepMarkers(current.layout, tcVisibility)
         : current.layout.image
           ? markersFor(tcVisibility)
@@ -255,8 +259,8 @@ export const createBondlineStore = (): BondlineApi =>
           const tcVisibility = s.config.tcVisibility.map((on, i) => (i === index ? !on : on))
           const layout = s.config.layout
           const stripped = isStripped(layout)
-          // sin imagen (omitida al restaurar) se conservan los marcadores de las TC aún visibles
-          const markers = stripped ? keepMarkers(layout, tcVisibility) : markersFor(tcVisibility)
+          // las TC que siguen visibles conservan su posición; la que reaparece va a su sitio por defecto (A14)
+          const markers = keepMarkers(layout, tcVisibility)
           return {
             config: {
               ...s.config,
@@ -304,9 +308,8 @@ export const createBondlineStore = (): BondlineApi =>
       setLayoutImage(image, imageName) {
         set((s) => {
           const { layout, tcVisibility } = s.config
-          // quitar la imagen borra los marcadores; solo una imagen omitida al restaurar los conserva
-          const keep = image !== null && layout.imageStripped
-          const markers = image === null ? [] : keep ? layout.markers : markersFor(tcVisibility)
+          // quitar la imagen borra los marcadores; cambiarla conserva las posiciones (mejora A14)
+          const markers = image === null ? [] : keepMarkers(layout, tcVisibility)
           return {
             config: { ...s.config, layout: { image, imageName, markers, imageStripped: false } },
           }

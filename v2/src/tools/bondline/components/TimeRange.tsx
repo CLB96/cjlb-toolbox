@@ -3,7 +3,7 @@ import { GlassPanel } from '../../../ui/GlassPanel'
 import { toast } from '../../../ui/toastStore'
 import { useBondline, useBondlineApi } from '../BondlineStoreProvider'
 import { STATIC_TEXTS, translate, useBondlineT } from '../i18n'
-import type { TimeRangeError } from '../logic/range'
+import { hasDecimals, type TimeRangeError } from '../logic/range'
 import type { Lang } from '../logic/types'
 import { selectActiveSheet } from '../store'
 
@@ -26,6 +26,7 @@ export function TimeRange({ disabled }: { disabled: boolean }) {
     const error = applyTimeRange()
     const data = selectActiveSheet(api.getState())
     if (error && data) toast('error', timeRangeErrorText(error, data.totalRows, lang))
+    else if (!error && (hasDecimals(inputs.start) || hasDecimals(inputs.end))) toast('warn', t('timeDecimals'))
   }
 
   return (

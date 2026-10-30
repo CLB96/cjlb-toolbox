@@ -58,6 +58,25 @@ test('éxito: dibuja, descarga y destruye la gráfica temporal', async () => {
   click.mockRestore()
 })
 
+test('si la imagen del layout no carga: exporta igual y avisa', async () => {
+  vi.mocked(drawExport).mockReturnValue({ toDataURL: () => 'data:image/png;base64,AA' } as never)
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+  vi.stubGlobal(
+    'Image',
+    class {
+      onerror: (() => void) | null = null
+      set src(_v: string) {
+        queueMicrotask(() => this.onerror?.())
+      }
+    },
+  )
+  await exportBondlinePng(loadedState(), FACTORY_DEFAULTS, 'es')
+  expect(click).toHaveBeenCalledTimes(1)
+  expect(vi.mocked(drawExport).mock.lastCall?.[2]).toBeNull()
+  expect(messages()).toEqual(['Se exportó sin la imagen del layout'])
+  click.mockRestore()
+})
+
 test('si el dibujo falla: toast de error, gráfica destruida y URL del layout revocada', async () => {
   vi.mocked(drawExport).mockImplementation(() => {
     throw new Error('boom')

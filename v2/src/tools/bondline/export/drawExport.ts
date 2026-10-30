@@ -48,43 +48,82 @@ function drawHeader(ctx: Ctx, model: BondlineExportModel): void {
   })
 }
 
-function dashSample(ctx: Ctx, x: number, color: string): void {
+function dashSample(ctx: Ctx, x: number, y: number, color: string): void {
   ctx.strokeStyle = color
   ctx.lineWidth = 3
   ctx.setLineDash([10, 5])
   ctx.beginPath()
-  ctx.moveTo(x, LEGEND_Y + 2)
-  ctx.lineTo(x + 28, LEGEND_Y + 2)
+  ctx.moveTo(x, y + 2)
+  ctx.lineTo(x + 28, y + 2)
   ctx.stroke()
   ctx.setLineDash([])
 }
 
-function drawLegend(ctx: Ctx, legend: ExportLegend): void {
+export type LegendItemKind = 'tc' | 'limits' | 'window' | 'cooling'
+
+export interface LegendSlot {
+  kind: LegendItemKind
+  index: number
+  x: number
+  y: number
+}
+
+/** Anchos de cada elemento de la leyenda (los avances del original). */
+const LEGEND_STEP: Record<LegendItemKind, number> = { tc: 100, limits: 200, window: 200, cooling: 200 }
+const LEGEND_LINE_H = 24
+
+/**
+ * Posiciones de la leyenda: mismo orden y avances del original, pero salta de línea en vez de
+ * salirse del ancho de la gráfica (mejora A6).
+ */
+export function legendSlots(legend: ExportLegend): LegendSlot[] {
+  const items: { kind: LegendItemKind; index: number }[] = [
+    ...legend.tcs.map((_, index) => ({ kind: 'tc' as const, index })),
+    { kind: 'limits', index: 0 },
+    { kind: 'window', index: 0 },
+    ...(legend.cooling ? [{ kind: 'cooling' as const, index: 0 }] : []),
+  ]
+  const right = CHART.x + CHART.w
   let x = CHART.x
+  let y = LEGEND_Y
+  return items.map((it) => {
+    const step = LEGEND_STEP[it.kind]
+    if (x > CHART.x && x + step > right) {
+      x = CHART.x
+      y += LEGEND_LINE_H
+    }
+    const slot = { ...it, x, y }
+    x += step
+    return slot
+  })
+}
+
+function drawLegend(ctx: Ctx, legend: ExportLegend): void {
   ctx.font = `14px ${FONT_TEXT}`
-  for (const tc of legend.tcs) {
-    ctx.fillStyle = tc.color
-    ctx.fillRect(x, LEGEND_Y, 28, 4)
-    ctx.fillStyle = C.muted
-    ctx.fillText(tc.label, x + 35, LEGEND_Y + 5)
-    x += 100
-  }
-  dashSample(ctx, x, legend.limitsColor)
-  ctx.fillStyle = C.muted
-  ctx.fillText(legend.limits, x + 35, LEGEND_Y + 5)
-  x += 200
-  ctx.strokeStyle = '#59c97f'
-  ctx.lineWidth = 2
-  ctx.strokeRect(x, LEGEND_Y - 6, 24, 16)
-  ctx.fillStyle = 'rgba(89,201,127,.12)'
-  ctx.fillRect(x, LEGEND_Y - 6, 24, 16)
-  ctx.fillStyle = C.muted
-  ctx.fillText(legend.window, x + 30, LEGEND_Y + 5)
-  if (legend.cooling) {
-    x += 200
-    dashSample(ctx, x, '#a78bfa')
-    ctx.fillStyle = C.muted
-    ctx.fillText(legend.cooling, x + 35, LEGEND_Y + 5)
+  for (const { kind, index, x, y } of legendSlots(legend)) {
+    if (kind === 'tc') {
+      const tc = legend.tcs[index]
+      ctx.fillStyle = tc.color
+      ctx.fillRect(x, y, 28, 4)
+      ctx.fillStyle = C.muted
+      ctx.fillText(tc.label, x + 35, y + 5)
+    } else if (kind === 'limits') {
+      dashSample(ctx, x, y, legend.limitsColor)
+      ctx.fillStyle = C.muted
+      ctx.fillText(legend.limits, x + 35, y + 5)
+    } else if (kind === 'window') {
+      ctx.strokeStyle = '#59c97f'
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y - 6, 24, 16)
+      ctx.fillStyle = 'rgba(89,201,127,.12)'
+      ctx.fillRect(x, y - 6, 24, 16)
+      ctx.fillStyle = C.muted
+      ctx.fillText(legend.window, x + 30, y + 5)
+    } else if (legend.cooling) {
+      dashSample(ctx, x, y, '#a78bfa')
+      ctx.fillStyle = C.muted
+      ctx.fillText(legend.cooling, x + 35, y + 5)
+    }
   }
 }
 

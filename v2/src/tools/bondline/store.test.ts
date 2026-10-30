@@ -164,6 +164,14 @@ it('acciones', () => {
     expect(api.getState().config.layout.markers).toHaveLength(4)
   }
 
+  { // mejora A14: otra hoja (primera visita) con el mismo nº de TC conserva las posiciones
+    const api = loaded()
+    api.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    api.getState().moveMarker(0, 5, 6)
+    api.getState().selectSheet(1)
+    expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 5, y: 6 })
+  }
+
   { // quitar la imagen borra los marcadores y una nueva usa las posiciones por defecto
     const api = loaded()
     api.getState().setLayoutImage(new Blob(['x']), 'a.png')

@@ -79,12 +79,13 @@ export async function exportBondlinePng(
       tcVisibility: state.config.tcVisibility,
       adhesive: state.config.adhesive,
       defaults,
-      totalRows: data.totalRows,
       lang,
     })
     try {
       const canvas = drawExport(model, chart.canvas, layoutImage, logo)
       download(canvas.toDataURL('image/png'), model.fileName)
+      // como el original se exporta sin la caja del layout, pero ahora se avisa (mejora C38)
+      if (image && !layoutImage) toast('warn', translate(lang, 'exportNoLayoutImage'))
     } finally {
       chart.destroy()
     }

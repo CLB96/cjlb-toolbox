@@ -41,8 +41,16 @@ export function isWindowInRange(
   return true
 }
 
-/** Límites del eje Y: máximo fijo 80, mínimo = 95 % de la media de los primeros valores visibles. */
-export function yLimits(trimmed: Column[]): { yMin: number; yMax: 80 } {
+/** Máximo del eje Y del original; ahora es el mínimo del tope (mejora A11). */
+export const Y_MAX_BASE = 80
+
+/**
+ * Límites del eje Y: mínimo = 95 % de la media de los primeros valores visibles; máximo 80 como el
+ * original, salvo que los datos visibles o el máximo del adhesivo lo superen (se redondea arriba).
+ */
+export function yLimits(trimmed: Column[], limitMax = 0): { yMin: number; yMax: number } {
+  let dataMax = -Infinity
+  for (const col of trimmed) for (const v of col) if (v !== null && v > dataMax) dataMax = v
   const firstValues: number[] = []
   for (const col of trimmed) {
     for (const v of col) {
@@ -53,5 +61,5 @@ export function yLimits(trimmed: Column[]): { yMin: number; yMax: 80 } {
     }
   }
   const avgFirst = firstValues.length ? firstValues.reduce((a, b) => a + b, 0) / firstValues.length : 0
-  return { yMin: Math.floor(avgFirst * 0.95), yMax: 80 }
+  return { yMin: Math.floor(avgFirst * 0.95), yMax: Math.max(Y_MAX_BASE, Math.ceil(dataMax), Math.ceil(limitMax)) }
 }
