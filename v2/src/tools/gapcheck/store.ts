@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createStore, type StoreApi } from 'zustand/vanilla'
 import { computeStats } from './logic/stats'
 import { computeTarget } from './logic/target'
 import { defaultMarkerPositions } from './logic/markers'
@@ -59,7 +59,9 @@ export interface GapcheckActions {
 const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i)
 
 const toggled = (list: number[], value: number): number[] =>
-  list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
+  list.includes(value)
+    ? list.filter((v) => v !== value)
+    : [...list, value].sort((a, b) => a - b)
 
 const markersFor = (count: number): LayoutMarker[] =>
   defaultMarkerPositions(count).map((p, pointIndex) => ({ pointIndex, x: p.x, y: p.y }))
@@ -92,7 +94,12 @@ const comparisonOf = (s: Pick<GapcheckState, 'covering' | 'inputs'>) => ({
   appliedTarget: computeTarget(s.covering, s.inputs).target,
 })
 
-export const useGapcheckStore = create<GapcheckState & GapcheckActions>()((set, get) => ({
+export type GapcheckStore = GapcheckState & GapcheckActions
+export type GapcheckApi = StoreApi<GapcheckStore>
+
+/** Un store por instancia de la herramienta: no comparte estado entre usuarios. */
+export const createGapcheckStore = (): GapcheckApi =>
+  createStore<GapcheckStore>()((set, get) => ({
   ...initialData(),
 
   loadRows(fileName, rows) {
@@ -150,8 +157,7 @@ export const selectKpis = (s: GapcheckState): KpiTexts =>
 export const selectLiveTarget = (s: GapcheckState) => computeTarget(s.covering, s.inputs)
 
 /** Solo los datos (sin acciones), aptos para structured clone. */
-export function getGapcheckSnapshot(): GapcheckState {
-  const s = useGapcheckStore.getState()
+export function snapshotOf(s: GapcheckState): GapcheckState {
   return {
     fileName: s.fileName,
     points: s.points,
@@ -168,6 +174,6 @@ export function getGapcheckSnapshot(): GapcheckState {
   }
 }
 
-export function restoreGapcheck(snapshot: GapcheckState): void {
-  useGapcheckStore.setState({ ...initialData(), ...snapshot })
+export function restoreInto(api: GapcheckApi, snapshot: GapcheckState): void {
+  api.setState({ ...initialData(), ...snapshot })
 }

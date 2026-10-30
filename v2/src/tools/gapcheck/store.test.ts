@@ -4,17 +4,21 @@ import { FIXTURES } from '../../../legacy-fixtures/gapcheck/fixtures'
 import { loadRealRows } from '../../../legacy-fixtures/gapcheck/realFixture'
 import { importExcelFile } from './importExcel'
 import {
-  getGapcheckSnapshot,
-  restoreGapcheck,
+  createGapcheckStore,
+  restoreInto,
   selectKpis,
   selectLiveTarget,
-  useGapcheckStore,
+  snapshotOf,
+  type GapcheckApi,
 } from './store'
 
-const store = useGapcheckStore
-const act = () => store.getState()
+let api: GapcheckApi
+const act = () => api.getState()
+const getGapcheckSnapshot = () => snapshotOf(api.getState())
 
-beforeEach(() => act().reset())
+beforeEach(() => {
+  api = createGapcheckStore()
+})
 
 describe('loadRows', () => {
   const real = loadRealRows()
@@ -67,6 +71,12 @@ describe('filtros, comparación y layout', () => {
     expect(act().visiblePoints).toContain(0)
     act().toggleIter(0)
     expect(act().visibleIters).not.toContain(0)
+    act().toggleIter(0)
+    act().togglePoint(1)
+    act().togglePoint(0)
+    act().togglePoint(1)
+    expect(act().visiblePoints).toEqual([...act().visiblePoints].sort((x, y) => x - y))
+    expect(act().visibleIters[0]).toBe(0)
   })
 
   it('R1: escribir pct no cambia appliedTarget hasta applyComparison', () => {
@@ -120,8 +130,8 @@ describe('snapshot', () => {
     act().setCovering('soft')
     const snap = getGapcheckSnapshot()
     const cloned = structuredClone(snap)
-    act().reset()
-    restoreGapcheck(cloned)
+    api = createGapcheckStore()
+    restoreInto(api, cloned)
     expect(getGapcheckSnapshot()).toEqual(snap)
     expect(Object.values(snap).some((v) => typeof v === 'function')).toBe(false)
   })

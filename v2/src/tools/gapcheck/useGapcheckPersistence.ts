@@ -1,26 +1,22 @@
 import { useEffect } from 'react'
 import { usePersistentTool } from '../../persistence/usePersistentTool'
-import {
-  getGapcheckSnapshot,
-  initialData,
-  restoreGapcheck,
-  useGapcheckStore,
-  type GapcheckState,
-} from './store'
+import { useGapcheckApi } from './GapcheckStoreProvider'
+import { initialData, restoreInto, snapshotOf, type GapcheckState } from './store'
 
-/** Conecta el store con el guardado automático; marca dirty en cada cambio tras restaurar. */
+/** Conecta el store de esta instancia con el guardado; marca dirty en cada cambio tras restaurar. */
 export function useGapcheckPersistence() {
+  const api = useGapcheckApi()
   const tool = usePersistentTool<GapcheckState>('gapcheck', {
-    getSnapshot: getGapcheckSnapshot,
-    restore: restoreGapcheck,
-    reset: () => useGapcheckStore.setState(initialData()),
+    getSnapshot: () => snapshotOf(api.getState()),
+    restore: (s) => restoreInto(api, s),
+    reset: () => api.setState(initialData()),
   })
   const { markDirty, restored } = tool
 
   useEffect(() => {
     if (!restored) return
-    return useGapcheckStore.subscribe(() => markDirty())
-  }, [restored, markDirty])
+    return api.subscribe(() => markDirty())
+  }, [api, restored, markDirty])
 
   return tool
 }
