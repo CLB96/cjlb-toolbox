@@ -140,3 +140,24 @@
   .gc-drop, .gc-seg__btn, .gc-fchip { transition: none; }
   .gc-drop--over, .gc-fchip:hover { transform: none; }
 }
+
+/* tabla de datos: scroll interno en vez de recorte (R6) */
+.gc-table-toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; cursor: pointer; text-align: left;
+}
+.gc-table-toggle:focus-visible, .gc-table-scroll:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+.gc-table-scroll { max-height: 420px; overflow: auto; border-radius: var(--radius-md); }
+.gc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.gc-table th {
+  position: sticky; top: 0; padding: 10px 12px; text-align: left; background: var(--glass-dense);
+  font-size: 12px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.gc-table td { padding: 8px 12px; border-top: 1px solid var(--edge); color: var(--fg-muted); font-weight: 600; }
+.gc-table tbody tr:hover { background: var(--glass); }
+.gc-table td.gc-table__name { color: var(--accent-1); font-weight: 700; overflow-wrap: anywhere; }
+.gc-table td.gc-table__value { color: var(--fg); font-weight: 700; }
+.gc-status { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.gc-status--good { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.gc-status--warning { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.gc-status--danger { background: color-mix(in srgb, var(--error) 18%, transparent); color: var(--error); }

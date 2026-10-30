@@ -13,6 +13,7 @@ import { useGapcheckT } from './i18n'
 import { EmptyState } from './components/EmptyState'
 import { Header, type LoadedFile } from './components/Header'
 import { GapcheckChart } from './components/Chart'
+import { DataTable } from './components/DataTable'
 import { Filters } from './components/Filters'
 import { Kpis } from './components/Kpis'
 import { TargetPanel } from './components/TargetPanel'
@@ -80,6 +81,7 @@ function GapcheckBody({ toolId, onExport = noop }: Props) {
             </GlassPanel>
             <TargetPanel disabled={disabled} />
           </div>
+          <DataTable />
         </>
       ) : (
         <EmptyState disabled={disabled} onFile={(f) => void onFile(f)} />
