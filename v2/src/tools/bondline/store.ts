@@ -1,4 +1,5 @@
 import { createStore, type StoreApi } from 'zustand/vanilla'
+import { translate } from './i18n'
 import { defaultMarkerPositions } from './logic/markers'
 import { parseSheetRows } from './logic/parse'
 import { validateTimeRange, type TimeRangeError } from './logic/range'
@@ -166,14 +167,7 @@ const sheetFailure = (sheet: SheetEntry): SheetResult => ({
 
 /** Texto del aviso de hoja inválida (literal del original en ES; EN nuevo, R10). */
 export function invalidSheetText(sheetName: string, reason: SheetFailure, lang: Lang = 'es'): string {
-  if (lang === 'en') {
-    return reason === 'empty'
-      ? `Sheet "${sheetName}" contains no valid data`
-      : `Sheet "${sheetName}" contains no valid temperature data`
-  }
-  return reason === 'empty'
-    ? `La hoja "${sheetName}" no contiene datos válidos`
-    : `La hoja "${sheetName}" no contiene datos de temperatura válidos`
+  return translate(lang, reason === 'empty' ? 'sheetEmpty' : 'sheetNoTemp', sheetName)
 }
 
 /** Primera visita (R2, como el original): hereda la configuración con rango y visibilidad TC reiniciados. */

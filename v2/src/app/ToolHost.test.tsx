@@ -5,9 +5,9 @@ import { registerTool } from '../persistence/flushRegistry'
 import { TOOLS } from '../tools/registry'
 import type { ToolDef } from '../tools/types'
 
-// keep-alive se prueba con el Placeholder (contador) también en GapCheck, ya portada
+// keep-alive se prueba con el Placeholder (contador) también en GapCheck y Bondline, ya portadas
 const tools: ToolDef[] = TOOLS.map((d) =>
-  d.id === 'gapcheck' ? { ...d, load: () => import('../tools/Placeholder') } : d,
+  d.id === 'gapcheck' || d.id === 'bondline' ? { ...d, load: () => import('../tools/Placeholder') } : d,
 )
 
 beforeEach(() => {

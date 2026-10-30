@@ -7,7 +7,7 @@ import { useGapcheck, useGapcheckApi } from '../GapcheckStoreProvider'
 import { useGapcheckT } from '../i18n'
 import { POINT_COLORS } from '../logic/chartStyle'
 import { Marker } from './Marker'
-import { RichText } from './RichText'
+import { RichText } from '../../../ui/RichText'
 
 const MARKER_MIN = 20
 const MARKER_MAX = 60

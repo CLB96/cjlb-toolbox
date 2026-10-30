@@ -2,7 +2,7 @@ import { useState, type DragEvent } from 'react'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { useGapcheckT } from '../i18n'
 import { FileInput } from './FileInput'
-import { RichText } from './RichText'
+import { RichText } from '../../../ui/RichText'
 
 interface Props {
   disabled: boolean
