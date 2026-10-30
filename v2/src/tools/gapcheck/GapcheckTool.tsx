@@ -16,6 +16,7 @@ import { GapcheckChart } from './components/Chart'
 import { DataTable } from './components/DataTable'
 import { Filters } from './components/Filters'
 import { Kpis } from './components/Kpis'
+import { Layout } from './components/Layout'
 import { TargetPanel } from './components/TargetPanel'
 import './gapcheck.css'
 
@@ -82,6 +83,7 @@ function GapcheckBody({ toolId, onExport = noop }: Props) {
             <TargetPanel disabled={disabled} />
           </div>
           <DataTable />
+          <Layout disabled={disabled} />
         </>
       ) : (
         <EmptyState disabled={disabled} onFile={(f) => void onFile(f)} />

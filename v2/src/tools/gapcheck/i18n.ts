@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/useI18n'
 /**
  * Diccionario copiado literal del original (gapcheck/index.html 1702-1795, inventario §10).
  * Añadidos de la v2: `importFailed` (aviso de lectura), `fileDims`, `changeFile` y `history`
- * (cabecera aprobada en el mockup). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
+ * (cabecera aprobada en el mockup); `selectImage` (alert literal de handleGapLayoutImage 2646) y `changeImage` (nuevo, Task 7). `axisThickness`/`axisCompression`: títulos de ejes literales de createChart (2526-2556).
  */
 const es = {
   loginEnter: 'Ingresar',
@@ -42,6 +42,8 @@ const es = {
   gapLayoutDrop: 'Arrastra una imagen del diagrama o <strong>haz clic para seleccionar</strong>',
   gapLayoutInstructions: 'Arrastra los puntos de medición para ubicarlos en el diagrama',
   markerSizeLabel: 'Tamaño de Puntos:',
+  selectImage: 'Por favor selecciona una imagen',
+  changeImage: 'Cambiar imagen',
   toggleTheme: 'Tema Oscuro / Claro',
   changeLanguage: 'Cambiar Idioma',
   filterPoints: 'Puntos',
@@ -97,6 +99,8 @@ const en: Record<GapcheckKey, string> = {
   gapLayoutDrop: 'Drag a diagram image or <strong>click to select</strong>',
   gapLayoutInstructions: 'Drag measurement points to position them on the diagram',
   markerSizeLabel: 'Point Size:',
+  selectImage: 'Please select an image',
+  changeImage: 'Change image',
   toggleTheme: 'Dark / Light Mode',
   changeLanguage: 'Change Language',
   filterPoints: 'Points',
