@@ -170,6 +170,16 @@ export function invalidSheetText(sheetName: string, reason: SheetFailure, lang: 
   return translate(lang, reason === 'empty' ? 'sheetEmpty' : 'sheetNoTemp', sheetName)
 }
 
+/** Imagen omitida al restaurar (>20 MB): sin imagen pero con marcadores guardados. */
+const isStripped = (l: SheetConfig['layout']): boolean =>
+  l.imageStripped === true || (!l.image && l.markers.length > 0)
+
+/** Marcadores de las TC visibles: conserva los guardados y añade los por defecto de las nuevas. */
+function keepMarkers(layout: SheetConfig['layout'], visibility: boolean[]): LayoutMarker[] {
+  const kept = new Map(layout.markers.map((m) => [m.tcIndex, m]))
+  return markersFor(visibility).map((m) => kept.get(m.tcIndex) ?? m)
+}
+
 /** Primera visita (R2, como el original): hereda la configuración con rango y visibilidad TC reiniciados. */
 function inheritConfig(current: SheetConfig, data: ParsedSheet): SheetConfig {
   const tcVisibility = allVisible(data.columns.length)
@@ -180,8 +190,12 @@ function inheritConfig(current: SheetConfig, data: ParsedSheet): SheetConfig {
     timeRangeInputs: { start: '', end: '' },
     layout: {
       ...current.layout,
-      markers: current.layout.image ? markersFor(tcVisibility) : [],
-      imageStripped: false,
+      markers: isStripped(current.layout)
+        ? keepMarkers(current.layout, tcVisibility)
+        : current.layout.image
+          ? markersFor(tcVisibility)
+          : [],
+      imageStripped: isStripped(current.layout),
     },
   }
 }
@@ -240,11 +254,14 @@ export const createBondlineStore = (): BondlineApi =>
         set((s) => {
           const tcVisibility = s.config.tcVisibility.map((on, i) => (i === index ? !on : on))
           const layout = s.config.layout
+          const stripped = isStripped(layout)
+          // sin imagen (omitida al restaurar) se conservan los marcadores de las TC aún visibles
+          const markers = stripped ? keepMarkers(layout, tcVisibility) : markersFor(tcVisibility)
           return {
             config: {
               ...s.config,
               tcVisibility,
-              layout: layout.image ? { ...layout, markers: markersFor(tcVisibility) } : layout,
+              layout: layout.image || stripped ? { ...layout, markers, imageStripped: stripped } : layout,
             },
           }
         })
@@ -345,7 +362,7 @@ function mergeConfig(saved: Partial<SheetConfig> | undefined): SheetConfig {
     layout: {
       ...base.layout,
       ...c.layout,
-      imageStripped: c.layout?.imageStripped ?? (!c.layout?.image && (c.layout?.markers?.length ?? 0) > 0),
+      imageStripped: c.layout?.imageStripped === true || (!c.layout?.image && (c.layout?.markers?.length ?? 0) > 0),
     },
   }
 }

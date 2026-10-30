@@ -47,8 +47,10 @@ export function useBondlineDefaults(): BondlineDefaultsApi {
     async (next: BondlineDefaults): Promise<boolean> => {
       try {
         await savePreference(uid, BONDLINE_DEFAULTS_KEY, next)
-        writesRef.current += 1
-        if (uidRef.current === uid) setState({ uid, defaults: next })
+        if (uidRef.current === uid) {
+          writesRef.current += 1
+          setState({ uid, defaults: next })
+        }
         return true
       } catch {
         toast('error', tRef.current('prefs.saveFailed'))

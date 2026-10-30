@@ -53,14 +53,17 @@ function DefaultsBody({ onClose }: Pick<Props, 'onClose'>) {
   const field = (f: FieldDef) => (
     <div className="bl-field" key={f.id}>
       <label htmlFor={f.id}>{t(f.label)}</label>
-      <input
-        id={f.id}
-        type="number"
-        step="0.1"
-        className="bl-input"
-        value={form[f.key]}
-        onChange={(e) => set(f.key, e.target.value)}
-      />
+      <div className="bl-unitbox">
+        <input
+          id={f.id}
+          type="number"
+          step="0.1"
+          className="bl-input"
+          value={form[f.key]}
+          onChange={(e) => set(f.key, e.target.value)}
+        />
+        <span className="bl-unit">°C</span>
+      </div>
     </div>
   )
 

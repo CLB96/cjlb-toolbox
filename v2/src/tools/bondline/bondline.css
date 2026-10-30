@@ -43,6 +43,9 @@
   border: 1px solid var(--edge); background: var(--glass-dense);
   color: var(--fg); font: 500 14px var(--font-display);
 }
+.bl-unitbox { position: relative; }
+.bl-unitbox .bl-input { padding-right: 36px; }
+.bl-unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--fg-muted); font-weight: 600; pointer-events: none; }
 .bl-input:focus { outline: 2px solid var(--accent-1); outline-offset: 1px; }
 .bl-input:disabled { opacity: 0.6; cursor: not-allowed; }
 .bl-info { font-size: 13px; color: var(--fg-muted); }

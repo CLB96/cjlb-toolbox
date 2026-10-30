@@ -7,7 +7,10 @@ import { effectiveRange, trimColumns } from './range'
 import { activationResult } from './results'
 import { kpiTexts, minMaxTemp } from './stats'
 import { ACTIVATION_DURATION, FACTORY_DEFAULTS } from './types'
-import { ADHESIVES, LANGS, T, calcOf, repRangesFor, repSheets, sheets } from './testHelpers'
+import { ADHESIVES, LANGS, T, calcOf, repRangesFor, repSheets, sheets, validSheets } from './testHelpers'
+
+// representativas + TODAS las hojas del Excel real
+const kpiSheets = [...new Set([...repSheets, ...validSheets.filter((s) => s.name.startsWith('real:'))])]
 
 describe('parseSheetRows ≡ legacyLoadSheet (primera fila siempre es dato)', () => {
   it('todas las hojas (sintéticas y reales, vacía, solo texto, celdas en blanco, 12abc, una fila)', () => {
@@ -60,7 +63,7 @@ describe('rango, activación, KPIs y resultado ≡ original (combinaciones repre
   })
 
   it('kpiTexts ≡ legacyStatsTexts', () => {
-    for (const { legacy } of repSheets) {
+    for (const { legacy } of kpiSheets) {
       for (const adhesive of ADHESIVES) {
         const { lc } = calcOf(legacy, adhesive, { active: false, start: 0, end: null })
         const want = legacyStatsTexts(lc, 'es')
@@ -79,7 +82,7 @@ describe('rango, activación, KPIs y resultado ≡ original (combinaciones repre
 
   it('activationResult ≡ legacyActivationResultHtml (pass/fail/out, ES y EN)', () => {
     const variants = new Set<string>()
-    for (const { legacy } of repSheets) {
+    for (const { legacy } of kpiSheets) {
       for (const adhesive of ADHESIVES) {
         for (const { tr } of repRangesFor(legacy)) {
           for (const lang of LANGS) {

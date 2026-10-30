@@ -1,4 +1,5 @@
 import { FIXTURES } from '../../../legacy-fixtures/bondline/fixtures'
+import { stripLargeFiles } from '../../persistence/stripLargeFiles'
 import { loadRealWorkbook } from '../../../legacy-fixtures/bondline/realFixture'
 import {
   createBondlineStore,
@@ -174,17 +175,25 @@ it('acciones', () => {
     expect(api.getState().config.layout.markers).toHaveLength(4)
   }
 
-  { // restaurar con imagen omitida conserva los marcadores al volver a cargarla
+  { // imagen >20 MB recortada al guardar: restaurar conserva marcadores y bandera
     const src = loaded()
-    src.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    src.getState().setLayoutImage(new Blob([new Uint8Array(21 * 1024 * 1024)]), 'a.png')
     src.getState().moveMarker(0, 1, 2)
-    const snap = snapshotOf(src.getState())
-    const stripped = { ...snap, config: { ...snap.config, layout: { ...snap.config.layout, image: null } } }
-    const { imageStripped: _flag, ...layout } = stripped.config.layout
+    const cut = stripLargeFiles(snapshotOf(src.getState())).value
+    expect(cut.config.layout.image).toBeNull()
     const api = createBondlineStore()
-    restoreInto(api, { ...stripped, config: { ...stripped.config, layout } } as never)
+    restoreInto(api, cut)
     expect(api.getState().config.layout.imageStripped).toBe(true)
-    api.getState().setLayoutImage(new Blob(['x']), 'a.png')
+    api.getState().toggleTC(3) // ocultar una TC conserva los demás marcadores y la bandera
+    expect(api.getState().config.layout.imageStripped).toBe(true)
+    expect(api.getState().config.layout.markers).toHaveLength(3)
+    expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 1, y: 2 })
+    api.getState().toggleTC(3)
+    expect(api.getState().config.layout.markers).toHaveLength(4)
+    api.getState().selectSheet(1) // primera visita a otra hoja: hereda marcadores y bandera
+    expect(api.getState().config.layout.imageStripped).toBe(true)
+    expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 1, y: 2 })
+    api.getState().setLayoutImage(new Blob(['x']), 'a.png') // al subir la imagen se conservan
     expect(api.getState().config.layout.markers[0]).toMatchObject({ x: 1, y: 2 })
     expect(api.getState().config.layout.imageStripped).toBe(false)
   }

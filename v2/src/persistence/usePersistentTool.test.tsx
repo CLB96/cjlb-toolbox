@@ -84,6 +84,20 @@ test('cambio de uid: lo pendiente de A se guarda bajo A y nada bajo el nuevo uid
   expect(await listSnapshots('uB', 'gantt')).toHaveLength(0)
 })
 
+test('restoreVersion que falla muestra toast de error en vez de rechazar', async () => {
+  const meta = await saveSnapshot('u1', 'gantt', { v: 1 })
+  const ad = adapter()
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  await waitFor(() => expect(ad.restore).toHaveBeenCalledTimes(1))
+  ad.restore.mockImplementation(() => {
+    throw new Error('boom')
+  })
+  await act(async () => {
+    await result.current.restoreVersion(meta.id)
+  })
+  expect(useToasts.getState().toasts.some((t) => t.kind === 'error')).toBe(true)
+})
+
 test('markDirty + flushTool guarda y actualiza lastSavedAt', async () => {
   const ad = adapter({ v: 3 })
   const { result } = renderHook(() => usePersistentTool('gapcheck', ad), { wrapper: wrap('u9') })
