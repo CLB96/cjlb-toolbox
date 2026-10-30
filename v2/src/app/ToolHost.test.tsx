@@ -1,10 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppShell } from './AppShell'
-import { registerFlush } from '../persistence/flushRegistry'
-vi.mock('../auth/useAuth', () => ({
-  useAuth: () => ({ user: { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true } }),
-}))
+import { registerTool } from '../persistence/flushRegistry'
 
 beforeEach(() => {
   window.location.hash = '#/home'
@@ -34,10 +31,11 @@ test('keep-alive: conserva el estado al volver y no monta herramientas sin visit
 test('onToolSwitch: de A a B se invoca el flush de A; desde home no se invoca ninguno', async () => {
   const flushGap = vi.fn().mockResolvedValue(undefined)
   const flushBond = vi.fn().mockResolvedValue(undefined)
-  const off1 = registerFlush('gapcheck', flushGap)
-  const off2 = registerFlush('bondline', flushBond)
   const user = userEvent.setup()
   render(<AppShell />)
+  // se registran tras montar Home (Home hace flushAll al montarse)
+  const off1 = registerTool('gapcheck', { uid: 'local', flush: flushGap, startFresh: vi.fn() })
+  const off2 = registerTool('bondline', { uid: 'local', flush: flushBond, startFresh: vi.fn() })
   await user.click(screen.getByRole('tab', { name: /GapCheck/ }))
   await screen.findByTestId('counter-gapcheck')
   expect(flushGap).not.toHaveBeenCalled()

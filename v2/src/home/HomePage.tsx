@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ToolId } from '../app/routes'
 import { useRoute } from '../app/useRoute'
-import { useAuth } from '../auth/useAuth'
+import { useSession } from '../auth/session'
 import { greetingName } from '../auth/greeting'
 import { useI18n } from '../i18n/useI18n'
-import { latestPerTool, markFreshStart, type SnapshotMeta } from '../persistence/snapshotStore'
+import { flushAll } from '../persistence/flushRegistry'
+import { startFresh } from '../persistence/freshStart'
+import { latestPerTool, type SnapshotMeta } from '../persistence/snapshotStore'
 import { useUid } from '../persistence/uidContext'
 import { TOOLS } from '../tools/registry'
 import type { ToolDef } from '../tools/types'
@@ -17,13 +19,15 @@ import './home.css'
 export function HomePage({ tools = TOOLS }: { tools?: ToolDef[] }) {
   const { t, lang } = useI18n()
   const { navigate } = useRoute()
-  const { user } = useAuth()
+  const session = useSession()
   const uid = useUid()
   const [metas, setMetas] = useState<SnapshotMeta[]>([])
 
   useEffect(() => {
     let cancelled = false
-    latestPerTool(uid)
+    // los efectos de los hijos corren antes: se espera a que la herramienta saliente guarde
+    flushAll()
+      .then(() => latestPerTool(uid))
       .then((list) => {
         if (!cancelled) setMetas(list)
       })
@@ -40,7 +44,7 @@ export function HomePage({ tools = TOOLS }: { tools?: ToolDef[] }) {
   const fresh = useCallback(
     async (toolId: ToolId) => {
       try {
-        await markFreshStart(uid, toolId)
+        await startFresh(uid, toolId)
       } catch {
         toast('error', t('home.resume.freshFailed'))
         return
@@ -51,7 +55,7 @@ export function HomePage({ tools = TOOLS }: { tools?: ToolDef[] }) {
   )
 
   const items = buildResumeItems(metas, Date.now(), lang, tools)
-  const name = user ? greetingName(user) : ''
+  const name = session ? greetingName(session.user) : ''
 
   return (
     <div className="home">

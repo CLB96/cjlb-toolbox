@@ -1,9 +1,16 @@
 import { act, render, renderHook, waitFor } from '@testing-library/react'
 import { clear, createStore } from 'idb-keyval'
-import { StrictMode, type ReactNode } from 'react'
+import { StrictMode, useEffect, type ReactNode } from 'react'
 import { UidProvider } from './uidContext'
 import { flushTool } from './flushRegistry'
-import { listSnapshots, markFreshStart, saveSnapshot } from './snapshotStore'
+import {
+  consumeFreshStart,
+  listSnapshots,
+  loadSnapshot,
+  markFreshStart,
+  saveSnapshot,
+} from './snapshotStore'
+import { startFresh } from './freshStart'
 import { usePersistentTool } from './usePersistentTool'
 import { useToasts } from '../ui/toastStore'
 
@@ -18,7 +25,27 @@ const wrap = (uid: string) =>
   }
 
 function adapter(state = { v: 0 }) {
-  return { restore: vi.fn(), getSnapshot: vi.fn(() => state) }
+  return { restore: vi.fn(), getSnapshot: vi.fn(() => state), reset: vi.fn() }
+}
+
+/** Adaptador con estado real: restore/reset cambian lo que devuelve getSnapshot. */
+function statefulAdapter<S>(initial: S) {
+  const box = { state: initial }
+  return {
+    box,
+    getSnapshot: vi.fn(() => box.state),
+    restore: vi.fn((s: S) => {
+      box.state = s
+    }),
+    reset: vi.fn(() => {
+      box.state = initial
+    }),
+  }
+}
+
+async function newestData(uid: string, toolId: 'gantt') {
+  const [m] = await listSnapshots(uid, toolId)
+  return m ? (await loadSnapshot(uid, toolId, m.id))?.data : undefined
 }
 
 test('restaura el último snapshot al montar', async () => {
@@ -90,6 +117,7 @@ test('cambio de uid: lo pendiente de A se guarda bajo A y nada bajo el nuevo uid
   )
   const ad = adapter({ v: 5 })
   const { result, rerender } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: Wrapper })
+  await waitFor(() => expect(result.current.restored).toBe(true))
   act(() => result.current.markDirty())
   uid = 'uB'
   await act(async () => {
@@ -160,4 +188,89 @@ test('sin provider usa uid local y se desregistra al desmontar', async () => {
   ad.getSnapshot.mockClear()
   await flushTool('bondline')
   expect(ad.getSnapshot).not.toHaveBeenCalled()
+})
+
+test('expone restored: false hasta terminar la restauración, luego true', async () => {
+  await saveSnapshot('u1', 'gantt', { v: 7 })
+  const ad = adapter()
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  expect(result.current.restored).toBe(false)
+  await waitFor(() => expect(result.current.restored).toBe(true))
+  expect(ad.restore).toHaveBeenCalledWith({ v: 7 })
+})
+
+test('StrictMode: el efecto desechado no guarda el estado inicial en blanco', async () => {
+  await saveSnapshot('u1', 'gantt', { v: 7 })
+  const ad = statefulAdapter({ v: 0 })
+  function C() {
+    const p = usePersistentTool('gantt', ad)
+    const { markDirty } = p
+    useEffect(() => {
+      markDirty()
+    }, [markDirty])
+    return null
+  }
+  render(
+    <StrictMode>
+      <UidProvider uid="u1">
+        <C />
+      </UidProvider>
+    </StrictMode>,
+  )
+  await waitFor(() => expect(ad.restore).toHaveBeenCalledWith({ v: 7 }))
+  await act(async () => {
+    await flushTool('gantt')
+    await new Promise((r) => setTimeout(r, 20))
+  })
+  const all = await listSnapshots('u1', 'gantt')
+  const datas = await Promise.all(all.map(async (m) => (await loadSnapshot('u1', 'gantt', m.id))?.data))
+  expect(datas).not.toContainEqual({ v: 0 })
+  expect(datas[0]).toEqual({ v: 7 })
+})
+
+test('restoreVersion persiste la versión restaurada y actualiza lastSavedAt', async () => {
+  const old = await saveSnapshot('u1', 'gantt', { v: 1 })
+  await saveSnapshot('u1', 'gantt', { v: 2 })
+  const ad = statefulAdapter({ v: 0 })
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.restored).toBe(true))
+  const before = result.current.lastSavedAt
+  await act(async () => {
+    await result.current.restoreVersion(old.id)
+  })
+  expect(ad.box.state).toEqual({ v: 1 })
+  expect(await listSnapshots('u1', 'gantt')).toHaveLength(3)
+  expect(await newestData('u1', 'gantt')).toEqual({ v: 1 })
+  expect(result.current.lastSavedAt).not.toBe(before)
+})
+
+test('startFresh con la herramienta montada: guarda el estado actual, resetea y guarda el blanco', async () => {
+  await saveSnapshot('u1', 'gantt', { v: 7 })
+  const ad = statefulAdapter({ v: 0 })
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.restored).toBe(true))
+  ad.box.state = { v: 8 }
+  await act(async () => {
+    await startFresh('u1', 'gantt')
+  })
+  expect(ad.reset).toHaveBeenCalledTimes(1)
+  expect(ad.box.state).toEqual({ v: 0 })
+  const all = await listSnapshots('u1', 'gantt')
+  const datas = await Promise.all(all.map(async (m) => (await loadSnapshot('u1', 'gantt', m.id))?.data))
+  expect(datas.slice(0, 2)).toEqual([{ v: 0 }, { v: 8 }])
+  expect(await consumeFreshStart('u1', 'gantt')).toBe(false)
+})
+
+test('startFresh sin la herramienta montada deja el flag para el próximo montaje', async () => {
+  await startFresh('u1', 'capaflow')
+  expect(await consumeFreshStart('u1', 'capaflow')).toBe(true)
+})
+
+test('startFresh de otro uid no toca la herramienta montada', async () => {
+  const ad = statefulAdapter({ v: 0 })
+  const { result } = renderHook(() => usePersistentTool('gantt', ad), { wrapper: wrap('u1') })
+  await waitFor(() => expect(result.current.restored).toBe(true))
+  await startFresh('u2', 'gantt')
+  expect(ad.reset).not.toHaveBeenCalled()
+  expect(await consumeFreshStart('u2', 'gantt')).toBe(true)
 })

@@ -1,13 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { UsagePage } from './UsagePage'
+import { UsagePage as Page } from './UsagePage'
+import { SessionProvider } from '../auth/session'
 
-vi.mock('../auth/useAuth', () => ({
-  useAuth: () => ({
-    user: { uid: 'a', email: 'admin@x.com', displayName: 'Admin', emailVerified: true },
-    isAdmin: true,
-  }),
-}))
+const session = {
+  user: { uid: 'a', email: 'admin@x.com', displayName: 'Admin', emailVerified: true },
+  isAdmin: true,
+}
+function UsagePage() {
+  return (
+    <SessionProvider session={session}>
+      <Page />
+    </SessionProvider>
+  )
+}
+
 vi.mock('../access/AccessRequestsPanel', () => ({ AccessRequestsPanel: () => <div>panel-solicitudes</div> }))
 vi.mock('./UsageChart', () => ({ UsageChart: () => <div>grafico</div> }))
 vi.mock('./usageService', () => ({ fetchSessions: vi.fn() }))

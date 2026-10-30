@@ -1,5 +1,8 @@
-import { createStore, del, get, keys, set } from 'idb-keyval'
+import { createStore, del, delMany, get, getMany, keys, set, setMany } from 'idb-keyval'
 import { TOOL_IDS, type ToolId } from '../app/routes'
+import { MAX_FILE_BYTES, stripLargeFiles } from './stripLargeFiles'
+
+export { MAX_FILE_BYTES, stripLargeFiles }
 
 export interface SnapshotMeta {
   id: string
@@ -15,57 +18,45 @@ export interface Snapshot<S> extends SnapshotMeta {
 }
 
 export const MAX_SNAPSHOTS = 10
-export const MAX_FILE_BYTES = 20 * 1024 * 1024
 
+/**
+ * Un mismo object store guarda, por cada versión, dos registros escritos en una transacción:
+ * - datos: `uid:toolId:savedAt` → `Snapshot` completo (solo lo lee `loadSnapshot`);
+ * - meta:  `~meta~:uid:toolId:savedAt` → `SnapshotMeta` (listar y podar leen solo estos).
+ */
+const META_PREFIX = '~meta~:'
 const FRESH_PREFIX = '~fresh~:'
 const store = createStore('cjlb-toolbox', 'snapshots')
 
 const keyOf = (uid: string, toolId: ToolId, savedAt: number) => `${uid}:${toolId}:${savedAt}`
+const metaKeyOf = (id: string) => `${META_PREFIX}${id}`
 const prefixOf = (uid: string, toolId: ToolId) => `${uid}:${toolId}:`
 const freshKey = (uid: string, toolId: ToolId) => `${FRESH_PREFIX}${uid}:${toolId}`
 
-function isPlainObject(v: unknown): v is Record<string, unknown> {
-  if (typeof v !== 'object' || v === null) return false
-  const proto = Object.getPrototypeOf(v)
-  return proto === Object.prototype || proto === null
-}
-
-/** Copia inmutable de `value` sustituyendo por null todo Blob/File > 20 MB. */
-export function stripLargeFiles<T>(value: T): { value: T; skipped: boolean } {
-  let skipped = false
-  const walk = (v: unknown): unknown => {
-    if (typeof Blob !== 'undefined' && v instanceof Blob) {
-      if (v.size > MAX_FILE_BYTES) {
-        skipped = true
-        return null
-      }
-      return v
-    }
-    if (Array.isArray(v)) return v.map(walk)
-    if (isPlainObject(v)) {
-      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]))
-    }
-    return v
-  }
-  const out = walk(value) as T
-  return { value: out, skipped }
-}
-
 async function uniqueSavedAt(uid: string, toolId: ToolId): Promise<number> {
   let at = Date.now()
-  while ((await get(keyOf(uid, toolId, at), store)) !== undefined) at += 1
+  while ((await get(metaKeyOf(keyOf(uid, toolId, at)), store)) !== undefined) at += 1
   return at
 }
 
-export async function listSnapshots(uid: string, toolId: ToolId): Promise<SnapshotMeta[]> {
-  const prefix = prefixOf(uid, toolId)
+const byNewest = (a: SnapshotMeta, b: SnapshotMeta) => b.savedAt - a.savedAt
+
+async function metaKeys(): Promise<string[]> {
   const all = await keys(store)
-  const mine = all.filter((k): k is string => typeof k === 'string' && k.startsWith(prefix))
-  const records = await Promise.all(mine.map((k) => get<Snapshot<unknown>>(k, store)))
-  return records
-    .filter((r): r is Snapshot<unknown> => r !== undefined)
-    .map(({ data: _data, ...meta }) => meta)
-    .sort((a, b) => b.savedAt - a.savedAt)
+  return all.filter((k): k is string => typeof k === 'string' && k.startsWith(META_PREFIX))
+}
+
+async function readMetas(metaKeyList: string[]): Promise<SnapshotMeta[]> {
+  if (metaKeyList.length === 0) return []
+  const records = await getMany<SnapshotMeta | undefined>(metaKeyList, store)
+  return records.filter((r): r is SnapshotMeta => r !== undefined).sort(byNewest)
+}
+
+const metaPrefixOf = (uid: string, toolId: ToolId) => metaKeyOf(prefixOf(uid, toolId))
+
+export async function listSnapshots(uid: string, toolId: ToolId): Promise<SnapshotMeta[]> {
+  const prefix = metaPrefixOf(uid, toolId)
+  return readMetas((await metaKeys()).filter((k) => k.startsWith(prefix)))
 }
 
 export async function saveSnapshot<S>(
@@ -85,9 +76,16 @@ export async function saveSnapshot<S>(
     ...(label !== undefined ? { label } : {}),
     ...(skipped ? { skippedLargeFiles: true } : {}),
   }
-  await set(id, { ...meta, data: value }, store)
+  await setMany(
+    [
+      [id, { ...meta, data: value }],
+      [metaKeyOf(id), meta],
+    ],
+    store,
+  )
   const all = await listSnapshots(uid, toolId)
-  await Promise.all(all.slice(MAX_SNAPSHOTS).map((m) => del(m.id, store)))
+  const stale = all.slice(MAX_SNAPSHOTS).flatMap((m) => [m.id, metaKeyOf(m.id)])
+  if (stale.length > 0) await delMany(stale, store)
   return meta
 }
 
@@ -101,10 +99,13 @@ export async function loadSnapshot<S>(
 }
 
 export async function latestPerTool(uid: string, limit = 3): Promise<SnapshotMeta[]> {
-  const lists = await Promise.all(TOOL_IDS.map((t) => listSnapshots(uid, t)))
+  const all = await metaKeys()
+  const lists = await Promise.all(
+    TOOL_IDS.map((t) => readMetas(all.filter((k) => k.startsWith(metaPrefixOf(uid, t))))),
+  )
   return lists
     .flatMap((l) => (l[0] ? [l[0]] : []))
-    .sort((a, b) => b.savedAt - a.savedAt)
+    .sort(byNewest)
     .slice(0, limit)
 }
 

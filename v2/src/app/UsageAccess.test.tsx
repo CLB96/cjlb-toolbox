@@ -1,9 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { AppShell } from './AppShell'
 
-vi.mock('../auth/useAuth', () => ({
-  useAuth: () => ({ user: { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true } }),
-}))
 vi.mock('../usage/UsagePage', () => ({ UsagePage: () => <div>pagina-uso</div> }))
 
 beforeEach(() => {

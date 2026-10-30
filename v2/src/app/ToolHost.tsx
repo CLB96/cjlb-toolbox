@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { isToolId, type Route, type ToolId } from './routes'
 import { TOOLS } from '../tools/registry'
-import type { ToolDef, ToolProps } from '../tools/types'
+import type { ToolDef } from '../tools/types'
 import { useI18n } from '../i18n/useI18n'
 import { HomePage } from '../home/HomePage'
+import { ToolErrorBoundary } from './ToolErrorBoundary'
 
 type Props = {
   route: Route
@@ -14,14 +15,34 @@ type Props = {
 
 const UsagePage = lazy(() => import('../usage/UsagePage').then((m) => ({ default: m.UsagePage })))
 
+/**
+ * Una herramienta con su propia frontera de error. "Reintentar" crea un nuevo `lazy` (React
+ * cachea un import rechazado) y remonta solo esta herramienta.
+ */
+function ToolSlot({ def, active }: { def: ToolDef; active: boolean }) {
+  const { t } = useI18n()
+  const [attempt, setAttempt] = useState(0)
+  // attempt fuerza un lazy nuevo al reintentar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const Tool = useMemo(() => lazy(def.load), [def.load, attempt])
+  return (
+    <ToolErrorBoundary
+      key={attempt}
+      message={t('shell.toolError')}
+      retryLabel={t('shell.retry')}
+      onRetry={() => setAttempt((a) => a + 1)}
+    >
+      <Suspense fallback={<p>{t('shell.loading')}</p>}>
+        <Tool toolId={def.id} active={active} />
+      </Suspense>
+    </ToolErrorBoundary>
+  )
+}
+
 export function ToolHost({ route, tools = TOOLS, isAdmin = false, onToolSwitch }: Props) {
   const { t } = useI18n()
   const [visited, setVisited] = useState<ReadonlySet<ToolId>>(new Set())
   const previous = useRef<Route | null>(null)
-  const lazyTools = useMemo(
-    () => new Map<ToolId, ComponentType<ToolProps>>(tools.map((d) => [d.id, lazy(d.load)])),
-    [tools],
-  )
 
   useEffect(() => {
     if (isToolId(route)) {
@@ -47,9 +68,8 @@ export function ToolHost({ route, tools = TOOLS, isAdmin = false, onToolSwitch }
         )}
       </div>
       {tools.map((def) => {
-        const Tool = lazyTools.get(def.id)
         const mounted = visited.has(def.id) || route === def.id
-        if (!Tool || !mounted) return null
+        if (!mounted) return null
         return (
           <div
             key={def.id}
@@ -57,9 +77,7 @@ export function ToolHost({ route, tools = TOOLS, isAdmin = false, onToolSwitch }
             aria-labelledby={`tab-${def.id}`}
             hidden={route !== def.id}
           >
-            <Suspense fallback={<p>{t('shell.loading')}</p>}>
-              <Tool toolId={def.id} active={route === def.id} />
-            </Suspense>
+            <ToolSlot def={def} active={route === def.id} />
           </div>
         )
       })}

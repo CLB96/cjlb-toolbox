@@ -19,7 +19,7 @@ Aplicación React + Vite + TypeScript con Firebase (Auth + Firestore). Esta carp
 
 Otros puntos previos:
 
-- Las reglas exigen correo verificado (`email_verified == true`). Las cuentas Google ya vienen verificadas; las de correo/contraseña reciben un correo de verificación desde la app. Desactiva el registro desde el cliente en Firebase (ver `SETUP-FIREBASE-VERCEL.md`).
+- Las reglas exigen correo verificado (`email_verified == true`). Las cuentas Google ya vienen verificadas; las de correo/contraseña ven la pantalla "Verifica tu correo" y se envían el correo de verificación con el botón de esa pantalla (no se envía automáticamente). Desactiva el registro desde el cliente en Firebase (ver `SETUP-FIREBASE-VERCEL.md`).
 - El recorrido manual completo (login, saludo, cambio de herramienta, recarga, solicitud de acceso, aprobación, pestaña Uso) está **pendiente**: requiere emuladores (Java) o un proyecto Firebase real.
 
 ## Desarrollo local
@@ -50,7 +50,7 @@ Ver `.env.example` y `src/vite-env.d.ts`.
 | Variable | Uso |
 |---|---|
 | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` | Configuración de la app web de Firebase (no son secretos, pero son propias de cada proyecto). |
-| `VITE_ADMIN_EMAIL` | Correo del administrador (declarada; el administrador efectivo lo define el documento `config/app` en Firestore). |
+| `VITE_ADMIN_EMAIL` | Sin uso actualmente (declarada para la UI; el administrador efectivo lo define `config/app.adminEmail` en Firestore). |
 | `VITE_USE_EMULATORS` | `true` en local; **`false` en Vercel**. |
 | `VITE_LEGACY_BASE_URL` | Dominio de la versión actual en producción; los enlaces "abrir versión actual" de los Placeholder se construyen con él. |
 
@@ -68,7 +68,7 @@ Además del rewrite SPA (`/(.*)` a `/index.html`), se envían `X-Content-Type-Op
 | `https://firestore.googleapis.com`, `https://*.googleapis.com` | API de Firestore y otras APIs de Google. |
 | `https://*.firebaseio.com`, `wss://*.firebaseio.com` | Canales en tiempo real de Firebase. |
 | `https://fonts.googleapis.com`, `https://fonts.gstatic.com` | Hojas de estilo y archivos de fuentes (Inter, Space Grotesk). |
-| `img-src 'self' data:` | Imágenes propias e incrustadas. |
+| `img-src 'self' data: blob:` | Imágenes propias, incrustadas y generadas en el navegador (`URL.createObjectURL`). |
 | `'unsafe-inline'` en `style-src` | Estilos en línea de React y de Chart.js. |
 
 Si algo queda bloqueado en producción, la consola del navegador indica el origen exacto que hay que añadir.
@@ -93,15 +93,27 @@ firestore.rules   reglas de seguridad
 3. Persistencia con el hook:
 
    ```ts
-   const { markDirty, flush, lastSavedAt, restoreVersion } = usePersistentTool<MyState>(toolId, {
-     getSnapshot: () => state,        // devuelve el estado serializable actual
-     restore: (s) => setState(s),     // aplica un snapshot guardado
+   const stateRef = useRef<MyState>(INITIAL)
+   const apply = (s: MyState) => {
+     stateRef.current = s              // la ref se actualiza en el acto
+     setState(s)
+   }
+   const { markDirty, flush, lastSavedAt, restoreVersion, restored } = usePersistentTool<MyState>(toolId, {
+     getSnapshot: () => stateRef.current, // lee de la ref, nunca de un closure de un render anterior
+     restore: (s) => apply(s),            // aplica un snapshot guardado
+     reset: () => apply(INITIAL),         // vuelve al estado inicial ("Empezar de cero")
    })
    ```
+
+   - `getSnapshot()` debe devolver datos aptos para structured clone (objetos planos, arrays, `Map`, `Set`, `Date`, `Blob`/`File`, `ArrayBuffer`/typed arrays; sin funciones ni instancias de clases propias) y leer de refs: se llama desde temporizadores y eventos fuera del render. Los archivos de más de 20 MB se sustituyen por `null` en el historial (con aviso).
+   - `reset()` se usa cuando el usuario pulsa "Empezar de cero" con la herramienta ya abierta (keep-alive): el hook guarda antes el estado actual en el historial, llama a `reset()` y guarda el estado inicial. Debe actualizar la ref que lee `getSnapshot()`.
+   - `restored` es `false` hasta que termina la restauración inicial; mientras tanto no se guarda nada, así que deshabilita la edición (o ignora cambios) hasta que sea `true`.
 
    - `markDirty()` se llama tras cada cambio del usuario; el autosave guarda cada 60 s y al cerrar la página.
    - `flush()` guarda de inmediato (también se registra para el cierre de página).
    - `lastSavedAt` es `number | null` (marca de tiempo del último guardado o restauración).
-   - `restoreVersion(id)` carga una versión anterior y la aplica con `restore`.
+   - `restoreVersion(id)` carga una versión anterior, la aplica con `restore` y la guarda como la más reciente.
+   - `HistoryPanel` recibe `lastSavedAt` para refrescar la lista tras cada guardado: `<HistoryPanel toolId={toolId} onRestore={restoreVersion} lastSavedAt={lastSavedAt} />`.
+   - Cada herramienta se monta dentro de una frontera de error propia: si falla al renderizar o al importarse, se muestra "Reintentar" sin afectar al resto.
    - Al montar, el hook restaura el último snapshot automáticamente.
 4. El estado se guarda por usuario: el hook lee el `uid` de `UidProvider`, y `AuthGate` monta `AppShell` con `key={uid}`, de modo que al cambiar de usuario se desmonta el estado keep-alive del anterior. No guardes estado de herramientas fuera de este hook.

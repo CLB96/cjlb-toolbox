@@ -10,7 +10,7 @@ Instala un JDK 17+ (p. ej. Eclipse Temurin 17) y ejecuta `cd v2 && npm run test:
 
 1. En la consola de Firebase crea un proyecto **nuevo** (plan Spark, gratuito).
 2. **Authentication → Sign-in method**: habilita **Google** y **Correo electrónico/contraseña**.
-3. **Authentication → Settings → User actions**: desmarca **Enable create (sign-up)**. Puede pedir actualizar a Identity Platform; sigue siendo gratuito a esta escala. Las reglas exigen correo verificado, así que las cuentas de correo/contraseña se crean **solo desde la consola** (Authentication → Users → Add user); la app envía un correo de verificación al primer ingreso. Las cuentas Google ya vienen verificadas.
+3. **Authentication → Settings → User actions**: desmarca **Enable create (sign-up)**. Puede pedir actualizar a Identity Platform; sigue siendo gratuito a esta escala. Las reglas exigen correo verificado, así que las cuentas de correo/contraseña se crean **solo desde la consola** (Authentication → Users → Add user); al primer ingreso la app muestra la pantalla "Verifica tu correo", donde el usuario pulsa el botón para enviarse el correo de verificación (no se envía solo). Las cuentas Google ya vienen verificadas.
 4. **Project settings → Your apps**: crea una app web y copia la configuración (`apiKey`, `authDomain`, `projectId`, `appId`).
 5. **Firestore Database**: crea la base de datos en modo producción.
 
@@ -42,7 +42,7 @@ firebase deploy --only firestore:rules,firestore:indexes
    | `VITE_FIREBASE_AUTH_DOMAIN` | de la config web |
    | `VITE_FIREBASE_PROJECT_ID` | de la config web |
    | `VITE_FIREBASE_APP_ID` | de la config web |
-   | `VITE_ADMIN_EMAIL` | tu correo |
+   | `VITE_ADMIN_EMAIL` | sin uso por ahora (puedes omitirla); el administrador lo define `config/app.adminEmail` en Firestore |
    | `VITE_USE_EMULATORS` | `false` |
    | `VITE_LEGACY_BASE_URL` | dominio de producción actual (para los enlaces de los Placeholder) |
 

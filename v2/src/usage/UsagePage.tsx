@@ -3,7 +3,7 @@ import { GlassPanel } from '../ui/GlassPanel'
 import { Button } from '../ui/Button'
 import { toast } from '../ui/toastStore'
 import { useI18n } from '../i18n/useI18n'
-import { useAuth } from '../auth/useAuth'
+import { useSession } from '../auth/session'
 import { AccessRequestsPanel } from '../access/AccessRequestsPanel'
 import { TOOLS } from '../tools/registry'
 import { TOOL_IDS } from '../app/routes'
@@ -28,7 +28,7 @@ export function UsagePage() {
   const { t, lang } = useI18n()
   const tRef = useRef(t)
   tRef.current = t
-  const { user } = useAuth()
+  const session = useSession()
   const [filter, setFilter] = useState<Filter>('week')
   const [fromDay, setFromDay] = useState(() => isoDay(Date.now() - 7 * DAY_MS))
   const [toDay, setToDay] = useState(() => isoDay(Date.now()))
@@ -157,7 +157,7 @@ export function UsagePage() {
         </>
       )}
 
-      {user && <AccessRequestsPanel adminEmail={user.email} />}
+      {session && <AccessRequestsPanel adminEmail={session.user.email} />}
     </GlassPanel>
   )
 }

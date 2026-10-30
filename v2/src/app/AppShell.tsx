@@ -1,6 +1,5 @@
 import { useCallback, useEffect, type ReactNode } from 'react'
 import { Starfield } from '../theme/Starfield'
-import { ToastHost } from '../ui/Toast'
 import { resolveRoute, TOOLS } from '../tools/registry'
 import type { ToolDef } from '../tools/types'
 import { useRoute } from './useRoute'
@@ -38,7 +37,6 @@ export function AppShell({ isAdmin = false, avatar, tools = TOOLS, onToolSwitch 
       <Starfield />
       <TopBar route={route} onNavigate={navigate} isAdmin={isAdmin} avatar={avatar} tools={tools} />
       <ToolHost route={route} tools={tools} isAdmin={isAdmin} onToolSwitch={handleSwitch} />
-      <ToastHost />
     </>
   )
 }

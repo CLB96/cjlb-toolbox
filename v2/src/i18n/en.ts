@@ -19,6 +19,8 @@ export const en: Record<MessageKey, string> = {
   'shell.openCurrent': 'Open the current tool',
   'shell.loading': 'Loading…',
   'shell.lang.toggle': 'Toggle language',
+  'shell.toolError': 'This tool ran into a problem.',
+  'shell.retry': 'Retry',
   'persist.saveFailed': 'Autosave failed. Export your work.',
   'persist.restoreFailed': 'Could not restore the saved work.',
   'persist.savedAgo': 'Saved {min} min ago',

@@ -17,6 +17,8 @@ export const es = {
   'shell.openCurrent': 'Abrir la herramienta actual',
   'shell.loading': 'Cargando…',
   'shell.lang.toggle': 'Cambiar idioma',
+  'shell.toolError': 'Esta herramienta tuvo un problema.',
+  'shell.retry': 'Reintentar',
   'persist.saveFailed': 'No se pudo guardar automáticamente. Exporta tu trabajo.',
   'persist.restoreFailed': 'No se pudo restaurar el trabajo guardado.',
   'persist.savedAgo': 'Guardado hace {min} min',

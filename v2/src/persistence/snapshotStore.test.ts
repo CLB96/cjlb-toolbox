@@ -89,3 +89,73 @@ test('omite blobs > 20 MB, conserva los pequeños y marca el meta', async () => 
   const ok = await saveSnapshot('u1', 'vectorizr', { n: 2 })
   expect(ok.skippedLargeFiles).toBeUndefined()
 })
+
+function fakeBuffer(size: number): ArrayBuffer {
+  const b = new ArrayBuffer(1)
+  Object.defineProperty(b, 'byteLength', { value: size })
+  return b
+}
+
+function fakeTyped(size: number): Uint8Array {
+  const a = new Uint8Array(1)
+  Object.defineProperty(a, 'byteLength', { value: size })
+  return a
+}
+
+test('omite ArrayBuffer y typed arrays > 20 MB y conserva los pequeños', () => {
+  const smallBuf = fakeBuffer(MAX_FILE_BYTES)
+  const smallArr = fakeTyped(10)
+  const out = stripLargeFiles({
+    smallBuf,
+    smallArr,
+    bigBuf: fakeBuffer(MAX_FILE_BYTES + 1),
+    bigArr: fakeTyped(MAX_FILE_BYTES + 1),
+  })
+  expect(out.skipped).toBe(true)
+  expect(out.value.smallBuf).toBe(smallBuf)
+  expect(out.value.smallArr).toBe(smallArr)
+  expect(out.value.bigBuf).toBeNull()
+  expect(out.value.bigArr).toBeNull()
+})
+
+test('recorre Map y Set (claves y valores) devolviendo copias nuevas', () => {
+  const big = fakeBlob(MAX_FILE_BYTES + 1)
+  const small = fakeBlob(1)
+  const map = new Map<string, unknown>([
+    ['big', big],
+    ['nested', { big }],
+    ['small', small],
+  ])
+  const set = new Set<unknown>([big, small])
+  const out = stripLargeFiles({ map, set })
+  expect(out.skipped).toBe(true)
+  expect(out.value.map).not.toBe(map)
+  expect(out.value.map).toBeInstanceOf(Map)
+  expect(out.value.map.get('big')).toBeNull()
+  expect(out.value.map.get('nested')).toEqual({ big: null })
+  expect(out.value.map.get('small')).toBe(small)
+  expect(out.value.set).toBeInstanceOf(Set)
+  expect([...out.value.set]).toEqual([null, small])
+  expect(map.get('big')).toBe(big)
+})
+
+test('ciclos: conserva la estructura sin recursión infinita', () => {
+  type Node = { n: number; self?: Node; list: unknown[]; map: Map<string, unknown> }
+  const a: Node = { n: 1, list: [], map: new Map() }
+  a.self = a
+  a.list.push(a)
+  a.map.set('a', a)
+  const out = stripLargeFiles(a)
+  expect(out.skipped).toBe(false)
+  expect(out.value).not.toBe(a)
+  expect(out.value.self).toBe(out.value)
+  expect(out.value.list[0]).toBe(out.value)
+  expect(out.value.map.get('a')).toBe(out.value)
+})
+
+test('listSnapshots conserva label y skippedLargeFiles', async () => {
+  await saveSnapshot('u1', 'gantt', { big: fakeBlob(MAX_FILE_BYTES + 1) }, 'etiqueta')
+  const [meta] = await listSnapshots('u1', 'gantt')
+  expect(meta).toMatchObject({ label: 'etiqueta', skippedLargeFiles: true, uid: 'u1', toolId: 'gantt' })
+  expect(meta).not.toHaveProperty('data')
+})

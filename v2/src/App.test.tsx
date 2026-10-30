@@ -1,4 +1,7 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { getMyRequest, submitAccessRequest } from './access/accessService'
+import { useToasts } from './ui/toastStore'
 import type { AuthStatus } from './auth/useAuth'
 
 const authState = vi.hoisted(() => ({ value: {} as Record<string, unknown> }))
@@ -36,6 +39,9 @@ function setAuth(status: AuthStatus, extra: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   window.location.hash = '#/home'
+  localStorage.clear()
+  useToasts.setState({ toasts: [] })
+  vi.mocked(getMyRequest).mockResolvedValue(null)
 })
 
 test('allowed: renderiza el shell con logo, pestañas y menú de usuario', () => {
@@ -84,4 +90,28 @@ test('loading no muestra el shell ni el login', () => {
   render(<App />)
   expect(screen.queryByRole('tab')).toBeNull()
   expect(screen.queryByRole('button', { name: 'Entrar con Google' })).toBeNull()
+})
+
+test('denied: si falla la solicitud el toast se muestra', async () => {
+  vi.mocked(submitAccessRequest).mockResolvedValue('error')
+  setAuth('denied')
+  render(<App />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Solicitar acceso' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo enviar la solicitud')
+})
+
+test('denied: si falla la carga de la solicitud previa el toast se muestra', async () => {
+  vi.mocked(getMyRequest).mockRejectedValue(new Error('x'))
+  setAuth('denied')
+  render(<App />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('No se pudieron cargar')
+})
+
+test('hay un único ToastHost en cada estado', () => {
+  for (const status of ['loading', 'signedOut', 'unverified', 'denied', 'error', 'allowed'] as const) {
+    setAuth(status)
+    const { unmount } = render(<App />)
+    expect(screen.getAllByRole('region', { name: 'Notificaciones' })).toHaveLength(1)
+    unmount()
+  }
 })
