@@ -2,6 +2,15 @@ import type { MessageKey } from './es'
 
 export const en: Record<MessageKey, string> = {
   'home.greeting': 'Hello, {name}',
+  'home.subtitle': 'Pick a tool to get started.',
+  'home.resume.title': 'Pick up where you left off?',
+  'home.resume.continue': 'Continue',
+  'home.resume.fresh': 'Start fresh',
+  'home.resume.loadFailed': 'Could not load your recent work.',
+  'home.resume.freshFailed': 'Could not start fresh.',
+  'home.badge.new': 'New',
+  'home.badge.updated': 'Updated',
+  'home.open': 'Open',
   'shell.tab.home': 'Home',
   'shell.tab.usage': 'Usage',
   'shell.theme.toggle': 'Toggle theme',

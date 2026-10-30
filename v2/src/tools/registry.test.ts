@@ -3,6 +3,9 @@ import { createElement } from 'react'
 import { AppShell } from '../app/AppShell'
 import { getTool, resolveRoute, TOOLS } from './registry'
 import type { ToolDef } from './types'
+vi.mock('../auth/useAuth', () => ({
+  useAuth: () => ({ user: { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true } }),
+}))
 
 const holdTool: ToolDef = { ...getTool('vectorizr'), id: 'vectorizr', status: 'hold', holdLabelEs: 'Próximamente' }
 const tools: ToolDef[] = [...TOOLS.filter((t) => t.id !== 'vectorizr'), holdTool]

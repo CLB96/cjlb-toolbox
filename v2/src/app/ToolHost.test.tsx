@@ -2,6 +2,9 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppShell } from './AppShell'
 import { registerFlush } from '../persistence/flushRegistry'
+vi.mock('../auth/useAuth', () => ({
+  useAuth: () => ({ user: { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true } }),
+}))
 
 beforeEach(() => {
   window.location.hash = '#/home'

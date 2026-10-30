@@ -4,6 +4,7 @@ import { TOOLS } from '../tools/registry'
 import type { ToolDef, ToolProps } from '../tools/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { useI18n } from '../i18n/useI18n'
+import { HomePage } from '../home/HomePage'
 
 type Props = {
   route: Route
@@ -11,7 +12,7 @@ type Props = {
   onToolSwitch?: (from: ToolId | null, to: Route) => void
 }
 
-function StaticPanel({ titleKey }: { titleKey: 'shell.tab.home' | 'shell.tab.usage' }) {
+function StaticPanel({ titleKey }: { titleKey: 'shell.tab.usage' }) {
   const { t } = useI18n()
   return (
     <GlassPanel as="section">
@@ -44,7 +45,7 @@ export function ToolHost({ route, tools = TOOLS, onToolSwitch }: Props) {
   return (
     <main className="tool-host">
       <div role="tabpanel" aria-labelledby="tab-home" hidden={route !== 'home'}>
-        {route === 'home' && <StaticPanel titleKey="shell.tab.home" />}
+        {route === 'home' && <HomePage />}
       </div>
       <div role="tabpanel" aria-labelledby="tab-usage" hidden={route !== 'usage'}>
         {route === 'usage' && <StaticPanel titleKey="shell.tab.usage" />}
