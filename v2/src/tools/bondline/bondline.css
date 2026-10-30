@@ -142,6 +142,24 @@
 .bl-defaults__group { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
 .bl-defaults__foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
+/* tarjetas plegables: Parámetros y Sucesos */
+.bl-collapsible__toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; cursor: pointer; text-align: left;
+}
+.bl-collapsible__toggle:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+.bl-collapsible__body { display: grid; gap: 16px; }
+.bl-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.bl-events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.bl-leisters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.bl-leisters__actions { display: flex; gap: 6px; }
+.bl-loss {
+  padding: 9px 12px; border-radius: var(--radius-md); background: var(--glass-dense);
+  border: 1px solid var(--edge); color: var(--fg-muted); font: 700 14px var(--font-body);
+}
+.bl-loss--pos { color: #b45309; border-color: #f59e0b; background: color-mix(in srgb, #f59e0b 14%, transparent); }
+.bl-cooling-params { padding-top: 16px; border-top: 1px solid var(--edge); }
+
 @media (max-width: 1100px) {
   .bl-main { grid-template-columns: 1fr; }
   .bl-bento { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -153,7 +171,7 @@
 @media (max-width: 560px) {
   .bl-head { padding: 16px; }
   .bl-head__actions { margin-left: 0; }
-  .bl-row2 { grid-template-columns: 1fr; }
+  .bl-row2, .bl-row3 { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bl-drop, .bl-seg__btn, .bl-legend__toggle { transition: none; }

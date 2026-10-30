@@ -89,7 +89,7 @@ export function BondlineChart({ view, disabled }: Props) {
   const setEvent = (id: EventInputId, value: string) => {
     if (!disabled) setEventAction(id, value)
   }
-  useEventDrag(chartRef, view.events, view.range, totalRows, setEvent)
+  useEventDrag(chartRef, view.events, view.range, totalRows, setEvent, !disabled)
 
   return (
     <div className="bl-chart">

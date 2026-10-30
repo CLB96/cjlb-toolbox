@@ -117,3 +117,13 @@ test('re-renders no duplican listeners ni tooltips; desmontar los retira', () =>
   fireEvent.mouseMove(canvas, { clientX: 700 })
   expect(setEvent).toHaveBeenCalledTimes(1)
 })
+
+test('deshabilitado: no escribe ni muestra el tooltip', () => {
+  const { canvas, ref } = fakeChart()
+  const setEvent = vi.fn()
+  renderHook(() => useEventDrag(ref, [press], NO_RANGE, 120, setEvent, false))
+  drag(canvas, 300, 320)
+  expect(setEvent).not.toHaveBeenCalled()
+  expect(tip().style.display).toBe('none')
+  expect(canvas.style.cursor).not.toBe('grabbing')
+})

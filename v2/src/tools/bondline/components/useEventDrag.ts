@@ -16,6 +16,7 @@ interface Latest {
   range: Pick<EffectiveRange, 'start' | 'rows'>
   totalRows: number
   setEvent: SetEvent
+  enabled: boolean
 }
 
 function createTooltip(): HTMLDivElement {
@@ -49,10 +50,11 @@ export function useEventDrag(
   range: Pick<EffectiveRange, 'start' | 'rows'>,
   totalRows: number,
   setEvent: SetEvent,
+  enabled = true,
 ): void {
-  const latest = useRef<Latest>({ events, range, totalRows, setEvent })
+  const latest = useRef<Latest>({ events, range, totalRows, setEvent, enabled })
   useEffect(() => {
-    latest.current = { events, range, totalRows, setEvent }
+    latest.current = { events, range, totalRows, setEvent, enabled }
   })
 
   useEffect(() => {
@@ -78,12 +80,12 @@ export function useEventDrag(
       canvas.style.cursor = hit ? 'grab' : 'default'
     }
     const onDown = () => {
-      if (!selected) return
+      if (!selected || !latest.current.enabled) return
       dragging = true
       canvas.style.cursor = 'grabbing'
     }
     const onMove = (e: MouseEvent) => {
-      if (!dragging || !selected) return
+      if (!dragging || !selected || !latest.current.enabled) return
       const { range: r, totalRows: rows, setEvent: write } = latest.current
       const rel = Math.round(chart.scales.x.getValueForPixel(localX(e)) ?? NaN)
       const abs = dragToAbsolute(rel, r, rows)

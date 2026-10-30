@@ -15,9 +15,11 @@ import { BondlineDefaultsContext, useBondlineView } from './useBondlineView'
 import { BondlineChart } from './components/Chart'
 import { DefaultsDialog } from './components/DefaultsDialog'
 import { EmptyState } from './components/EmptyState'
+import { Events } from './components/Events'
 import { Header } from './components/Header'
 import { Kpis } from './components/Kpis'
 import { Legend } from './components/Legend'
+import { ProcessParams } from './components/ProcessParams'
 import { RawMaterial } from './components/RawMaterial'
 import { ResultBoxes } from './components/ResultBoxes'
 import { TimeRange } from './components/TimeRange'
@@ -86,7 +88,9 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
               <TimeRange disabled={disabled} />
             </div>
           </div>
-          {/* Parámetros, Sucesos y Layout plegables: Tasks 7 y 8 */}
+          <ProcessParams disabled={disabled} />
+          <Events disabled={disabled} />
+          {/* Layout plegable: Task 8 */}
         </>
       ) : (
         <EmptyState disabled={disabled} onFile={(f) => void onFile(f)} />
