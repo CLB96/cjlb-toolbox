@@ -12,10 +12,12 @@ import { invalidSheetText, type SheetResult } from './store'
 import { useBondlineDefaults } from './useBondlineDefaults'
 import { useBondlinePersistence } from './useBondlinePersistence'
 import { BondlineDefaultsContext, useBondlineView } from './useBondlineView'
+import { BondlineChart } from './components/Chart'
 import { DefaultsDialog } from './components/DefaultsDialog'
 import { EmptyState } from './components/EmptyState'
 import { Header } from './components/Header'
 import { Kpis } from './components/Kpis'
+import { Legend } from './components/Legend'
 import { RawMaterial } from './components/RawMaterial'
 import { ResultBoxes } from './components/ResultBoxes'
 import { TimeRange } from './components/TimeRange'
@@ -75,8 +77,10 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
             <ResultBoxes result={view.result} cooling={view.cooling} coolingTarget={coolingTarget} />
           </div>
           <div className="bl-main">
-            {/* gráfica y leyenda: Task 6 */}
-            <GlassPanel as="section" className="bl-card bl-chart-slot" data-testid="bl-chart-slot" />
+            <GlassPanel as="section" className="bl-chart-card">
+              <BondlineChart view={view} disabled={disabled} />
+              <Legend view={view} disabled={disabled} />
+            </GlassPanel>
             <div className="bl-side">
               <RawMaterial cfg={view.cfg} disabled={disabled} />
               <TimeRange disabled={disabled} />

@@ -12,6 +12,8 @@ import { useToasts } from '../../ui/toastStore'
 import BondlineTool from './BondlineTool'
 import { createBondlineStore, snapshotOf } from './store'
 
+vi.mock('./components/Chart', () => ({ BondlineChart: () => <div data-testid="bl-chart" /> }))
+
 const prefGate = vi.hoisted(() => ({ hold: null as Promise<void> | null, failSave: false }))
 vi.mock('../../persistence/preferences', async (orig) => {
   const actual = await orig<typeof import('../../persistence/preferences')>()
@@ -116,6 +118,23 @@ test('Hotmelt cambia tempInfo y recalcula; PP solo cambia la flama', async () =>
   await userEvent.click(screen.getByRole('button', { name: 'PP' }))
   expect(screen.getByTestId('substrateInfo')).toHaveTextContent('Necesita Flama: SÍ')
   expect(screen.getByTestId('activationResult').innerHTML).toBe(before)
+})
+
+test('leyenda: Ocultar -> Mostrar no cambia KPIs ni resultado', async () => {
+  await seed([{ name: 'H', raw: FIXTURES.plain }])
+  renderTool()
+  await ready()
+  expect(screen.getByTestId('bl-chart')).toBeInTheDocument()
+  const kpisBefore = ['tc', 'duration', 'min', 'max', 'activation'].map((id) => kpi(id).textContent)
+  const resultBefore = screen.getByTestId('activationResult').innerHTML
+  const btn = screen.getByText('TC-1').closest('[data-tc]')!.querySelector('button')!
+  expect(btn).toHaveTextContent('Ocultar')
+  await userEvent.click(btn)
+  expect(btn).toHaveTextContent('Mostrar')
+  expect(['tc', 'duration', 'min', 'max', 'activation'].map((id) => kpi(id).textContent)).toEqual(kpisBefore)
+  expect(screen.getByTestId('activationResult').innerHTML).toBe(resultBefore)
+  act(() => setLangRef!('en'))
+  expect(btn).toHaveTextContent('Show')
 })
 
 test('EN muestra los textos originales en inglés', async () => {
