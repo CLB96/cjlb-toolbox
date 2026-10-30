@@ -37,7 +37,7 @@ export function AppShell({ isAdmin = false, avatar, tools = TOOLS, onToolSwitch 
     <>
       <Starfield />
       <TopBar route={route} onNavigate={navigate} isAdmin={isAdmin} avatar={avatar} tools={tools} />
-      <ToolHost route={route} tools={tools} onToolSwitch={handleSwitch} />
+      <ToolHost route={route} tools={tools} isAdmin={isAdmin} onToolSwitch={handleSwitch} />
       <ToastHost />
     </>
   )

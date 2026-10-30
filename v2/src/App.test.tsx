@@ -10,6 +10,12 @@ vi.mock('./access/accessService', () => ({
   submitAccessRequest: vi.fn(),
 }))
 
+vi.mock('./usage/usageService', () => ({
+  recordLogin: vi.fn().mockResolvedValue(undefined),
+  startSession: vi.fn().mockResolvedValue('s1'),
+  beat: vi.fn().mockResolvedValue(undefined),
+}))
+
 import App from './App'
 
 const user = { uid: 'u1', email: 'a@b.com', displayName: 'Ana', emailVerified: true }

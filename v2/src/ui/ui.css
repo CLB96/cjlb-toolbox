@@ -120,3 +120,10 @@
 .user-menu__badge { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--error); color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .auth-card__form textarea { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--fg-muted); background: var(--glass-dense); color: var(--fg); min-height: 70px; font: inherit; }
+
+.usage-page { display: grid; gap: 16px; }
+.usage-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.usage-table-wrap { overflow-x: auto; }
+.usage-table { width: 100%; border-collapse: collapse; }
+.usage-table th, .usage-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--glass-dense); }
+.usage-chart { position: relative; height: 260px; }

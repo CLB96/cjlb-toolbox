@@ -2,27 +2,19 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentTyp
 import { isToolId, type Route, type ToolId } from './routes'
 import { TOOLS } from '../tools/registry'
 import type { ToolDef, ToolProps } from '../tools/types'
-import { GlassPanel } from '../ui/GlassPanel'
 import { useI18n } from '../i18n/useI18n'
 import { HomePage } from '../home/HomePage'
 
 type Props = {
   route: Route
   tools?: ToolDef[]
+  isAdmin?: boolean
   onToolSwitch?: (from: ToolId | null, to: Route) => void
 }
 
-function StaticPanel({ titleKey }: { titleKey: 'shell.tab.usage' }) {
-  const { t } = useI18n()
-  return (
-    <GlassPanel as="section">
-      <h2>{t(titleKey)}</h2>
-      <p>{t('shell.migrating')}</p>
-    </GlassPanel>
-  )
-}
+const UsagePage = lazy(() => import('../usage/UsagePage').then((m) => ({ default: m.UsagePage })))
 
-export function ToolHost({ route, tools = TOOLS, onToolSwitch }: Props) {
+export function ToolHost({ route, tools = TOOLS, isAdmin = false, onToolSwitch }: Props) {
   const { t } = useI18n()
   const [visited, setVisited] = useState<ReadonlySet<ToolId>>(new Set())
   const previous = useRef<Route | null>(null)
@@ -48,7 +40,11 @@ export function ToolHost({ route, tools = TOOLS, onToolSwitch }: Props) {
         {route === 'home' && <HomePage />}
       </div>
       <div role="tabpanel" aria-labelledby="tab-usage" hidden={route !== 'usage'}>
-        {route === 'usage' && <StaticPanel titleKey="shell.tab.usage" />}
+        {route === 'usage' && isAdmin && (
+          <Suspense fallback={<p>{t('shell.loading')}</p>}>
+            <UsagePage />
+          </Suspense>
+        )}
       </div>
       {tools.map((def) => {
         const Tool = lazyTools.get(def.id)

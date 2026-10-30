@@ -10,6 +10,14 @@ import { LoginScreen } from './LoginScreen'
 import { DeniedScreen } from './DeniedScreen'
 import { VerifyScreen } from './VerifyScreen'
 import { UserMenu } from './UserMenu'
+import { useUsageTracking } from '../usage/useUsageTracking'
+import type { AppUser } from './authService'
+
+/** Activa el registro de uso solo mientras el usuario está permitido. */
+function UsageTracker({ user }: { user: AppUser }) {
+  useUsageTracking(user)
+  return null
+}
 
 /** loading → LoginScreen → VerifyScreen → DeniedScreen → AppShell (o reintento si falla la comprobación). */
 export function AuthGate() {
@@ -68,6 +76,7 @@ export function AuthGate() {
 
   return (
     <UidProvider uid={user.uid}>
+      <UsageTracker user={user} />
       <AppShell
         key={user.uid}
         isAdmin={auth.isAdmin}
