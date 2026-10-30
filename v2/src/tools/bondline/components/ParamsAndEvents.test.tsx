@@ -5,7 +5,9 @@ import { BondlineStoreProvider, useBondlineApi } from '../BondlineStoreProvider'
 import type { BondlineApi } from '../store'
 import type { BondlineDefaultsApi } from '../useBondlineDefaults'
 import { BondlineDefaultsContext, useBondlineView } from '../useBondlineView'
+import { translate } from '../i18n'
 import { FACTORY_DEFAULTS } from '../logic/types'
+import { buildChartConfig } from './chartConfig'
 import { Events } from './Events'
 import { ProcessParams } from './ProcessParams'
 import { ResultBoxes } from './ResultBoxes'
@@ -18,9 +20,17 @@ const DEFAULTS: BondlineDefaultsApi = {
 }
 
 let api: BondlineApi
+let chartAnnotations: Record<string, unknown> = {}
 function Body() {
   api = useBondlineApi()
   const view = useBondlineView()
+  if (view) {
+    const theme = { text: '#t', grid: '#g', tooltipBg: '#b', tooltipTitle: '#a', tooltipBody: '#c', tooltipBorder: '#d' }
+    chartAnnotations = buildChartConfig({
+      view, tcVisibility: [], adhesive: 'waterbase', coolingTarget: 35, lang: 'es', dark: false, theme,
+      t: (key, ...args) => translate('es', key, ...args),
+    }).options?.plugins?.annotation?.annotations as Record<string, unknown>
+  }
   return (
     <>
       <ProcessParams disabled={false} />
@@ -123,6 +133,11 @@ test('escribir un suceso actualiza el store, las líneas de la gráfica y el res
   fireEvent.change(screen.getByLabelText('Inicia Ciclo Cooling'), { target: { value: '40' } })
   expect(api.getState().config.events.eventCoolingStart).toBe('40')
   expect(screen.getByTestId('coolingResult')).toBeInTheDocument()
+  // UI -> store -> vista -> configuración de la gráfica
+  expect(chartAnnotations.event_0).toMatchObject({ xMin: 40, xMax: 40 })
+  fireEvent.change(screen.getByLabelText('Inicia Ciclo Cooling'), { target: { value: '55' } })
+  expect(chartAnnotations.event_0).toMatchObject({ xMin: 55 })
+  expect(chartAnnotations.coolingTargetLine).toBeDefined()
 })
 
 test('parámetros de cooling ocultos hasta rellenar los 3 sucesos de cooling', () => {

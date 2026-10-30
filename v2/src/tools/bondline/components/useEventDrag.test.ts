@@ -125,5 +125,5 @@ test('deshabilitado: no escribe ni muestra el tooltip', () => {
   drag(canvas, 300, 320)
   expect(setEvent).not.toHaveBeenCalled()
   expect(tip().style.display).toBe('none')
-  expect(canvas.style.cursor).not.toBe('grabbing')
+  expect(canvas.style.cursor).toBe('default')
 })

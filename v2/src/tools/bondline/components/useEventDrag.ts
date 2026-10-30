@@ -77,7 +77,7 @@ export function useEventDrag(
       }
       selected = hit
       if (hit) originalX = hit.x
-      canvas.style.cursor = hit ? 'grab' : 'default'
+      canvas.style.cursor = hit && latest.current.enabled ? 'grab' : 'default'
     }
     const onDown = () => {
       if (!selected || !latest.current.enabled) return
@@ -97,7 +97,7 @@ export function useEventDrag(
       if (!dragging) return
       dragging = false
       tooltip.style.display = 'none'
-      canvas.style.cursor = selected ? 'grab' : 'default'
+      canvas.style.cursor = selected && latest.current.enabled ? 'grab' : 'default'
     }
     const onLeave = () => {
       dragging = false
