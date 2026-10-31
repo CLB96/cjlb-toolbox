@@ -28,8 +28,10 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
     setErrorKey(null)
     try {
       await action()
-    } catch {
-      // mensaje genérico a propósito: no se exponen códigos ni detalles de Firebase
+    } catch (e) {
+      // mensaje genérico a propósito; el código queda en la consola para diagnosticar
+      const code = typeof e === 'object' && e !== null && 'code' in e ? String((e as { code: unknown }).code) : 'unknown'
+      console.warn('[login]', code)
       setErrorKey(failKey)
     } finally {
       setBusy(false)
