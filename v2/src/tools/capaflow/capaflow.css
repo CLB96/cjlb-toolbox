@@ -171,7 +171,8 @@
 .cf-marker:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 3px; }
 .cf-marker--dragging { cursor: grabbing; z-index: 50; }
 
-.cf-mwx { display: grid; gap: 12px; min-width: min(560px, 80vw); }
+.dialog:has(.cf-mwx) { width: min(600px, 100%); }
+.cf-mwx { display: grid; gap: 12px; min-width: 0; }
 .cf-mwx__files { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .cf-mwx__file { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--edge); border-radius: var(--radius-md); background: var(--glass-dense); }
 .cf-mwx__ext { font: 700 11px ui-monospace, Consolas, monospace; padding: 2px 6px; border-radius: 4px; background: var(--accent-1); color: var(--btn-fg); }
