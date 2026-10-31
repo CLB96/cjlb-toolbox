@@ -12,6 +12,7 @@ import { getParentOptions } from './logic/tree'
 import { exportGanttExcel } from './export/exportExcel'
 import { isDarkTheme } from './export/exportModel'
 import { exportGanttPng } from './export/exportPng'
+import { importGanttExcel } from './export/importExcel'
 import { useGanttPersistence } from './useGanttPersistence'
 import { TodayContext, useGanttView } from './useGanttView'
 import { FilterPanel } from './components/FilterPanel'
@@ -84,6 +85,16 @@ function GanttBody({ toolId, active }: ToolProps) {
     else if (r === 'image') toast('error', t('toastImgError'))
     else toast('error', t('toastShareError') + r.error)
   }
+  const onImport = async (file: File) => {
+    const data = await importGanttExcel(file)
+    if (!data) {
+      toast('error', t('toastImportError'))
+      return
+    }
+    const r = api.getState().importChart(file.name.replace(/\.xlsx$/i, ''), data.tasks, data.nextId)
+    if (r.ok) toast('ok', t('toastImportOk', data.tasks.length))
+    else toast('error', t(r.error))
+  }
   const onRestore = async (id: string) => {
     await restoreVersion(id)
     setHistoryOpen(false)
@@ -100,6 +111,7 @@ function GanttBody({ toolId, active }: ToolProps) {
         onHistory={() => setHistoryOpen(true)}
         onExcel={() => void onExcel()}
         onPng={() => void onPng()}
+        onImport={(f) => void onImport(f)}
       />
       <Overview stats={view.stats} />
       <div className="gt-split">

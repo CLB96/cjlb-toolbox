@@ -259,6 +259,15 @@ describe('GanttTool', () => {
     expect(rows()[5]!.querySelector('.gt-today-mark')).toBeNull()
   })
 
+  it('importar un archivo que no es del Gantt avisa y no crea Gantts (mejora B4)', async () => {
+    renderTool()
+    await ready()
+    const file = new File(['no es un xlsx'], 'otro.xlsx')
+    fireEvent.change(screen.getByLabelText('📥 Importar Excel'), { target: { files: [file] } })
+    await waitFor(() => expect(toasts()).toContain('No se pudo leer el Excel. Usa un Excel exportado por el Gantt.'))
+    expect(screen.getByText('No hay tareas.')).toBeInTheDocument()
+  })
+
   it('Ctrl+K enfoca la búsqueda', async () => {
     renderTool()
     await ready()

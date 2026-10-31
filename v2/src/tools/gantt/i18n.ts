@@ -187,6 +187,9 @@ const es = {
     chartsConfirmDelete:(name: A)=>`¿Eliminar el Gantt "${name}" y todas sus tareas?`,
     chartsLastOne:'Debe quedar al menos un Gantt.',
     toastExcelError:'No se pudo crear el Excel.',
+    importExcel:'📥 Importar Excel',
+    toastImportOk:(n: A)=>`Excel importado ✓ (${n} tareas)`,
+    toastImportError:'No se pudo leer el Excel. Usa un Excel exportado por el Gantt.',
     history:'🕘 Historial',
 }
 
@@ -354,6 +357,9 @@ const en: Record<keyof typeof es, Entry> = {
     chartsConfirmDelete:(name: A)=>`Delete the Gantt "${name}" and all its tasks?`,
     chartsLastOne:'At least one Gantt must remain.',
     toastExcelError:'The Excel file could not be created.',
+    importExcel:'📥 Import Excel',
+    toastImportOk:(n: A)=>`Excel imported ✓ (${n} tasks)`,
+    toastImportError:'The Excel file could not be read. Use an Excel exported by the Gantt.',
     history:'🕘 History',
 }
 

@@ -1,6 +1,6 @@
 // buildExcel del original (gantt/index.html 1830-2022), con ExcelJS incluido en la app (sin CDN).
-// Se genera lo que el original descarga en la práctica: su parche de formato condicional por ZIP interno
-// nunca se aplica (ExcelJS no expone wb._zip), así que queda la versión de respaldo (mejora A10).
+// El original intentaba un parche de formato condicional por ZIP interno que nunca se aplicaba
+// (ExcelJS no expone wb._zip); la mejora A10 añade aquí las reglas completas.
 import type { Borders, DataValidation, Fill, Workbook } from 'exceljs'
 import { translate, type Lang } from '../i18n'
 import { addDays } from '../logic/dates'
@@ -23,7 +23,7 @@ const f = (a: string): Fill => ({ type: 'pattern', pattern: 'solid', fgColor: { 
 const th = (a: string) => ({ style: 'thin' as const, color: { argb: a } })
 const bord = (a: string): Partial<Borders> => ({ top: th(a), bottom: th(a), left: th(a), right: th(a) })
 
-/** Llena el libro como buildExcel (sin el parche ZIP). Exportado para las pruebas. */
+/** Llena el libro como buildExcel, con las reglas completas de la mejora A10. Exportado para las pruebas. */
 export function fillWorkbook(wb: Workbook, m: ExportModel, isDark: boolean, lang: Lang): void {
   const T = (k: Parameters<typeof translate>[1]) => translate(lang, k)
   const P = isDark ? DARK : LIGHT
@@ -159,16 +159,17 @@ export function fillWorkbook(wb: Workbook, m: ExportModel, isDark: boolean, lang
       })
     })
 
-    // Formato condicional de barras: fechas propias y sin "Tarde" (como el original, mejora A10)
+    // Formato condicional de barras con fechas efectivas e incluye "Tarde" (mejora A10)
     for (let i = 0; i < total; i++) {
       const d = addDays(m.start, i)
-      if (d < t.start || d > t.end) continue
+      if (d < r.eff.start || d > r.eff.end) continue
       const cl = ws.getColumn(4 + i).letter
       ;[
         { txt: T('statusProg'), argb: P.barProg },
         { txt: T('statusDone'), argb: P.barDone },
         { txt: T('statusPend'), argb: P.barPend },
         { txt: T('statusBloc'), argb: P.barBloc },
+        { txt: T('statusLate'), argb: P.barLate },
       ].forEach(({ txt, argb }, pri) => {
         ws.addConditionalFormatting({
           ref: `${cl}${rowNum}`,

@@ -73,6 +73,8 @@ export interface GanttActions {
   setView<K extends keyof ChartView>(key: K, value: ChartView[K]): void
   clearFilters(): void
   createChart(name: string): ActionResult
+  /** Mejora B4: crea un Gantt nuevo con las tareas importadas y lo deja activo. */
+  importChart(name: string, tasks: StoredTask[], nextId: number): ActionResult
   renameChart(id: string, name: string): void
   deleteChart(id: string): ActionResult
   selectChart(id: string): void
@@ -223,6 +225,13 @@ export function createGanttStore(): GanttApi {
         const chart = emptyChart(seq, name.trim() || `Gantt ${s.charts.length + 1}`)
         set({ charts: [...s.charts, chart], chartSeq: seq, activeId: chart.id, editingId: null })
         return { ok: true }
+      },
+
+      importChart(name, tasks, nextId) {
+        const r = get().createChart(name)
+        if (!r.ok) return r
+        putChart({ ...active(), tasks, nextId })
+        return r
       },
 
       renameChart(id, name) {

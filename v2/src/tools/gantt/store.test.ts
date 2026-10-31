@@ -51,6 +51,16 @@ describe('Gantts por usuario', () => {
     expect(api.getState().charts[0]!.name).toBe('Plan Q4')
   })
 
+  it('importar crea un Gantt nuevo activo con las tareas; con 5 Gantts se rechaza (mejora B4)', () => {
+    const api = withTree()
+    expect(api.getState().importChart('Plan viejo', FIXTURES.flat!, 7)).toEqual({ ok: true })
+    const s = api.getState()
+    expect([s.activeId, s.charts[1]!.name, s.charts[1]!.nextId]).toEqual(['c2', 'Plan viejo', 7])
+    expect(activeTasks(s)).toHaveLength(FIXTURES.flat!.length)
+    for (let i = 3; i <= MAX_CHARTS; i++) api.getState().createChart(`G${i}`)
+    expect(api.getState().importChart('Otro', FIXTURES.flat!, 7)).toEqual({ ok: false, error: 'chartsMax' })
+  })
+
   it('eliminar: no permite borrar el último; al borrar el activo pasa al primero', () => {
     const api = withTree()
     expect(api.getState().deleteChart('c1')).toEqual({ ok: false, error: 'chartsLastOne' })

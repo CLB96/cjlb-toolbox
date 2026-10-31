@@ -61,4 +61,14 @@ describe('Excel', () => {
     expect(refs.filter((r) => r === 'B4')).toHaveLength(5)
     expect(ws.getCell('A1').value).toBe('GANTT TRACKER — R&D Process Engineering')
   })
+
+  it('formato condicional de barras con fechas efectivas e incluye "Tarde" (mejora A10)', () => {
+    const { ws, model } = book(FIXTURES.tree!)
+    const cfs = (ws as unknown as { conditionalFormattings: { ref: string; rules: { formulae: string[] }[] }[] }).conditionalFormattings
+    const parent = model.rows[0]!
+    const days = Math.round((parent.eff.end.getTime() - parent.eff.start.getTime()) / 86400000) + 1
+    const barRules = cfs.filter((c) => /^[C-Z]|^[A-Z]{2}/.test(c.ref) && c.ref.endsWith('4') && !c.ref.startsWith('B'))
+    expect(barRules).toHaveLength(days * 5)
+    expect(barRules.some((c) => c.rules[0]!.formulae[0] === '$B4="Tarde"')).toBe(true)
+  })
 })
