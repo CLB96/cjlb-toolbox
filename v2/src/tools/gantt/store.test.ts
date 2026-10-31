@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FIXTURES } from '../../../legacy-fixtures/gantt/fixtures'
-import { activeTasks, createGanttStore, initialData, MAX_CHARTS, restoreInto, snapshotOf, type GanttState } from './store'
+import { activeTasks, createGanttStore, DEFAULT_VIEW, initialData, MAX_CHARTS, restoreInto, snapshotOf, type GanttState } from './store'
 
 const fields = (name: string, parentId: string | null = null) => ({
   name,
@@ -13,14 +13,14 @@ const fields = (name: string, parentId: string | null = null) => ({
 
 function withTree() {
   const api = createGanttStore()
-  api.setState({ charts: [{ id: 'c1', name: 'Gantt 1', tasks: FIXTURES.tree!, nextId: 8 }] })
+  api.setState({ charts: [{ id: 'c1', name: 'Gantt 1', tasks: FIXTURES.tree!, nextId: 8, collapsed: [], view: { ...DEFAULT_VIEW } }] })
   return api
 }
 
 describe('Gantts por usuario', () => {
   it('empieza con un Gantt vacío (sin demo)', () => {
     const s = createGanttStore().getState()
-    expect(s.charts).toEqual([{ id: 'c1', name: 'Gantt 1', tasks: [], nextId: 1 }])
+    expect(s.charts).toEqual([{ id: 'c1', name: 'Gantt 1', tasks: [], nextId: 1, collapsed: [], view: DEFAULT_VIEW }])
     expect(s.activeId).toBe('c1')
   })
 
@@ -89,7 +89,7 @@ describe('tareas', () => {
     api.getState().setEditing(5)
     api.getState().deleteTask(3)
     expect(activeTasks(api.getState()).map((t) => t.id)).toEqual([1, 2, 6, 7])
-    expect(api.getState().collapsed.c1).toEqual([1])
+    expect(api.getState().charts[0]!.collapsed).toEqual([1])
     expect(api.getState().editingId).toBeNull()
   })
 
@@ -97,7 +97,7 @@ describe('tareas', () => {
     const api = withTree()
     api.getState().toggleCollapse(3)
     api.getState().duplicateTask(3, ' (copia)')
-    expect(api.getState().collapsed.c1).toEqual([3, 8])
+    expect(api.getState().charts[0]!.collapsed).toEqual([3, 8])
     expect(api.getState().charts[0]!.nextId).toBe(11)
   })
 
@@ -109,11 +109,44 @@ describe('tareas', () => {
 })
 
 describe('guardado', () => {
-  it('el snapshot no incluye plegados, edición ni segmento de la dona', () => {
+  it('el snapshot no incluye edición ni segmento de la dona', () => {
     const api = withTree()
-    api.getState().toggleCollapse(1)
     api.getState().setEditing(2)
     expect(Object.keys(snapshotOf(api.getState())).sort()).toEqual(['activeId', 'chartSeq', 'charts', 'prefs'])
+  })
+
+  it('los plegados se guardan y se restauran con su Gantt (mejora B1)', () => {
+    const api = withTree()
+    api.getState().toggleCollapse(3)
+    const other = createGanttStore()
+    restoreInto(other, structuredClone(snapshotOf(api.getState())))
+    expect(other.getState().charts[0]!.collapsed).toEqual([3])
+  })
+
+  it('cada Gantt recuerda su búsqueda, filtro y orden; Limpiar solo afecta al activo (mejora B3)', () => {
+    const api = withTree()
+    api.getState().setView('sort', 'name')
+    api.getState().setView('search', 'fix')
+    api.getState().createChart('Otro')
+    expect(api.getState().charts[1]!.view).toEqual(DEFAULT_VIEW)
+    api.getState().setView('filter', 'late')
+    api.getState().clearFilters()
+    api.getState().selectChart('c1')
+    expect(api.getState().charts[0]!.view).toEqual({ search: 'fix', filter: 'all', sort: 'name' })
+  })
+
+  it('un guardado anterior pasa buscar/filtrar/ordenar de prefs a cada Gantt', () => {
+    const api = createGanttStore()
+    const old = {
+      charts: [{ id: 'c1', name: 'A', tasks: [], nextId: 1 }, { id: 'c2', name: 'B', tasks: [], nextId: 1 }],
+      activeId: 'c1',
+      chartSeq: 2,
+      prefs: { ...initialData().prefs, search: 'x', filter: 'done', sort: 'name' },
+    } as unknown as GanttState
+    restoreInto(api, old)
+    const s = api.getState()
+    for (const c of s.charts) expect([c.view, c.collapsed]).toEqual([{ search: 'x', filter: 'done', sort: 'name' }, []])
+    expect(s.prefs).toEqual(initialData().prefs)
   })
 
   it('restaurar completa preferencias, limita el ancho 80-520 y corrige el activo', () => {
@@ -128,7 +161,7 @@ describe('guardado', () => {
     const s = api.getState()
     expect(s.activeId).toBe('c3')
     expect(s.prefs).toEqual({ ...initialData().prefs, viewMode: 'week', taskColWidth: 520 })
-    expect(s.collapsed).toEqual({})
+    expect(s.charts[0]!.collapsed).toEqual([])
   })
 
   it('restaurar sin Gantts vuelve a un Gantt vacío', () => {

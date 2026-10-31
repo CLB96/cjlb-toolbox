@@ -8,23 +8,30 @@ export const MAX_CHARTS = 5
 export const TASK_COL_MIN = 80
 export const TASK_COL_MAX = 520
 
+/** Buscar, filtrar y ordenar: cada Gantt recuerda los suyos (mejora B3). */
+export interface ChartView {
+  search: string
+  filter: FilterValue
+  sort: SortValue
+}
+
 export interface GanttChart {
   id: string
   name: string
   tasks: StoredTask[]
   nextId: number
+  /** Tareas plegadas, guardadas con el Gantt (mejora B1). */
+  collapsed: number[]
+  view: ChartView
 }
 
-/** Preferencias del original (savePrefs), compartidas por todos los Gantts (mejora B3). */
+/** Preferencias del original (savePrefs) comunes a todos los Gantts. */
 export interface GanttPrefs {
   viewMode: ViewMode
   taskColWidth: number
   formOpen: boolean
   statsOpen: boolean
   insightOpen: boolean
-  search: string
-  filter: FilterValue
-  sort: SortValue
 }
 
 /** Datos persistibles y clonables. */
@@ -35,9 +42,8 @@ export interface GanttState {
   prefs: GanttPrefs
 }
 
-/** Estado de pantalla que el original no guardaba (plegados, edición en curso, segmento de la dona). */
+/** Estado de pantalla que no se guarda (edición en curso, segmento de la dona). */
 export interface GanttUi {
-  collapsed: Record<string, number[]>
   editingId: number | null
   pieSelection: Status | null
 }
@@ -64,6 +70,7 @@ export interface GanttActions {
   setEditing(id: number | null): void
   setPieSelection(s: Status): void
   setPref<K extends keyof GanttPrefs>(key: K, value: GanttPrefs[K]): void
+  setView<K extends keyof ChartView>(key: K, value: ChartView[K]): void
   clearFilters(): void
   createChart(name: string): ActionResult
   renameChart(id: string, name: string): void
@@ -80,12 +87,18 @@ export const DEFAULT_PREFS: GanttPrefs = {
   formOpen: true,
   statsOpen: true,
   insightOpen: true,
-  search: '',
-  filter: 'all',
-  sort: 'startAsc',
 }
 
-const emptyChart = (seq: number, name: string): GanttChart => ({ id: `c${seq}`, name, tasks: [], nextId: 1 })
+export const DEFAULT_VIEW: ChartView = { search: '', filter: 'all', sort: 'startAsc' }
+
+const emptyChart = (seq: number, name: string): GanttChart => ({
+  id: `c${seq}`,
+  name,
+  tasks: [],
+  nextId: 1,
+  collapsed: [],
+  view: { ...DEFAULT_VIEW },
+})
 
 /** Un Gantt vacío (sin demo, decisión del dueño). */
 export const initialData = (): GanttState => ({
@@ -95,7 +108,7 @@ export const initialData = (): GanttState => ({
   prefs: { ...DEFAULT_PREFS },
 })
 
-const initialUi = (): GanttUi => ({ collapsed: {}, editingId: null, pieSelection: 'done' })
+const initialUi = (): GanttUi => ({ editingId: null, pieSelection: 'done' })
 
 export function selectActiveChart(s: GanttState): GanttChart {
   return s.charts.find((c) => c.id === s.activeId) ?? s.charts[0]!
@@ -113,9 +126,7 @@ export function createGanttStore(): GanttApi {
       set((s) => ({ charts: s.charts.map((c) => (c.id === chart.id ? chart : c)) }))
     const putTasks = (tasks: Task[], nextId = active().nextId) =>
       putChart({ ...active(), tasks: tasks.map(serializeTask), nextId })
-    const collapsedOf = (id: string) => new Set(get().collapsed[id] ?? [])
-    const setCollapsed = (id: string, ids: Set<number>) =>
-      set((s) => ({ collapsed: { ...s.collapsed, [id]: [...ids] } }))
+    const collapsedOf = () => new Set(active().collapsed)
 
     return {
       ...initialData(),
@@ -143,11 +154,13 @@ export function createGanttStore(): GanttApi {
       },
 
       deleteTask(id) {
-        const chart = active()
         const r = deleteSubtree(activeTasks(get()), id)
         if (!r) return false
-        putTasks(r.tasks)
-        setCollapsed(chart.id, new Set([...collapsedOf(chart.id)].filter((x) => !r.removed.has(x))))
+        putChart({
+          ...active(),
+          tasks: r.tasks.map(serializeTask),
+          collapsed: active().collapsed.filter((x) => !r.removed.has(x)),
+        })
         const editingId = get().editingId
         if (editingId !== null && r.removed.has(editingId)) set({ editingId: null })
         return true
@@ -157,10 +170,9 @@ export function createGanttStore(): GanttApi {
         const chart = active()
         const r = duplicateSubtree(activeTasks(get()), id, chart.nextId, suffix)
         if (!r) return false
-        putTasks(r.tasks, r.nextId)
-        const collapsed = collapsedOf(chart.id)
+        const collapsed = collapsedOf()
         for (const [src, clone] of r.idMap) if (collapsed.has(src)) collapsed.add(clone)
-        setCollapsed(chart.id, collapsed)
+        putChart({ ...chart, tasks: r.tasks.map(serializeTask), nextId: r.nextId, collapsed: [...collapsed] })
         return true
       },
 
@@ -178,11 +190,10 @@ export function createGanttStore(): GanttApi {
       },
 
       toggleCollapse(id) {
-        const chart = active()
-        const c = collapsedOf(chart.id)
+        const c = collapsedOf()
         if (c.has(id)) c.delete(id)
         else c.add(id)
-        setCollapsed(chart.id, c)
+        putChart({ ...active(), collapsed: [...c] })
       },
 
       setEditing(id) {
@@ -197,8 +208,12 @@ export function createGanttStore(): GanttApi {
         set((s) => ({ prefs: { ...s.prefs, [key]: value } }))
       },
 
+      setView(key, value) {
+        putChart({ ...active(), view: { ...active().view, [key]: value } })
+      },
+
       clearFilters() {
-        set((s) => ({ prefs: { ...s.prefs, search: '', filter: 'all', sort: 'startAsc' } }))
+        putChart({ ...active(), view: { ...DEFAULT_VIEW } })
       },
 
       createChart(name) {
@@ -220,10 +235,8 @@ export function createGanttStore(): GanttApi {
         const s = get()
         if (s.charts.length <= 1) return { ok: false, error: 'chartsLastOne' }
         const charts = s.charts.filter((c) => c.id !== id)
-        const { [id]: _drop, ...collapsed } = s.collapsed
         set({
           charts,
-          collapsed,
           activeId: s.activeId === id ? charts[0]!.id : s.activeId,
           editingId: s.activeId === id ? null : s.editingId,
         })
@@ -245,11 +258,24 @@ export function snapshotOf(s: GanttState): GanttState {
 const clampWidth = (w: unknown): number =>
   Number.isFinite(w) ? Math.min(TASK_COL_MAX, Math.max(TASK_COL_MIN, w as number)) : DEFAULT_PREFS.taskColWidth
 
+/** Guardados anteriores a B1/B3: sin plegados por Gantt y con buscar/filtrar/ordenar en prefs. */
+function completeChart(c: GanttChart, legacyView: ChartView): GanttChart {
+  return {
+    ...c,
+    collapsed: Array.isArray(c.collapsed) ? c.collapsed : [],
+    view: { ...legacyView, ...c.view },
+  }
+}
+
 /** Aplica un snapshot guardado; completa lo que falte y descarta el estado de pantalla. */
 export function restoreInto(api: GanttApi, snapshot: GanttState): void {
   const base = initialData()
-  const charts = Array.isArray(snapshot.charts) && snapshot.charts.length ? snapshot.charts.slice(0, MAX_CHARTS) : base.charts
-  const prefs = { ...base.prefs, ...snapshot.prefs }
+  const stored: Partial<GanttPrefs & ChartView> = snapshot.prefs ?? {}
+  const { search, filter, sort, ...prefs } = { ...base.prefs, ...DEFAULT_VIEW, ...stored }
+  const legacyView: ChartView = { search, filter, sort }
+  const charts = (
+    Array.isArray(snapshot.charts) && snapshot.charts.length ? snapshot.charts.slice(0, MAX_CHARTS) : base.charts
+  ).map((c) => completeChart(c, legacyView))
   api.setState({
     charts,
     activeId: charts.some((c) => c.id === snapshot.activeId) ? snapshot.activeId : charts[0]!.id,

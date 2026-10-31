@@ -19,7 +19,7 @@ import {
   type TimelineCell,
 } from '../logic/tree'
 import type { Status, Task } from '../logic/types'
-import { TASK_COL_MAX, TASK_COL_MIN } from '../store'
+import { selectActiveChart, TASK_COL_MAX, TASK_COL_MIN } from '../store'
 import type { GanttView } from '../useGanttView'
 import { EditRow } from './EditRow'
 import { useBarDrag, type CommittedDrag, type LiveDrag } from './useBarDrag'
@@ -46,8 +46,7 @@ export function Timeline({ view, disabled, onBarCommit }: Props) {
   const viewMode = useGantt((s) => s.prefs.viewMode)
   const width = useGantt((s) => s.prefs.taskColWidth)
   const editingId = useGantt((s) => s.editingId)
-  const activeId = useGantt((s) => s.activeId)
-  const collapsed = useGantt((s) => s.collapsed[activeId])
+  const collapsed = useGantt((s) => selectActiveChart(s).collapsed)
   const tableRef = useRef<HTMLTableElement>(null)
   const { tasks, list, range, today, totalDays, weeks } = view
   const { live, barProps } = useBarDrag(tableRef, tasks, viewMode === 'day' && !disabled, onBarCommit)

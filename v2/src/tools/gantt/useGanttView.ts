@@ -31,15 +31,14 @@ export const useToday = () => useContext(TodayContext)
 export function useGanttView(lang: Lang): GanttView {
   const today = useToday()
   const stored = useGantt((s) => selectActiveChart(s).tasks)
-  const { search, filter, sort } = useGantt(useShallow((s) => ({ search: s.prefs.search, filter: s.prefs.filter, sort: s.prefs.sort })))
-  const activeId = useGantt((s) => s.activeId)
-  const collapsedArr = useGantt((s) => s.collapsed[activeId])
+  const { search, filter, sort } = useGantt(useShallow((s) => selectActiveChart(s).view))
+  const collapsedArr = useGantt((s) => selectActiveChart(s).collapsed)
   const pieSelection = useGantt((s) => s.pieSelection)
 
   return useMemo(() => {
     const tasks = stored.map(deserializeTask)
     const filtered = filteredTasks(tasks, { search, filter, sort }, today, lang)
-    const list = buildTreeList(tasks, filtered, new Set(collapsedArr ?? []))
+    const list = buildTreeList(tasks, filtered, new Set(collapsedArr))
     const range = getRange(tasks, list.length ? list : tasks, today)
     return {
       today,
