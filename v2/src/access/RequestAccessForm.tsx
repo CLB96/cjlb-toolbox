@@ -5,25 +5,6 @@ import { useI18n } from '../i18n/useI18n'
 import { submitAccessRequest, type SubmitResult } from './accessService'
 import { LIMITS } from './limits'
 
-export const COOLDOWN_KEY = 'cjlb.accessRequestedAt'
-const COOLDOWN_MS = 24 * 60 * 60 * 1000
-
-function inCooldown(): boolean {
-  try {
-    const v = Number(localStorage.getItem(COOLDOWN_KEY))
-    return v > 0 && Date.now() - v < COOLDOWN_MS
-  } catch {
-    return false
-  }
-}
-
-function markRequested(): void {
-  try {
-    localStorage.setItem(COOLDOWN_KEY, String(Date.now()))
-  } catch {
-    // almacenamiento bloqueado: el cooldown solo vive en memoria
-  }
-}
 
 type Props = {
   /** Con cuenta: correo fijo (solo lectura). */
@@ -43,8 +24,8 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
   const [trap, setTrap] = useState('')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<SubmitResult | null>(null)
-  // El enfriamiento local solo aplica sin cuenta; con cuenta las reglas impiden duplicar pendientes.
-  const [locked, setLocked] = useState(() => fixedEmail === undefined && inCooldown())
+  // Se bloquea solo tras enviar en esta vista; las reglas impiden duplicar solicitudes pendientes.
+  const [locked, setLocked] = useState(false)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -57,7 +38,6 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
     }
     setResult(r)
     setLocked(true)
-    if (r !== 'ignored') markRequested()
     if (r === 'sent') onSent?.()
   }
 
