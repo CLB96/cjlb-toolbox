@@ -251,6 +251,14 @@ describe('GanttTool', () => {
     expect(screen.getByText('Hoy · 31 Oct 2026')).toBeInTheDocument()
   })
 
+  it('la línea de hoy se dibuja encima de las barras que cruzan hoy (mejora A8)', async () => {
+    await seed()
+    renderTool()
+    await waitFor(() => expect(rows()).toHaveLength(7))
+    expect(rows()[0]!.querySelector('.gt-today-mark')).not.toBeNull()
+    expect(rows()[5]!.querySelector('.gt-today-mark')).toBeNull()
+  })
+
   it('Ctrl+K enfoca la búsqueda', async () => {
     renderTool()
     await ready()

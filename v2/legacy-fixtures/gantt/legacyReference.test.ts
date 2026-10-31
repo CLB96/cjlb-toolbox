@@ -19,6 +19,7 @@ import {
   isOverdue,
   serializeTask,
   weekCells,
+  type TimelineCell,
 } from '../../src/tools/gantt/logic/tree'
 import type { FilterValue, SortValue, StoredTask } from '../../src/tools/gantt/logic/types'
 import { FIXTURES, TODAY } from './fixtures'
@@ -123,9 +124,11 @@ describe.each(NAMES)('fixture %s', (name) => {
     const v = viewOf(stored)
     const total = Math.round((v.range.end.getTime() - v.range.start.getTime()) / 86400000) + 1
     const weeks = buildWeeks(v.range.start, v.range.end)
+    // todayAt es nuevo (mejora A8): el original no marcaba hoy dentro de una barra
+    const strip = (cells: TimelineCell[]) => cells.map(({ todayAt: _t, ...c }) => c)
     v.tasks.forEach((t, i) => {
-      expect(dayCells(v.tasks, t, v.range.start, total, TODAY)).toEqual(L.legacyDayCells(L.tasks[i], v.range.start, total))
-      expect(weekCells(v.tasks, t, weeks, TODAY)).toEqual(L.legacyWeekCells(L.tasks[i], weeks))
+      expect(strip(dayCells(v.tasks, t, v.range.start, total, TODAY))).toEqual(L.legacyDayCells(L.tasks[i], v.range.start, total))
+      expect(strip(weekCells(v.tasks, t, weeks, TODAY))).toEqual(L.legacyWeekCells(L.tasks[i], weeks))
     })
   })
 
@@ -273,5 +276,20 @@ describe('orden elegido (mejora A2)', () => {
     expect(byName).toEqual(['alfa independiente', 'Proyecto línea 3', 'Zeta independiente'])
     const kids = viewOf(stored, { sort: 'endDesc' }).list.filter((t) => t.parentId === 1).map((t) => t.id)
     expect(kids).toEqual(stored.filter((t) => t.parentId === 1).map((t) => t.id))
+  })
+})
+
+describe('línea de hoy sobre las barras (mejora A8)', () => {
+  it('la celda de una barra que cruza hoy indica en qué día/semana cae', () => {
+    const v = viewOf(FIXTURES.tree!)
+    const total = Math.round((v.range.end.getTime() - v.range.start.getTime()) / 86400000) + 1
+    const parent = v.tasks.find((t) => t.id === 1)!
+    const bar = dayCells(v.tasks, parent, v.range.start, total, TODAY).find((c) => c.bar)!
+    expect(bar.todayAt).toBe(10) // 20 oct → 30 oct
+    const weeks = buildWeeks(v.range.start, v.range.end)
+    const wbar = weekCells(v.tasks, parent, weeks, TODAY).find((c) => c.bar)!
+    expect(wbar.todayAt).toBe(1)
+    const done = v.tasks.find((t) => t.id === 6)! // 21-23 oct, no cruza hoy
+    expect(dayCells(v.tasks, done, v.range.start, total, TODAY).find((c) => c.bar)!.todayAt).toBeUndefined()
   })
 })

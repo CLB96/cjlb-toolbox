@@ -248,7 +248,11 @@ export interface TimelineCell {
   bar: boolean
   today: boolean
   weekend?: boolean
+  /** Día/semana de la barra en que cae hoy (mejora A8: la línea de hoy se dibuja encima). */
+  todayAt?: number
 }
+
+const todayWithin = (offset: number, span: number) => (offset >= 0 && offset < span ? { todayAt: offset } : {})
 
 /** dayCols (1597-1622): celdas de una fila en vista Días. */
 export function dayCells(tasks: Task[], t: Task, start: Date, total: number, today: Date): TimelineCell[] {
@@ -262,7 +266,7 @@ export function dayCells(tasks: Task[], t: Task, start: Date, total: number, tod
     const weekend = d.getDay() === 0 || d.getDay() === 6
     if (inR && dayDiff(eff.start, d) === 0) {
       const sp = dayDiff(eff.start, eff.end) + 1
-      out.push({ i, span: sp, bar: true, today: isT, weekend })
+      out.push({ i, span: sp, bar: true, today: isT, weekend, ...todayWithin(dayDiff(eff.start, today), sp) })
       i += sp
       continue
     }
@@ -275,6 +279,7 @@ export function dayCells(tasks: Task[], t: Task, start: Date, total: number, tod
 /** weekCols (1623-1636): celdas de una fila en vista Semanas. */
 export function weekCells(tasks: Task[], t: Task, weeks: Date[], today: Date): TimelineCell[] {
   const eff = getEffectiveDates(tasks, t)
+  const todayWeek = weeks.findIndex((w) => today >= w && today <= addDays(w, 6))
   const out: TimelineCell[] = []
   let i = 0
   while (i < weeks.length) {
@@ -290,7 +295,7 @@ export function weekCells(tasks: Task[], t: Task, weeks: Date[], today: Date): T
         if (eff.start <= nwe && eff.end >= nw) sp++
         else break
       }
-      out.push({ i, span: sp, bar: true, today: isCur })
+      out.push({ i, span: sp, bar: true, today: isCur, ...(todayWeek < 0 ? {} : todayWithin(todayWeek - i, sp)) })
       i += sp
       continue
     }

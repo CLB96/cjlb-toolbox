@@ -112,10 +112,15 @@ export function Timeline({ view, disabled, onBarCommit }: Props) {
       const cls = `gt-bar-cell${c.today ? ' gt-today-col' : ''}${c.weekend ? ' gt-weekend-col' : ''}`
       if (!c.bar) return <td key={c.i} className={cls} />
       const opacity = barOpacity(depth)
+      const todayMark =
+        c.todayAt === undefined ? null : (
+          <span className="gt-today-mark" style={{ left: `${((c.todayAt + 0.5) / c.span) * 100}%` }} aria-hidden />
+        )
       if (viewMode === 'week' || isParent || disabled) {
         return (
           <td key={c.i} className={cls} colSpan={c.span}>
             <div className={`gt-bar gt-bar--${status}`} style={{ opacity }} />
+            {todayMark}
           </td>
         )
       }
@@ -126,6 +131,7 @@ export function Timeline({ view, disabled, onBarCommit }: Props) {
             <div className={`gt-bar gt-bar--${status} gt-bar--interactive`} data-bar-id={task.id} {...barProps(task.id)} />
             {tip && <BarTip live={tip} lang={lang} />}
           </div>
+          {todayMark}
         </td>
       )
     })

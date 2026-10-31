@@ -143,6 +143,7 @@
 .gt-weekend-col { background: var(--gt-weekend); }
 td.gt-today-col::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--st-today); opacity: 0.8; pointer-events: none; }
 td.gt-today-col[colspan]::after { display: none; }
+.gt-today-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--st-today); opacity: 0.8; pointer-events: none; z-index: 1; }
 .gt-bar, .gt-bar-wrap { position: relative; height: 28px; margin: 0 3px; border-radius: 10px; }
 .gt-bar-wrap .gt-bar { margin: 0; }
 .gt-bar { box-shadow: 0 4px 14px var(--shadow); }

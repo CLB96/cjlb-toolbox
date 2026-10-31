@@ -20,11 +20,15 @@ const LIGHT: Colors = {bg:'#fbf7ff',bg2:'#f3ecff',bg3:'#e9e2ff',text:'#251a40',t
 const FONT = 'Inter,-apple-system,sans-serif'
 
 /** Dibuja el PNG en un canvas nuevo. Devuelve null si no hay contexto 2D. */
+/** Ancho mínimo de la columna de tareas en el PNG (mejora B2: con 80 px los nombres salían cortados). */
+const PNG_MIN_TASK_COL = 280
+export const pngTaskColWidth = (onScreen: number) => Math.max(onScreen, PNG_MIN_TASK_COL)
+
 export function drawGanttPng(m: ExportModel, taskColWidth: number, isDark: boolean, lang: Lang): HTMLCanvasElement | null {
   const T = (k: Parameters<typeof translate>[1]) => translate(lang, k)
   const WDAYS = getWdays(lang)
   const totalDays = m.days.length
-  const DPR = 2, ROW_H = 36, H1 = 22, H2 = 28, TCW = taskColWidth, DW = 28, PAD = 16
+  const DPR = 2, ROW_H = 36, H1 = 22, H2 = 28, TCW = pngTaskColWidth(taskColWidth), DW = 28, PAD = 16
   const TW = TCW + totalDays * DW + PAD * 2
   const TH = H1 + H2 + m.rows.length * ROW_H + PAD * 2
   const cv = document.createElement('canvas')
@@ -159,6 +163,10 @@ export function drawGanttPng(m: ExportModel, taskColWidth: number, isDark: boole
         rr(dx + 2, ry + (ROW_H - 20) / 2, Math.max(sp * DW - 4, 4), 20, 6, barC[r.status])
         ctx.globalAlpha = 1
       }
+    })
+    // mejora A8: la línea de hoy también encima de la barra
+    m.days.forEach((d, i) => {
+      if (d.isToday) fr(ox + TCW + i * DW, ry, 2, ROW_H, C.today)
     })
   })
   ctx.strokeStyle = C.border
