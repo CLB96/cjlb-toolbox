@@ -31,10 +31,11 @@ Writer A provides, writer B consumes (all under `v2/src/tools/vectorizr/`):
 | ID | Specs | Route | Status | Evidence |
 |---|---|---|---|---|
 | T1 | S5 | inline | done | deps konva 9.3.22, react-konva 18.2.16, jspdf 4.2.1; opencv copy; `.gitattributes` |
-| T2 | S1 S5 S6 S7 S8 | delegated (writer A, parallel) | pending | |
-| T3 | S1 S2 S3 S4 S6 S8 | delegated (writer B, parallel) | pending | |
-| T4 | all | inline | pending | integration, full suite, build, browser check |
-| T5 | all | verifier | pending | independent verification (CSP/security = high risk) |
+| T2 | S1 S5 S6 S7 S8 | delegated (writer A, parallel) | done | 324c49c; 74 tests RED→GREEN |
+| T3 | S1 S2 S3 S4 S6 S8 | delegated (writer B, parallel) | done | e8b3780; 41 tests |
+| T4 | all | inline | done | full suite 86 files/605 passed; tsc OK; build OK; browser harness with vercel.json headers: steps 1-4, DXF/SVG/PDF (A0 landscape), EN + light, restore after reload |
+| T5 | all | verifier | done | all S1-S8 PASS, 0 blockers; assess risk high, RDD off (no review) |
+| T6 | S5 | owner | pending | publish: verify on a Vercel preview with `curl -I` that the opencv/worker paths get only the worker CSP |
 
 Route evidence: T2 and T3 are independent units with disjoint edit surfaces, each far heavier than starting a subagent, launched together (Writer trigger a).
 
@@ -44,3 +45,6 @@ Route evidence: T2 and T3 are independent units with disjoint edit surfaces, eac
 - L2 (2026-10-31) Preparation delivered: commit d4de86a (inventory + plan), mockup sent. Spike: OpenCV needs `'unsafe-eval'` only inside the worker.
 - L3 (2026-10-31) Owner: "Me parece bien, tienes razon faltaba el inglés para que tambien tenga ambas opciones."
 - L4 (2026-10-31) Owner on improvements: "Todo menos rotar el dxf." On large PDF: "Usar un A0 o una donde quepa completo la pieza".
+- L5 (2026-10-31) Browser check found 3 integration defects, fixed with RED→GREEN tests: blob URL revoked before `<img>` used it (step 2 blank); worker CSP blocked the embedded wasm (`connect-src 'self' data:`); Permissions-Policy `camera=()` blocked "📷 Tomar foto" → `camera=(self)`.
+- L6 (2026-10-31) Independent verifier: S1-S8 PASS, no blockers. Advisories: Vercel duplicate-CSP behaviour unverified (check on preview); undo history empty after restore (by design §4); unrequested `errExport` text; manual EN not in the approved inventory table.
+- L7 Next step: owner decides publishing (nothing pushed).
