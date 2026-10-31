@@ -77,7 +77,7 @@ export async function convertMwxFile(file: File, log: MwxLog): Promise<void> {
   a.href = url
   a.download = xlsxName(file.name)
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
   log(`  ✓ Guardado como: ${a.download}`, 'success')
 }
 
