@@ -10,6 +10,7 @@ const LOADERS: Partial<Record<ToolId, ToolDef['load']>> = {
   bondline: () => import('./bondline/BondlineTool'),
   gantt: () => import('./gantt/GanttTool'),
   capaflow: () => import('./capaflow/CapaflowTool'),
+  vectorizr: () => import('./vectorizr/VectorizrTool'),
 }
 
 export const TOOLS: ToolDef[] = data.tools
