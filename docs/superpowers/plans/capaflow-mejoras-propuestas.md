@@ -2,6 +2,8 @@
 
 Origen: inventario §10 (`capaflow-inventory/`, hallazgos 1-29) y revisión del código al portar la lógica. **Nada de esto está corregido**: la v2 reproduce el comportamiento original byte a byte y los tests diferenciales lo fijan. El dueño decide cuáles aplicar; cada una se haría como cambio aparte con su test.
 
+> **Actualización 2026-10-30 (petición del dueño):** las cuatro exportaciones PNG (Resumen Ejecutivo, Guía de Lectura, Resumen comparativo y Plano) ya usan el diseño Nebulosa del toolbox en lugar de la apariencia del original; el contenido (datos, textos, secciones, nombres de archivo) no cambia. De paso, los marcadores del Plano PNG ya salen con su color real (antes `var(--...)` se leía como negro). La nota C6 (grano aleatorio) queda resuelta: el fondo Nebulosa no usa ruido.
+
 Referencias `Lxxxx` = líneas de `capaflow/index.html`. "Valores" = efecto sobre los números mostrados.
 
 ## A. Afectan a los números (lógica de cálculo, fase 1)

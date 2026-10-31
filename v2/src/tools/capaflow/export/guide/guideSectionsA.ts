@@ -1,31 +1,29 @@
 // Guía de Lectura, primera mitad: encabezado, introducción y secciones 1 a 5 (textos literales del original).
 import { guideCCChart, guideHistogram } from './guideCharts'
+import { drawBrandMark } from '../nebulaKit'
 import { wrapText, type Guide } from './guideKit'
 
 export function guideHeader(g: Guide): number {
   const { c, P, isDark, es, W, PAD, VGAP, rr, hl, txt } = g
   const hg = c.createLinearGradient(0, 0, W, 120)
-  hg.addColorStop(0, isDark ? 'rgba(0,229,255,0.10)' : 'rgba(0,103,187,0.08)'); hg.addColorStop(1, 'transparent')
+  hg.addColorStop(0, isDark ? 'rgba(226,180,255,0.10)' : 'rgba(139,63,217,0.08)'); hg.addColorStop(1, 'transparent')
   c.fillStyle = hg; c.fillRect(0, 0, W, 120)
   hl(0, W, 120, P.border, 1.5)
 
-  const lmg = c.createLinearGradient(PAD, 20, PAD + 60, 80)
-  lmg.addColorStop(0, P.accent); lmg.addColorStop(1, P.accent2)
-  c.beginPath(); c.roundRect(PAD, 20, 60, 60, 14); c.fillStyle = lmg; c.fill()
-  txt('C', PAD + 30, 64, '800 36px system-ui,sans-serif', isDark ? '#050d2a' : '#fff', 'center')
-  txt('CapaFlow', PAD + 76, 54, '800 38px system-ui,sans-serif', P.text, 'left')
-  txt(es ? 'Análisis de Capacidad de Proceso · Six Sigma' : 'Process Capability Analysis · Six Sigma', PAD + 76, 80, '400 19px ui-monospace,monospace', P.textSub, 'left')
+  drawBrandMark(c, PAD, 20, 60)
+  txt('CapaFlow', PAD + 76, 54, '800 38px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+  txt(es ? 'Análisis de Capacidad de Proceso · Six Sigma' : 'Process Capability Analysis · Six Sigma', PAD + 76, 80, '400 19px Inter, sans-serif', P.textSub, 'left')
 
   const guideTitle = es ? 'GUÍA RÁPIDA DE LECTURA' : 'QUICK READING GUIDE'
-  txt(guideTitle, W - PAD, 52, '800 28px ui-monospace,monospace', P.accent, 'right')
-  txt(es ? 'Cómo interpretar tu análisis Six Sigma' : 'How to interpret your Six Sigma analysis', W - PAD, 78, '400 18px ui-monospace,monospace', P.textSub, 'right')
+  txt(guideTitle, W - PAD, 52, '800 28px "Space Grotesk", Inter, sans-serif', P.accent, 'right')
+  txt(es ? 'Cómo interpretar tu análisis Six Sigma' : 'How to interpret your Six Sigma analysis', W - PAD, 78, '400 18px Inter, sans-serif', P.textSub, 'right')
   let Y = 120 + VGAP
 
-  rr(PAD, Y, W - PAD * 2, 72, 14, isDark ? 'rgba(0,229,255,0.07)' : 'rgba(0,103,187,0.06)', P.border, 1.5)
+  rr(PAD, Y, W - PAD * 2, 72, 14, isDark ? 'rgba(226,180,255,0.07)' : 'rgba(139,63,217,0.06)', P.border, 1.5)
   txt(es ? 'Este reporte te dice si tu proceso de producción está bajo control y cumple los estándares de calidad. Aquí aprenderás a leer cada sección.' : 'This report tells you whether your production process is in control and meets quality standards. Here you will learn to read each section.',
-    PAD + 24, Y + 28, '400 20px system-ui,sans-serif', P.text, 'left', W - PAD * 2 - 48)
+    PAD + 24, Y + 28, '400 20px Inter, sans-serif', P.text, 'left', W - PAD * 2 - 48)
   txt(es ? 'No necesitas ser experto — sigue esta guía de arriba a abajo.' : 'No expertise needed — follow this guide from top to bottom.',
-    PAD + 24, Y + 52, '400 17px ui-monospace,monospace', P.textSub, 'left')
+    PAD + 24, Y + 52, '400 17px Inter, sans-serif', P.textSub, 'left')
   Y += 72 + VGAP
   return Y
 }
@@ -35,25 +33,25 @@ export function guideKeyNumbers(g: Guide, Y0: number): number {
   const { c, P, isDark, es, W, PAD, VGAP, rr, hl, txt, sectionTitle } = g
   let Y = Y0
   sectionTitle(es ? '① LOS 3 NÚMEROS CLAVE' : '① THE 3 KEY NUMBERS',
-    es ? 'Lo primero que debes mirar' : 'The first thing to look at', PAD, Y, W - PAD * 2, '0,229,255')
+    es ? 'Lo primero que debes mirar' : 'The first thing to look at', PAD, Y, W - PAD * 2, '226,180,255')
   Y += 56 + 16
 
   const k3W = (W - PAD * 2 - 32) / 3
   const kpiDefs = [
     {
-      key: 'Cpk', color: '0,229,255',
+      key: 'Cpk', color: '226,180,255',
       name: es ? 'Capacidad Real' : 'Real Capability',
       what: es ? 'Mide qué tan bien CABE la distribución dentro de los límites, considerando si está centrada o no.' : 'Measures how well the distribution FITS within the limits, considering whether it is centered or not.',
       rule: es ? 'Meta mínima: Cpk ≥ 1.33' : 'Minimum target: Cpk ≥ 1.33',
     },
     {
-      key: 'Cp', color: '79,195,247',
+      key: 'Cp', color: '114,168,255',
       name: es ? 'Capacidad Potencial' : 'Potential Capability',
       what: es ? 'Mide el espacio disponible vs el tamaño de la distribución. No considera si está centrada.' : 'Measures available space vs distribution size. Does NOT consider centering.',
       rule: es ? 'Si Cp >> Cpk: el proceso no está centrado' : 'If Cp >> Cpk: process is off-center',
     },
     {
-      key: 'Ppk', color: '105,240,174',
+      key: 'Ppk', color: '89,201,127',
       name: es ? 'Desempeño Real' : 'Real Performance',
       what: es ? 'Como Cpk pero usa la variación TOTAL histórica (largo plazo). Incluye todas las fuentes de variación.' : 'Like Cpk but uses TOTAL historical variation (long term). Includes all sources of variation.',
       rule: es ? 'Si Ppk << Cpk: hay variación entre turnos/lotes' : 'If Ppk << Cpk: variation between shifts/batches',
@@ -63,36 +61,36 @@ export function guideKeyNumbers(g: Guide, Y0: number): number {
     const kx = PAD + i * (k3W + 16), ky = Y
     rr(kx, ky, k3W, 220, 16, P.surface, `rgba(${k.color},0.20)`, 2)
     rr(kx, ky, k3W, 5, [2, 2, 0, 0], `rgba(${k.color},0.9)`, null)
-    txt(k.key, kx + k3W / 2, ky + 52, '800 48px system-ui,sans-serif', `rgba(${k.color},0.95)`, 'center')
-    txt(k.name, kx + k3W / 2, ky + 76, '600 18px ui-monospace,monospace', P.textSub, 'center')
+    txt(k.key, kx + k3W / 2, ky + 52, '800 48px "Space Grotesk", Inter, sans-serif', `rgba(${k.color},0.95)`, 'center')
+    txt(k.name, kx + k3W / 2, ky + 76, '600 18px Inter, sans-serif', P.textSub, 'center')
     hl(kx + 20, kx + k3W - 20, ky + 88, P.borderLight, 1)
-    c.font = '400 16px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-    wrapText(c, k.what, k3W - 32, '400 16px system-ui,sans-serif').forEach((ln, j) => c.fillText(ln, kx + 16, ky + 108 + j * 21))
+    c.font = '400 16px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
+    wrapText(c, k.what, k3W - 32, '400 16px Inter, sans-serif').forEach((ln, j) => c.fillText(ln, kx + 16, ky + 108 + j * 21))
     rr(kx + 16, ky + 188, k3W - 32, 24, 8, `rgba(${k.color},0.10)`, `rgba(${k.color},0.25)`, 1)
-    txt(k.rule, kx + k3W / 2, ky + 204, '500 14px ui-monospace,monospace', `rgba(${k.color},0.9)`, 'center')
+    txt(k.rule, kx + k3W / 2, ky + 204, '500 14px Inter, sans-serif', `rgba(${k.color},0.9)`, 'center')
   })
   Y += 220 + VGAP
 
   rr(PAD, Y, W - PAD * 2, 100, 12, P.surface, P.border, 1.5)
-  const scaleW = W - PAD * 2 - 120
-  const scaleX = PAD + 60, scaleY2 = Y + 38, scaleH = 22
+  const scaleW = W - PAD * 2 - 170
+  const scaleX = PAD + 110, scaleY2 = Y + 38, scaleH = 22
   const zones2 = [
     { from: 0, to: 1.0, label: es ? 'No Capaz' : 'Not Capable', color: P.red, bg: P.redBg },
     { from: 1.0, to: 1.33, label: 'Marginal', color: P.yellow, bg: P.yellowBg },
     { from: 1.33, to: 1.67, label: es ? 'Capaz' : 'Capable', color: P.green, bg: P.greenBg },
-    { from: 1.67, to: 2.0, label: 'World Class', color: P.accent, bg: isDark ? 'rgba(0,229,255,0.1)' : 'rgba(0,103,187,0.1)' },
+    { from: 1.67, to: 2.0, label: 'World Class', color: P.accent2, bg: isDark ? 'rgba(114,168,255,0.14)' : 'rgba(79,140,255,0.10)' },
   ]
   const maxCpk = 2.0
-  txt(es ? 'Escala Cpk:' : 'Cpk Scale:', PAD + 12, scaleY2 + scaleH / 2 + 6, '600 16px ui-monospace,monospace', P.textDim, 'left')
+  txt(es ? 'Escala Cpk:' : 'Cpk Scale:', PAD + 12, scaleY2 + scaleH / 2 + 6, '600 16px Inter, sans-serif', P.textDim, 'left')
   zones2.forEach((z) => {
     const zx = scaleX + (z.from / maxCpk) * scaleW, zw = (z.to - z.from) / maxCpk * scaleW
     rr(zx, scaleY2, zw, scaleH, 0, z.bg, z.color, 1.5)
-    c.font = '600 14px ui-monospace,monospace'; c.fillStyle = z.color; c.textAlign = 'center'
+    c.font = '600 14px Inter, sans-serif'; c.fillStyle = z.color; c.textAlign = 'center'
     c.fillText(z.label, zx + zw / 2, scaleY2 + scaleH / 2 + 5)
   })
   ;[0, 1.0, 1.33, 1.67, 2.0].forEach((v) => {
     const tx = scaleX + (v / maxCpk) * scaleW
-    txt(v.toFixed(v % 1 === 0 ? 0 : 2), tx, scaleY2 + scaleH + 18, '500 14px ui-monospace,monospace', P.textDim, 'center')
+    txt(v.toFixed(v % 1 === 0 ? 0 : 2), tx, scaleY2 + scaleH + 18, '500 14px Inter, sans-serif', P.textDim, 'center')
   })
   return Y + 100 + VGAP
 }
@@ -102,7 +100,7 @@ export function guideHistogramPpm(g: Guide, Y0: number): number {
   const { c, P, isDark, es, W, PAD, VGAP, rr, hl, txt, sectionTitle } = g
   let Y = Y0
   sectionTitle(es ? '② EL HISTOGRAMA + CURVA NORMAL' : '② HISTOGRAM + NORMAL CURVE',
-    es ? 'La foto de tu proceso' : 'The picture of your process', PAD, Y, W - PAD * 2, '105,240,174')
+    es ? 'La foto de tu proceso' : 'The picture of your process', PAD, Y, W - PAD * 2, '89,201,127')
   Y += 56 + 16
 
   const hW = 760, hH = 280
@@ -119,33 +117,33 @@ export function guideHistogramPpm(g: Guide, Y0: number): number {
   annotationItems.forEach((item) => {
     rr(annX, annY, annW, 64, 10, P.surface, P.borderLight, 1)
     rr(annX, annY, 4, 64, [2, 0, 0, 2], item.color, null)
-    txt(item.icon, annX + 14, annY + 22, 'bold 18px monospace', item.color, 'left')
-    c.font = '400 16px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-    wrapText(c, item.text, annW - 36, '400 16px system-ui,sans-serif').forEach((l, i) => c.fillText(l, annX + 36, annY + 20 + i * 20))
+    txt(item.icon, annX + 14, annY + 22, 'bold 18px "Space Grotesk", Inter, sans-serif', item.color, 'left')
+    c.font = '400 16px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
+    wrapText(c, item.text, annW - 36, '400 16px Inter, sans-serif').forEach((l, i) => c.fillText(l, annX + 36, annY + 20 + i * 20))
     annY += 72
   })
   Y += Math.max(hH, annY - Y) + VGAP
 
   sectionTitle(es ? '③ PPM — DEFECTOS ESPERADOS' : '③ PPM — EXPECTED DEFECTS',
-    es ? 'Cuántas piezas defectuosas esperas por millón' : 'How many defective parts to expect per million', PAD, Y, W - PAD * 2, '251,191,36')
+    es ? 'Cuántas piezas defectuosas esperas por millón' : 'How many defective parts to expect per million', PAD, Y, W - PAD * 2, '248,184,79')
   Y += 56 + 16
 
   const ppmCards = [
     { cpk: '< 1.00', ppm: '> 2,700 PPM', icon: '❌', desc: es ? 'Más de 2,700 defectos por millón de piezas. Proceso fuera de control.' : 'More than 2,700 defects per million parts. Out-of-control process.', col: P.red, bg: P.redBg, bd: P.redBd },
     { cpk: '1.00–1.33', ppm: '64–2,700 PPM', icon: '⚠️', desc: es ? 'Proceso marginal. Mejoras necesarias para alcanzar Six Sigma.' : 'Marginal process. Improvements needed to reach Six Sigma.', col: P.yellow, bg: P.yellowBg, bd: P.yellowBd },
     { cpk: '1.33–1.67', ppm: '< 64 PPM', icon: '✅', desc: es ? 'Proceso capaz. Estándar de la industria. Menos de 64 defectos por millón.' : 'Capable process. Industry standard. Less than 64 defects per million.', col: P.green, bg: P.greenBg, bd: P.greenBd },
-    { cpk: '≥ 1.67', ppm: '< 0.6 PPM', icon: '⭐', desc: es ? 'World Class / Six Sigma. Virtualmente cero defectos.' : 'World Class / Six Sigma. Virtually zero defects.', col: P.accent, bg: isDark ? 'rgba(0,229,255,0.08)' : 'rgba(0,103,187,0.07)', bd: isDark ? 'rgba(0,229,255,0.25)' : 'rgba(0,103,187,0.25)' },
+    { cpk: '≥ 1.67', ppm: '< 0.6 PPM', icon: '⭐', desc: es ? 'World Class / Six Sigma. Virtualmente cero defectos.' : 'World Class / Six Sigma. Virtually zero defects.', col: P.accent2, bg: isDark ? 'rgba(114,168,255,0.12)' : 'rgba(79,140,255,0.08)', bd: isDark ? 'rgba(114,168,255,0.38)' : 'rgba(79,140,255,0.30)' },
   ]
   const pW4 = (W - PAD * 2 - 48) / 4
   ppmCards.forEach((p, i) => {
     const px = PAD + i * (pW4 + 16), py = Y
     rr(px, py, pW4, 160, 14, p.bg, p.bd, 2)
-    txt(p.icon, px + pW4 / 2, py + 38, '32px system-ui,sans-serif', p.col, 'center')
-    txt('Cpk ' + p.cpk, px + pW4 / 2, py + 66, '700 17px ui-monospace,monospace', p.col, 'center')
-    txt(p.ppm, px + pW4 / 2, py + 90, '800 22px system-ui,sans-serif', p.col, 'center')
+    txt(p.icon, px + pW4 / 2, py + 38, '32px Inter, sans-serif', p.col, 'center')
+    txt('Cpk ' + p.cpk, px + pW4 / 2, py + 66, '700 17px "Space Grotesk", Inter, sans-serif', p.col, 'center')
+    txt(p.ppm, px + pW4 / 2, py + 90, '800 22px "Space Grotesk", Inter, sans-serif', p.col, 'center')
     hl(px + 16, px + pW4 - 16, py + 102, P.borderLight, 1)
-    c.font = '400 14px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'center'
-    wrapText(c, p.desc, pW4 - 24, '400 14px system-ui,sans-serif').forEach((l, j) => c.fillText(l, px + pW4 / 2, py + 120 + j * 18))
+    c.font = '400 14px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'center'
+    wrapText(c, p.desc, pW4 - 24, '400 14px Inter, sans-serif').forEach((l, j) => c.fillText(l, px + pW4 / 2, py + 120 + j * 18))
   })
   return Y + 160 + VGAP
 }
@@ -190,10 +188,10 @@ export function guideControlCharts(g: Guide, Y0: number): number {
     rr(wx, wy, weW, 110, 12, isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)', rule.color, 1.5)
     rr(wx, wy, 4, 110, [2, 0, 0, 2], rule.color, null)
     rr(wx + 14, wy + 14, 30, 30, 15, rule.color, null)
-    txt(rule.num, wx + 29, wy + 34, '800 17px system-ui,sans-serif', isDark ? '#050d2a' : '#fff', 'center')
-    txt(rule.title, wx + 54, wy + 32, '700 18px system-ui,sans-serif', P.text, 'left', weW - 70)
-    c.font = '400 16px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-    wrapText(c, rule.desc, weW - 60, '400 16px system-ui,sans-serif').forEach((l, j) => c.fillText(l, wx + 54, wy + 56 + j * 20, weW - 70))
+    txt(rule.num, wx + 29, wy + 34, '800 17px "Space Grotesk", Inter, sans-serif', isDark ? '#160c2e' : '#fff', 'center')
+    txt(rule.title, wx + 54, wy + 32, '700 18px "Space Grotesk", Inter, sans-serif', P.text, 'left', weW - 70)
+    c.font = '400 16px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
+    wrapText(c, rule.desc, weW - 60, '400 16px Inter, sans-serif').forEach((l, j) => c.fillText(l, wx + 54, wy + 56 + j * 20, weW - 70))
   })
   return Y + 240 + VGAP
 }

@@ -40,13 +40,13 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
   const toY = (v: number) => oy + pH - ((v - yMin) / (yMax - yMin)) * pH
   const toX = (i: number) => ox + (i / Math.max(validPts.length - 1, 1)) * pW
 
-  c.font = '600 20px ui-monospace,monospace'; c.fillStyle = P.textSub; c.textAlign = 'left'
+  c.font = '600 20px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
   c.fillText(chartLabel, cardX + PAD_L, cardY + 28)
   const badgeText = oocCount > 0 ? `⚠ ${oocCount} ${t('png.ccOOC')}` : `✓ ${t('png.ccInControl')}`
   const badgeColor = oocCount > 0 ? P.red : P.green
   const badgeBg = oocCount > 0 ? P.redBg : P.greenBg
   const badgeBd = oocCount > 0 ? P.redBorder : P.greenBorder
-  c.font = '500 17px ui-monospace,monospace'
+  c.font = '500 17px Inter, sans-serif'
   const labelW = c.measureText(chartLabel).width
   const bw = c.measureText(badgeText).width + 28
   rr(cardX + PAD_L + labelW + 16, cardY + 12, bw, 24, 12, badgeBg, badgeBd, 1.5)
@@ -62,7 +62,7 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
   const sigmaForZone = sigma > 0 ? sigma : (yMax - yMin) / 6
   const u2 = toY(cl + 2 * sigmaForZone), u3 = toY(safeUCL)
   const l2 = toY(cl - 2 * sigmaForZone), l3 = toY(safeLCL > yMin ? safeLCL : yMin + 0.001)
-  c.fillStyle = isDark ? 'rgba(251,191,36,0.06)' : 'rgba(180,83,9,0.04)'
+  c.fillStyle = isDark ? 'rgba(248,184,79,0.06)' : 'rgba(176,112,0,0.04)'
   if (u3 < u2) c.fillRect(ox, u3, pW, Math.max(0, u2 - u3))
   if (l2 < l3) c.fillRect(ox, l2, pW, Math.max(0, l3 - l2))
 
@@ -73,26 +73,26 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
   }
   hLn(toY(safeUCL), P.red, [8, 6], 2.5)
   if (safeLCL > yMin) hLn(toY(safeLCL), P.red, [8, 6], 2.5)
-  hLn(toY(cl + 2 * sigmaForZone), isDark ? 'rgba(251,191,36,0.5)' : 'rgba(180,83,9,0.45)', [4, 5], 1.5)
-  if (cl - 2 * sigmaForZone > yMin) hLn(toY(cl - 2 * sigmaForZone), isDark ? 'rgba(251,191,36,0.5)' : 'rgba(180,83,9,0.45)', [4, 5], 1.5)
-  const clColor = isTop ? (isDark ? 'rgba(0,229,255,0.75)' : 'rgba(0,103,187,0.75)') : (isDark ? 'rgba(79,195,247,0.75)' : 'rgba(33,150,243,0.75)')
+  hLn(toY(cl + 2 * sigmaForZone), isDark ? 'rgba(248,184,79,0.5)' : 'rgba(176,112,0,0.45)', [4, 5], 1.5)
+  if (cl - 2 * sigmaForZone > yMin) hLn(toY(cl - 2 * sigmaForZone), isDark ? 'rgba(248,184,79,0.5)' : 'rgba(176,112,0,0.45)', [4, 5], 1.5)
+  const clColor = isTop ? (isDark ? 'rgba(226,180,255,0.75)' : 'rgba(139,63,217,0.75)') : (isDark ? 'rgba(114,168,255,0.75)' : 'rgba(79,140,255,0.75)')
   hLn(toY(cl), clColor, [], 2.5)
 
-  c.font = 'bold 14px ui-monospace,monospace'; c.textAlign = 'left'
+  c.font = 'bold 14px "Space Grotesk", Inter, sans-serif'; c.textAlign = 'left'
   const uclY2 = toY(safeUCL)
   if (uclY2 > oy && uclY2 < oy + pH) { c.fillStyle = P.red; c.fillText('UCL', ox + pW + 8, uclY2 + 5) }
   const clY2 = toY(cl)
   if (clY2 > oy && clY2 < oy + pH) { c.fillStyle = isTop ? P.accent : P.accent2; c.fillText('CL', ox + pW + 8, clY2 + 5) }
   if (safeLCL > yMin) { const lclY2 = toY(safeLCL); if (lclY2 > oy && lclY2 < oy + pH) { c.fillStyle = P.red; c.fillText('LCL', ox + pW + 8, lclY2 + 5) } }
 
-  c.font = '13px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'right'
+  c.font = '13px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'right'
   for (let g = 0; g <= 4; g++) {
     const v = yMin + (g / 4) * (yMax - yMin)
     const dp = Math.abs(v) < 1 ? 4 : v < 100 ? 3 : 1
     c.fillText(v.toFixed(dp), ox - 10, oy + pH - (g / 4) * pH + 5)
   }
 
-  const lineCol = isTop ? clColor : (isDark ? 'rgba(79,195,247,0.85)' : 'rgba(33,150,243,0.85)')
+  const lineCol = isTop ? clColor : (isDark ? 'rgba(114,168,255,0.85)' : 'rgba(79,140,255,0.85)')
   c.beginPath()
   validPts.forEach((p, i) => { if (i === 0) c.moveTo(toX(i), toY(p.v)); else c.lineTo(toX(i), toY(p.v)) })
   c.strokeStyle = lineCol; c.lineWidth = 2.5; c.lineJoin = 'round'; c.stroke()
@@ -104,13 +104,13 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
     if (isV) {
       c.fillStyle = P.red; c.shadowColor = P.red; c.shadowBlur = 14; c.fill(); c.shadowBlur = 0
       c.beginPath(); c.arc(x, y, 9, 0, Math.PI * 2)
-      c.strokeStyle = isDark ? 'rgba(248,113,113,0.4)' : 'rgba(220,38,38,0.4)'; c.lineWidth = 1.5; c.stroke()
+      c.strokeStyle = isDark ? 'rgba(255,118,131,0.4)' : 'rgba(217,58,76,0.4)'; c.lineWidth = 1.5; c.stroke()
     } else {
       c.fillStyle = lineCol; c.fill()
     }
   })
 
-  c.font = '13px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'center'
+  c.font = '13px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'center'
   const step = Math.max(1, Math.ceil(validPts.length / 16))
   validPts.forEach((_p, i) => {
     if (i % step === 0 || i === validPts.length - 1) c.fillText(String(i + 1), toX(i), oy + pH + 28)
@@ -122,10 +122,10 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
     c.beginPath(); c.setLineDash(dd); c.moveTo(x, y); c.lineTo(x + 22, y)
     c.strokeStyle = col; c.lineWidth = 2; c.stroke(); c.setLineDash([])
   }
-  c.font = '13px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'left'
+  c.font = '13px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'left'
   dot(ox + 10, legY, lineCol); c.fillText(t('cc.cl'), ox + 20, legY + 5)
   dash2(ox + 70, legY, P.red, [6, 4]); c.fillText('UCL/LCL', ox + 98, legY + 5)
-  dash2(ox + 185, legY, isDark ? 'rgba(251,191,36,0.65)' : 'rgba(180,83,9,0.65)', [4, 3])
+  dash2(ox + 185, legY, isDark ? 'rgba(248,184,79,0.65)' : 'rgba(176,112,0,0.65)', [4, 3])
   c.fillText('±2σ', ox + 213, legY + 5)
   dot(ox + 270, legY, P.red); c.fillText(t('png.ccOOC'), ox + 280, legY + 5)
 }

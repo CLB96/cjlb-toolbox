@@ -17,7 +17,7 @@ export function summaryDrawPhoto(
   c.fillStyle = P.accent
   c.beginPath(); c.roundRect(x, y, 3, h, [2, 0, 0, 2]); c.fill()
 
-  c.font = '600 12px ui-monospace,monospace'
+  c.font = '600 12px Inter, sans-serif'
   c.fillStyle = P.textDim; c.textAlign = 'left'
   c.fillText(t('summary.photoTitle'), x + 10, y + 19)
 
@@ -30,10 +30,10 @@ export function summaryDrawPhoto(
     c.strokeStyle = P.borderLight; c.setLineDash([8, 6]); c.lineWidth = 1.5; c.stroke()
     c.setLineDash([]); c.restore()
 
-    c.font = '400 15px system-ui,sans-serif'
+    c.font = '400 15px Inter, sans-serif'
     c.fillStyle = P.textDim; c.textAlign = 'center'
     c.fillText(t('summary.noPhoto'), x + w / 2, y + h / 2 - 8)
-    c.font = '400 12px ui-monospace,monospace'
+    c.font = '400 12px Inter, sans-serif'
     c.fillText(t('summary.noPhotoSub'), x + w / 2, y + h / 2 + 14)
     return
   }
@@ -71,7 +71,7 @@ export function summaryDrawPhoto(
     c.restore()
 
     const fs = Math.max(9, mR - 3)
-    c.font = `700 ${fs}px system-ui,sans-serif`
+    c.font = `700 ${fs}px "Space Grotesk", Inter, sans-serif`
     c.fillStyle = '#fff'; c.textAlign = 'center'
     c.fillText(String(i + 1), mx, my + fs * 0.37)
   })
@@ -114,7 +114,7 @@ export function summaryDrawTable(c: C, x: number, y: number, w: number, h: numbe
   const visibleOrder = order.slice(0, maxRows)
   const clipped = order.length - visibleOrder.length
 
-  c.font = '600 12px ui-monospace,monospace'
+  c.font = '600 12px Inter, sans-serif'
   c.fillStyle = P.textDim; c.textAlign = 'left'
   c.fillText(t('summary.tableTitle'), x + 10, y + 16)
 
@@ -123,7 +123,7 @@ export function summaryDrawTable(c: C, x: number, y: number, w: number, h: numbe
 
   c.fillStyle = P.headerBg; c.fillRect(x, TABLE_START, w, HDR_H)
 
-  c.font = '700 11px ui-monospace,monospace'; c.fillStyle = P.accent
+  c.font = '700 11px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.accent
   let colX = x + PAD_X
   COLS.forEach((col) => {
     c.textAlign = col.align
@@ -134,7 +134,7 @@ export function summaryDrawTable(c: C, x: number, y: number, w: number, h: numbe
   c.beginPath(); c.moveTo(x, TABLE_START + HDR_H); c.lineTo(x + w, TABLE_START + HDR_H)
   c.strokeStyle = P.border; c.lineWidth = 1; c.stroke()
 
-  const FONT_ROW = `${ROW_H > 22 ? '500' : '400'} ${Math.min(11, ROW_H - 6)}px ui-monospace,monospace`
+  const FONT_ROW = `${ROW_H > 22 ? '500' : '400'} ${Math.min(11, ROW_H - 6)}px Inter, sans-serif`
   visibleOrder.forEach((p, i) => {
     const r = p.result
     const ry = TABLE_START + HDR_H + i * ROW_H
@@ -168,7 +168,7 @@ export function summaryDrawTable(c: C, x: number, y: number, w: number, h: numbe
 
   if (clipped > 0) {
     const clipY = TABLE_START + HDR_H + visibleOrder.length * ROW_H + 4
-    c.font = '400 11px ui-monospace,monospace'
+    c.font = '400 11px Inter, sans-serif'
     c.fillStyle = P.textDim; c.textAlign = 'left'
     const moreLabel = lang === 'es'
       ? `… y ${clipped} punto${clipped > 1 ? 's' : ''} más`

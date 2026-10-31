@@ -24,24 +24,24 @@ export function summaryDrawMiniHist(
 
   c.fillStyle = P.headerBg; c.fillRect(bx, by, bw, HDR)
 
-  c.font = '700 11px system-ui,sans-serif'; c.fillStyle = cpkCol
+  c.font = '700 11px "Space Grotesk", Inter, sans-serif'; c.fillStyle = cpkCol
   c.textAlign = 'left'; c.fillText(`#${posNum}`, bx + 6, by + 21)
 
   // Nombre truncado. Quirk original: la comparación usa el texto de respaldo en español, así que en EN sin nombre añade "…".
   const maxNameW = bw - 90
   let displayName = r.pointName || (env.lang === 'es' ? `Punto ${posNum}` : `Point ${posNum}`)
-  c.font = '600 10px ui-monospace,monospace'; c.fillStyle = P.textSub
+  c.font = '600 10px Inter, sans-serif'; c.fillStyle = P.textSub
   while (c.measureText(displayName).width > maxNameW && displayName.length > 3) {
     displayName = displayName.slice(0, -1)
   }
   if (displayName !== (r.pointName || `Punto ${posNum}`)) displayName += '…'
   c.textAlign = 'left'; c.fillText(displayName, bx + 26, by + 21)
 
-  c.font = '700 10px ui-monospace,monospace'; c.fillStyle = cpkCol
+  c.font = '700 10px "Space Grotesk", Inter, sans-serif'; c.fillStyle = cpkCol
   c.textAlign = 'right'; c.fillText(`Cpk ${fmt(r.Cpk)}`, bx + bw - 5, by + 21)
 
   if (!r.data || r.data.length < 2) {
-    c.font = '400 11px system-ui,sans-serif'; c.fillStyle = P.textDim
+    c.font = '400 11px Inter, sans-serif'; c.fillStyle = P.textDim
     c.textAlign = 'center'; c.fillText('Sin datos', bx + bw / 2, by + bh / 2)
     return
   }
@@ -100,7 +100,7 @@ export function summaryDrawMiniHist(
     c.moveTo(px, oy); c.lineTo(px, oy + pH)
     c.strokeStyle = col; c.lineWidth = 1.5; c.stroke()
     c.setLineDash([]); c.restore()
-    c.font = 'bold 8px ui-monospace,monospace'; c.fillStyle = col; c.textAlign = 'center'
+    c.font = 'bold 8px "Space Grotesk", Inter, sans-serif'; c.fillStyle = col; c.textAlign = 'center'
     c.fillText(lbl, px, oy + 9)
   }
   if (r.hasLSL) drawV(r.lsl, P.specLine, 'L')
@@ -114,12 +114,12 @@ export function summaryDrawMiniHist(
     c.setLineDash([]); c.restore()
   }
 
-  c.font = '400 8px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'center'
+  c.font = '400 8px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'center'
   for (let i = 0; i <= 2; i++) {
     const xv = dMin + (i / 2) * (dMax - dMin)
     c.fillText(xv.toFixed(2), ox + (i / 2) * pW, oy + pH + 14)
   }
 
-  c.font = '400 8px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'right'
+  c.font = '400 8px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'right'
   c.fillText(String(maxC), ox - 2, oy + 8)
 }

@@ -1,6 +1,7 @@
 // Resumen Ejecutivo PNG (generateExecutivePNG / _drawPNG del original): 1600 px de ancho, alto calculado.
 import { autoCCType, buildControlChartExport, buildInterpretationPlain, classifyCpk, fmtN, type AnalysisResult, type CCTypeChoice } from '../logic'
 import { cpkColorOf, exportPalette, fmt, localDate, newCanvas, stamp, triggerDownload, type ExportEnv, type ExportPalette } from './exportEnv'
+import { drawBrandMark, paintNebulaBackground } from './nebulaKit'
 import { pngBoxPlot, pngGauge, pngHistogram, pngQQPlot, pngRunChart } from './pngCharts'
 import { pngCCChart } from './pngControlChart'
 
@@ -12,12 +13,12 @@ const GAP = 20
 const COL2 = (W - PAD * 2 - GAP) / 2
 const COL3 = (W - PAD * 2 - GAP * 2) / 3
 const ROW_H = 38
-const FONT_LABEL = '400 21px ui-monospace,monospace'
-const FONT_VALUE = '600 21px ui-monospace,monospace'
-const FONT_HEAD = '600 19px ui-monospace,monospace'
-const FONT_TITLE = '700 24px ui-monospace,monospace'
-const FONT_KPI = '800 56px system-ui,sans-serif'
-const FONT_BADGE = '600 19px ui-monospace,monospace'
+const FONT_LABEL = '400 21px Inter, sans-serif'
+const FONT_VALUE = '600 21px Inter, sans-serif'
+const FONT_HEAD = '600 19px Inter, sans-serif'
+const FONT_TITLE = '700 24px "Space Grotesk", Inter, sans-serif'
+const FONT_KPI = '800 56px "Space Grotesk", Inter, sans-serif'
+const FONT_BADGE = '600 19px Inter, sans-serif'
 const SECTION_HEADER_H = 44
 const CARD_PAD_X = 20
 const CARD_PAD_Y = 16
@@ -30,7 +31,7 @@ const cpkBdOf = (P: ExportPalette, v: number | null) => (v === null ? P.border :
 
 /** Alto de la sección de interpretación: mismas reglas de ajuste de línea que al dibujar. */
 function interpretationHeight(c: CanvasRenderingContext2D, lines: string[]): number {
-  c.font = '400 20px system-ui,sans-serif'
+  c.font = '400 20px Inter, sans-serif'
   let count = 0
   lines.forEach((line) => {
     let row = ''
@@ -92,26 +93,9 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
 
   const { cv, c } = newCanvas(W, H)
 
-  c.fillStyle = P.bg
-  c.fillRect(0, 0, W, H)
-  const m1 = c.createRadialGradient(180, 180, 0, 180, 180, 700)
-  m1.addColorStop(0, isDark ? 'rgba(0,80,180,0.16)' : 'rgba(100,160,255,0.10)')
-  m1.addColorStop(1, 'transparent')
-  c.fillStyle = m1; c.fillRect(0, 0, W, H)
-  const m2 = c.createRadialGradient(W, H * 0.7, 0, W, H * 0.7, 800)
-  m2.addColorStop(0, isDark ? 'rgba(0,160,140,0.08)' : 'rgba(60,120,200,0.06)')
-  m2.addColorStop(1, 'transparent')
-  c.fillStyle = m2; c.fillRect(0, 0, W, H)
+  paintNebulaBackground(c, W, H, isDark)
 
-  // Ruido de grano: aleatorio también en el original (la imagen no es repetible píxel a píxel).
-  c.save(); c.globalAlpha = isDark ? 0.022 : 0.012
-  for (let i = 0; i < 5000; i++) {
-    const v = 100 + Math.random() * 155 | 0
-    c.fillStyle = `rgb(${v},${v},${v + 20})`
-    c.fillRect(Math.random() * W | 0, Math.random() * H | 0, 1, 1)
-  }
-  c.restore()
-
+  const inset = isDark ? 'rgba(7,6,26,0.35)' : 'rgba(255,255,255,0.55)'
   const rRect = (x: number, y: number, w: number, h: number, r2: number | number[], fill: string | CanvasGradient | null, stroke: string | null, sw = 1.5) => {
     c.beginPath(); c.roundRect(x, y, w, h, r2)
     if (fill) { c.fillStyle = fill; c.fill() }
@@ -143,22 +127,18 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   let Y = 0
 
   // HEADER
-  rRect(0, 0, W, H_HEADER, 0, P.headerBg, null)
   hline(0, W, H_HEADER, P.border, 1.5)
-  const lmGrad = c.createLinearGradient(PAD, 18, PAD + 56, 74)
-  lmGrad.addColorStop(0, P.accent); lmGrad.addColorStop(1, P.accent2)
-  rRect(PAD, 18, 56, 56, 13, lmGrad, null)
-  label('C', PAD + 28, 62, '800 33px system-ui,sans-serif', '#050d2a', 'center')
-  label('CapaFlow', PAD + 68, 58, '800 36px system-ui,sans-serif', P.text, 'left')
-  label(t('png.subtitle'), PAD + 68, 82, '400 19px ui-monospace,monospace', P.textSub, 'left')
+  drawBrandMark(c, PAD, 18, 56)
+  label('CapaFlow', PAD + 68, 58, '800 36px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+  label(t('png.subtitle'), PAD + 68, 82, '400 19px Inter, sans-serif', P.textSub, 'left')
   const dateStr = localDate(lang)
-  label(t('png.generatedBy'), W - PAD, 46, '400 17px ui-monospace,monospace', P.textDim, 'right')
-  label(dateStr, W - PAD, 72, '600 19px ui-monospace,monospace', P.textSub, 'right')
+  label(t('png.generatedBy'), W - PAD, 46, '400 17px Inter, sans-serif', P.textDim, 'right')
+  label(dateStr, W - PAD, 72, '600 19px Inter, sans-serif', P.textSub, 'right')
   Y = H_HEADER
 
   // TITLE BANNER
   rRect(PAD, Y + 12, W - PAD * 2, H_BANNER - 12, 12, P.headerBg, P.border, 1.5)
-  label(t('png.title'), W / 2, Y + 12 + (H_BANNER - 12) / 2 + 10, '800 30px system-ui,sans-serif', P.accent, 'center')
+  label(t('png.title'), W / 2, Y + 12 + (H_BANNER - 12) / 2 + 10, '800 30px "Space Grotesk", Inter, sans-serif', P.accent, 'center')
   Y += H_BANNER + VGAP
 
   // 3 KPI CARDS
@@ -192,11 +172,11 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   c.font = FONT_HEAD; c.textAlign = 'left'
   const sigLabelW = c.measureText(t('png.sigmaLevel')).width + 10
   const sigVal = r.sigLvl !== null ? fmt(r.sigLvl, 2) + 'σ' : '—'
-  label(sigVal, sigmaLabelX + sigLabelW + 2, sigmaBarInnerY + 20, '700 21px ui-monospace,monospace', cpkColorOf(P, r.Cpk), 'left')
+  label(sigVal, sigmaLabelX + sigLabelW + 2, sigmaBarInnerY + 20, '700 21px "Space Grotesk", Inter, sans-serif', cpkColorOf(P, r.Cpk), 'left')
   const ppmRX = W - PAD - CARD_PAD_X
-  label(t('png.ppmCpk') + ':  ' + fmtN(r.ppm), ppmRX, sigmaBarInnerY + 18, '500 17px ui-monospace,monospace', P.textSub, 'right')
-  label(t('png.ppmPpk') + ':  ' + fmtN(r.ppmOverall), ppmRX, sigmaBarInnerY + 40, '500 17px ui-monospace,monospace', P.textSub, 'right')
-  c.font = '400 15px ui-monospace,monospace'; c.textAlign = 'center'; c.fillStyle = P.textDim
+  label(t('png.ppmCpk') + ':  ' + fmtN(r.ppm), ppmRX, sigmaBarInnerY + 18, '500 17px Inter, sans-serif', P.textSub, 'right')
+  label(t('png.ppmPpk') + ':  ' + fmtN(r.ppmOverall), ppmRX, sigmaBarInnerY + 40, '500 17px Inter, sans-serif', P.textSub, 'right')
+  c.font = '400 15px Inter, sans-serif'; c.textAlign = 'center'; c.fillStyle = P.textDim
   const ppmLabelW = c.measureText(t('png.ppmCpk') + ':  ' + fmtN(r.ppm)).width + 30
   const barXS = sigmaLabelX + sigLabelW + 80
   const barXE = ppmRX - ppmLabelW - 20
@@ -210,7 +190,7 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
     rRect(barXS, barTY, barTW * pct, 10, 5, bg, null)
   }
   ;['1σ', '2σ', '3σ', '4σ', '5σ', '6σ'].forEach((lbl, i) => {
-    label(lbl, barXS + (i + 1) / 6 * barTW, barTY + 26, '400 14px ui-monospace,monospace', P.textDim, 'center')
+    label(lbl, barXS + (i + 1) / 6 * barTW, barTY + 26, '400 14px Inter, sans-serif', P.textDim, 'center')
   })
   Y += H_SIGMA + VGAP
 
@@ -253,7 +233,7 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   rRect(PAD + COL2 + GAP + CARD_PAD_X, sY, COL2 - CARD_PAD_X * 2, 36, 18, npBg, npBd, 1.5)
   c.beginPath(); c.arc(PAD + COL2 + GAP + CARD_PAD_X + 22, sY + 18, 6, 0, Math.PI * 2)
   c.fillStyle = npColor; c.fill()
-  label(npText, PAD + COL2 + GAP + CARD_PAD_X + 36, sY + 24, '500 16px ui-monospace,monospace', npColor, 'left')
+  label(npText, PAD + COL2 + GAP + CARD_PAD_X + 36, sY + 24, '500 16px Inter, sans-serif', npColor, 'left')
   Y += H_TABLES + VGAP
 
   // INTERPRETATION
@@ -262,7 +242,7 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   let iY = Y + CARD_PAD_Y
   sectionHeader(t('png.interpretation'), PAD + CARD_PAD_X + 4, iY, W - PAD * 2 - CARD_PAD_X * 2)
   iY += SECTION_HEADER_H + 4
-  c.font = '400 20px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
+  c.font = '400 20px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
   interpPlain.forEach((line) => {
     let row = ''
     line.split(' ').forEach((word) => {
@@ -285,11 +265,11 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   let ccY = Y + CARD_PAD_Y
   sectionHeader(t('cc.title'), PAD + CARD_PAD_X + 4, ccY, W - PAD * 2 - CARD_PAD_X * 2)
   ccY += SECTION_HEADER_H + 8
-  rRect(PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD, 10, P.bg, P.borderLight, 1)
+  rRect(PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD, 10, inset, P.borderLight, 1)
   pngCCChart(c, PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD,
     { pts: cc.topPts, cl: cc.topCL, ucl: cc.topUCL, lcl: cc.topLCL, sigma: cc.topSigma, violIdx: cc.topViol, chartLabel: cc.topLabel, oocCount: cc.topOOC, isTop: true }, P, env)
   ccY += H_CC_CARD + GAP
-  rRect(PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD, 10, P.bg, P.borderLight, 1)
+  rRect(PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD, 10, inset, P.borderLight, 1)
   pngCCChart(c, PAD + CARD_PAD_X, ccY, ccW, H_CC_CARD,
     { pts: cc.botPts, cl: cc.botCL, ucl: cc.botUCL, lcl: cc.botLCL, sigma: cc.botSigma, violIdx: cc.botViol, chartLabel: cc.botLabel, oocCount: cc.botOOC, isTop: false }, P, env)
   Y += H_CC + VGAP
@@ -315,9 +295,9 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
 
   // FOOTER
   hline(PAD, W - PAD, Y + 16, P.borderLight, 1)
-  label('CapaFlow', PAD, Y + 48, '700 18px ui-monospace,monospace', P.textDim, 'left')
-  label(t('png.footNote'), W / 2, Y + 48, '400 16px ui-monospace,monospace', P.textDim, 'center')
-  label(dateStr, W - PAD, Y + 48, '400 16px ui-monospace,monospace', P.textDim, 'right')
+  label('CapaFlow', PAD, Y + 48, '700 18px "Space Grotesk", Inter, sans-serif', P.textDim, 'left')
+  label(t('png.footNote'), W / 2, Y + 48, '400 16px Inter, sans-serif', P.textDim, 'center')
+  label(dateStr, W - PAD, Y + 48, '400 16px Inter, sans-serif', P.textDim, 'right')
 
   return cv.toDataURL('image/png', 1.0)
 }

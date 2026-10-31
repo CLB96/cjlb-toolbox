@@ -7,7 +7,7 @@ export function guideCpVsTable(g: Guide, Y0: number): number {
   const { c, P, isDark, es, W, PAD, VGAP, rr, hl, txt, sectionTitle } = g
   let Y = Y0
   sectionTitle(es ? '⑥ DIFERENCIA ENTRE Cp y Cpk' : '⑥ DIFFERENCE BETWEEN Cp and Cpk',
-    es ? 'Por qué ambos importan' : 'Why both matter', PAD, Y, W - PAD * 2, '79,195,247')
+    es ? 'Por qué ambos importan' : 'Why both matter', PAD, Y, W - PAD * 2, '114,168,255')
   Y += 56 + 16
 
   const diffW = (W - PAD * 2 - 24) / 2
@@ -18,7 +18,7 @@ export function guideCpVsTable(g: Guide, Y0: number): number {
   Y += 200 + VGAP
 
   sectionTitle(es ? '⑦ TABLA DE REFERENCIA RÁPIDA' : '⑦ QUICK REFERENCE TABLE',
-    es ? 'Todos los índices de un vistazo' : 'All indices at a glance', PAD, Y, W - PAD * 2, '0,229,255')
+    es ? 'Todos los índices de un vistazo' : 'All indices at a glance', PAD, Y, W - PAD * 2, '226,180,255')
   Y += 56 + 16
 
   const refRows = es ? [
@@ -46,12 +46,12 @@ export function guideCpVsTable(g: Guide, Y0: number): number {
     const ry = Y + ri * rowH
     if (ri % 2 === 1) rr(PAD, ry, tW, rowH, 0, isDark ? 'rgba(255,255,255,0.025)' : 'rgba(30,60,120,0.03)', null)
     if (ri === 0) {
-      rr(PAD, ry, tW, rowH, 0, isDark ? 'rgba(0,229,255,0.08)' : 'rgba(0,103,187,0.06)', null)
+      rr(PAD, ry, tW, rowH, 0, isDark ? 'rgba(226,180,255,0.08)' : 'rgba(139,63,217,0.06)', null)
       hl(PAD, PAD + tW, ry + rowH, P.border, 1.5)
     }
     let cx2 = PAD + 12
     row.forEach((cell, ci) => {
-      const font = ri === 0 ? '700 17px ui-monospace,monospace' : '400 17px ui-monospace,monospace'
+      const font = ri === 0 ? '700 17px "Space Grotesk", Inter, sans-serif' : '400 17px Inter, sans-serif'
       const color2 = ri === 0 ? P.accent : ci === 0 ? P.accent : ci === 4 ? P.green : P.textSub
       txt(cell, cx2, ry + rowH / 2 + 6, font, color2, 'left', cols[ci]! - 8)
       cx2 += cols[ci]!
@@ -116,7 +116,7 @@ export function guideRunQqBox(g: Guide, Y0: number): number {
   guideBoxPlot(c, PAD, Y, boxW, boxH, P, isDark)
   const boxItems = [
     { color: isDark ? '#8b5cf6' : '#6d28d9', text: es ? 'CAJA (BOX) = Rango intercuartílico (IQR = Q3 - Q1). Contiene el 50% central de los datos.' : 'BOX = Interquartile range (IQR = Q3 - Q1). Contains the middle 50% of data.' },
-    { color: isDark ? '#fbbf24' : '#f59e0b', text: es ? 'LÍNEA AMARILLA = Mediana (Q2). Divide los datos en dos mitades iguales.' : 'YELLOW LINE = Median (Q2). Divides data into two equal halves.' },
+    { color: isDark ? '#f8b84f' : '#f59e0b', text: es ? 'LÍNEA AMARILLA = Mediana (Q2). Divide los datos en dos mitades iguales.' : 'YELLOW LINE = Median (Q2). Divides data into two equal halves.' },
     { color: isDark ? '#06b6d4' : '#0891b2', text: es ? 'PUNTO CYAN = Media (x̄). Compara con mediana para detectar asimetría.' : 'CYAN POINT = Mean (x̄). Compare with median to detect skewness.' },
     { color: P.red, text: es ? 'PUNTOS ROJOS = Outliers (valores >1.5×IQR fuera de Q1/Q3). Investigar causas especiales.' : 'RED POINTS = Outliers (values >1.5×IQR outside Q1/Q3). Investigate special causes.' },
   ]
@@ -126,7 +126,7 @@ export function guideRunQqBox(g: Guide, Y0: number): number {
   Y += callout('⚠️', es ? 'Outliers — ¿removerlos o investigarlos?' : 'Outliers — remove or investigate?',
     es ? 'NUNCA remuevas outliers sin investigar. Pueden indicar: (1) Errores de medición → corregir; (2) Causas especiales del proceso → eliminar la causa raíz; (3) Variación natural extrema → aceptar si no hay causa asignable. Documentar siempre la decisión.'
       : 'NEVER remove outliers without investigation. They may indicate: (1) Measurement errors → correct; (2) Process special causes → eliminate root cause; (3) Natural extreme variation → accept if no assignable cause. Always document the decision.',
-    PAD, Y, W - PAD * 2, P.red, isDark ? 'rgba(239,68,68,0.08)' : 'rgba(220,38,38,0.06)', isDark ? 'rgba(239,68,68,0.25)' : 'rgba(220,38,38,0.22)')
+    PAD, Y, W - PAD * 2, P.red, isDark ? 'rgba(255,118,131,0.08)' : 'rgba(217,58,76,0.06)', isDark ? 'rgba(255,118,131,0.25)' : 'rgba(217,58,76,0.22)')
   return Y
 }
 
@@ -136,10 +136,10 @@ export function guideFooter(g: Guide, Y0: number): number {
   let Y = Y0 + 16
   hl(PAD, W - PAD, Y, P.borderLight, 1)
   Y += 20
-  txt('CapaFlow — capaflow.app', PAD, Y + 20, '700 18px ui-monospace,monospace', P.textDim, 'left')
+  txt('CapaFlow — capaflow.app', PAD, Y + 20, '700 18px "Space Grotesk", Inter, sans-serif', P.textDim, 'left')
   txt(es ? 'Esta guía es un resumen educativo basado en la metodología Six Sigma. Para análisis críticos consulta a un Black Belt certificado.' : 'This guide is an educational summary based on Six Sigma methodology. For critical analyses, consult a certified Black Belt.',
-    W / 2, Y + 20, '400 16px ui-monospace,monospace', P.textDim, 'center', W - PAD * 2 - 200)
+    W / 2, Y + 20, '400 16px Inter, sans-serif', P.textDim, 'center', W - PAD * 2 - 200)
   const now = new Date().toLocaleDateString(es ? 'es-MX' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-  txt(now, W - PAD, Y + 20, '400 16px ui-monospace,monospace', P.textDim, 'right')
+  txt(now, W - PAD, Y + 20, '400 16px Inter, sans-serif', P.textDim, 'right')
   return Y
 }

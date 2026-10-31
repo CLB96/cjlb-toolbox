@@ -12,23 +12,23 @@ export interface GuidePalette {
 }
 
 const DARK: GuidePalette = {
-  bg: '#050d2a', bg2: '#0b1840', surface: 'rgba(255,255,255,0.06)',
-  border: 'rgba(255,255,255,0.11)', borderLight: 'rgba(255,255,255,0.06)',
-  text: '#eef2ff', textSub: 'rgba(220,228,255,0.70)', textDim: 'rgba(180,195,255,0.38)',
-  accent: '#00E5FF', accent2: '#4FC3F7', green: '#4ade80', yellow: '#fbbf24', red: '#f87171',
+  bg: '#160c2e', bg2: '#1d1240', surface: 'rgba(255,255,255,0.07)',
+  border: 'rgba(255,255,255,0.16)', borderLight: 'rgba(255,255,255,0.09)',
+  text: '#efe9ff', textSub: '#b3a6d9', textDim: '#9a8fc0',
+  accent: '#e2b4ff', accent2: '#72a8ff', green: '#59c97f', yellow: '#f8b84f', red: '#ff7683',
   orange: '#fb923c', purple: '#a78bfa',
-  greenBg: 'rgba(74,222,128,0.12)', yellowBg: 'rgba(251,191,36,0.12)', redBg: 'rgba(248,113,113,0.12)',
-  greenBd: 'rgba(74,222,128,0.35)', yellowBd: 'rgba(251,191,36,0.35)', redBd: 'rgba(248,113,113,0.35)',
+  greenBg: 'rgba(89,201,127,0.14)', yellowBg: 'rgba(248,184,79,0.14)', redBg: 'rgba(255,118,131,0.14)',
+  greenBd: 'rgba(89,201,127,0.40)', yellowBd: 'rgba(248,184,79,0.40)', redBd: 'rgba(255,118,131,0.40)',
 }
 
 const LIGHT: GuidePalette = {
-  bg: '#eef1f7', bg2: '#e4e8f2', surface: 'rgba(255,255,255,0.80)',
-  border: 'rgba(30,60,120,0.12)', borderLight: 'rgba(30,60,120,0.06)',
-  text: '#1a2340', textSub: '#4a5580', textDim: '#9aa5c0',
-  accent: '#0067bb', accent2: '#2196F3', green: '#16a34a', yellow: '#b45309', red: '#dc2626',
+  bg: '#fbf7ff', bg2: '#f3ecff', surface: 'rgba(255,255,255,0.78)',
+  border: 'rgba(37,26,64,0.14)', borderLight: 'rgba(37,26,64,0.08)',
+  text: '#251a40', textSub: '#6d6290', textDim: '#8a7fae',
+  accent: '#8b3fd9', accent2: '#4f8cff', green: '#2f9e57', yellow: '#b07000', red: '#d93a4c',
   orange: '#c2410c', purple: '#7c3aed',
-  greenBg: 'rgba(22,163,74,0.09)', yellowBg: 'rgba(180,83,9,0.09)', redBg: 'rgba(220,38,38,0.09)',
-  greenBd: 'rgba(22,163,74,0.30)', yellowBd: 'rgba(180,83,9,0.30)', redBd: 'rgba(220,38,38,0.30)',
+  greenBg: 'rgba(47,158,87,0.10)', yellowBg: 'rgba(176,112,0,0.10)', redBg: 'rgba(217,58,76,0.09)',
+  greenBd: 'rgba(47,158,87,0.35)', yellowBd: 'rgba(176,112,0,0.35)', redBd: 'rgba(217,58,76,0.35)',
 }
 
 /** Parte el texto en líneas que caben en maxW (no cambia el texto). */
@@ -75,20 +75,20 @@ export function createGuide(c: C, isDark: boolean, es: boolean, W: number): Guid
     else c.fillText(s, x, y)
   }
   const sectionTitle: Guide['sectionTitle'] = (title, sub, x, y, W2, accent) => {
-    rr(x, y, W2, 56, 12, isDark ? `rgba(${accent || '0,229,255'},0.06)` : 'rgba(255,255,255,0.7)', isDark ? `rgba(${accent || '0,229,255'},0.15)` : P.border, 1.5)
-    rr(x, y, 4, 56, [2, 0, 0, 2], isDark ? `rgba(${accent || '0,229,255'},0.9)` : `rgba(${accent || '0,103,187'},0.9)`, null)
-    txt(title, x + 20, y + 26, '700 24px ui-monospace,monospace', P.text, 'left')
-    if (sub) txt(sub, x + 20, y + 44, '400 16px ui-monospace,monospace', P.textSub, 'left')
+    rr(x, y, W2, 56, 12, isDark ? `rgba(${accent || '226,180,255'},0.06)` : 'rgba(255,255,255,0.7)', isDark ? `rgba(${accent || '226,180,255'},0.15)` : P.border, 1.5)
+    rr(x, y, 4, 56, [2, 0, 0, 2], isDark ? `rgba(${accent || '226,180,255'},0.9)` : `rgba(${accent || '139,63,217'},0.9)`, null)
+    txt(title, x + 20, y + 26, '700 24px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+    if (sub) txt(sub, x + 20, y + 44, '400 16px Inter, sans-serif', P.textSub, 'left')
   }
   const callout: Guide['callout'] = (icon, headline, body, x, y, w, accentCol, bgCol, bdCol) => {
     const lineH = 22
-    const bodyLines = wrapText(c, body, w - 80, '400 18px system-ui,sans-serif')
+    const bodyLines = wrapText(c, body, w - 80, '400 18px Inter, sans-serif')
     const totalH = 20 + 24 + 8 + bodyLines.length * lineH + 20
     rr(x, y, w, totalH, 12, bgCol, bdCol, 1.5)
     rr(x, y, 4, totalH, [2, 0, 0, 2], accentCol, null)
-    txt(icon, x + 20, y + 32, '26px system-ui,sans-serif', accentCol, 'left')
-    txt(headline, x + 50, y + 32, '700 20px system-ui,sans-serif', P.text, 'left')
-    c.font = '400 18px system-ui,sans-serif'; c.fillStyle = P.textSub
+    txt(icon, x + 20, y + 32, '26px Inter, sans-serif', accentCol, 'left')
+    txt(headline, x + 50, y + 32, '700 20px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+    c.font = '400 18px Inter, sans-serif'; c.fillStyle = P.textSub
     bodyLines.forEach((line, i) => { c.fillText(line, x + 50, y + 58 + i * lineH) })
     return totalH + 12
   }
@@ -97,8 +97,8 @@ export function createGuide(c: C, isDark: boolean, es: boolean, W: number): Guid
     items.forEach((item) => {
       rr(x, yy, w, cardH, 10, P.surface, P.borderLight, 1)
       rr(x, yy, 4, cardH, [2, 0, 0, 2], item.color, null)
-      c.font = '400 16px system-ui,sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-      wrapText(c, item.text, w - textW, '400 16px system-ui,sans-serif').forEach((l, i) => c.fillText(l, x + 16, yy + 18 + i * 20))
+      c.font = '400 16px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
+      wrapText(c, item.text, w - textW, '400 16px Inter, sans-serif').forEach((l, i) => c.fillText(l, x + 16, yy + 18 + i * 20))
       yy += step
     })
     return yy

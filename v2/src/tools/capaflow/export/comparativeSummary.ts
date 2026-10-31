@@ -1,5 +1,6 @@
 // Resumen comparativo (generateComparativeSummary): una o más páginas PNG de 2400x1440.
 import { exportPalette, fontsReady, loadImage, localDate, newCanvas, triggerDownload, type ExportEnv, type ProjectExportData } from './exportEnv'
+import { drawBrandMark, paintNebulaBackground } from './nebulaKit'
 import { summaryDrawMiniHist } from './summaryMiniHist'
 import { summaryDrawPhoto, summaryDrawTable } from './summaryParts'
 
@@ -54,36 +55,27 @@ export async function buildSummaryPages(data: ProjectExportData, env: ExportEnv)
     const CELL_H = Math.min(Math.floor(CONTENT_H / rows), CELL_W)
     const { cv, c } = newCanvas(W, H)
 
-    c.fillStyle = P.bg; c.fillRect(0, 0, W, H)
-    const m1 = c.createRadialGradient(300, 300, 0, 300, 300, 900)
-    m1.addColorStop(0, isDark ? 'rgba(0,80,180,0.13)' : 'rgba(100,160,255,0.08)')
-    m1.addColorStop(1, 'transparent')
-    c.fillStyle = m1; c.fillRect(0, 0, W, H)
+    paintNebulaBackground(c, W, H, isDark)
 
-    c.fillStyle = P.headerBg; c.fillRect(0, 0, W, HEADER_H)
     c.beginPath(); c.moveTo(0, HEADER_H); c.lineTo(W, HEADER_H)
     c.strokeStyle = P.border; c.lineWidth = 1.5; c.stroke()
 
-    const lg = c.createLinearGradient(PAD, 10, PAD + 48, 58)
-    lg.addColorStop(0, P.accent); lg.addColorStop(1, P.accent2)
-    c.beginPath(); c.roundRect(PAD, 10, 48, 48, 10); c.fillStyle = lg; c.fill()
-    c.font = '800 26px system-ui,sans-serif'; c.fillStyle = '#050d2a'
-    c.textAlign = 'center'; c.fillText('C', PAD + 24, 44)
+    drawBrandMark(c, PAD, 10, 48)
 
-    c.font = '700 26px system-ui,sans-serif'; c.fillStyle = P.text
+    c.font = '700 26px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.text
     c.textAlign = 'left'; c.fillText('CapaFlow', PAD + 62, 38)
-    c.font = '400 13px ui-monospace,monospace'; c.fillStyle = P.textSub
+    c.font = '400 13px Inter, sans-serif'; c.fillStyle = P.textSub
     c.fillText(t('summary.subtitle'), PAD + 62, 57)
 
     c.textAlign = 'right'
-    c.font = '500 13px ui-monospace,monospace'; c.fillStyle = P.textDim
+    c.font = '500 13px Inter, sans-serif'; c.fillStyle = P.textDim
     c.fillText(dateStr, W - PAD, 34)
     if (pages > 1) {
-      c.font = '700 13px ui-monospace,monospace'; c.fillStyle = P.accent
+      c.font = '700 13px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.accent
       c.fillText(`${t('summary.page')} ${pageIdx + 1} ${t('summary.page.of')} ${pages}`, W - PAD, 55)
     }
     if (projName) {
-      c.font = '600 13px ui-monospace,monospace'; c.fillStyle = P.textSub
+      c.font = '600 13px Inter, sans-serif'; c.fillStyle = P.textSub
       c.textAlign = 'center'; c.fillText(t('summary.project') + ' ' + projName, W / 2, 42)
     }
 
@@ -99,7 +91,7 @@ export async function buildSummaryPages(data: ProjectExportData, env: ExportEnv)
     const footY = H - FOOTER_H - 4
     c.beginPath(); c.moveTo(PAD, footY); c.lineTo(W - PAD, footY)
     c.strokeStyle = P.borderLight; c.lineWidth = 1; c.stroke()
-    c.font = '400 12px ui-monospace,monospace'; c.fillStyle = P.textDim
+    c.font = '400 12px Inter, sans-serif'; c.fillStyle = P.textDim
     const es = lang === 'es'
     const ptLabel = es
       ? `${order.length} punto${order.length !== 1 ? 's' : ''} de medición`

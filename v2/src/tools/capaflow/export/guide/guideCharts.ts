@@ -15,30 +15,30 @@ export function guideRunChart(c: C, ox2: number, oy2: number, W2: number, H2: nu
   const toY = (v: number) => oy2 + pad.t + pH - ((v - yMin) / (yMax - yMin)) * pH
   const medY = toY(med)
 
-  c.fillStyle = isDark ? 'rgba(74,222,128,0.05)' : 'rgba(22,163,74,0.04)'; c.fillRect(ox2 + pad.l, oy2 + pad.t, pW, Math.max(0, medY - oy2 - pad.t))
-  c.fillStyle = isDark ? 'rgba(248,113,113,0.05)' : 'rgba(220,38,38,0.04)'; c.fillRect(ox2 + pad.l, medY, pW, Math.max(0, oy2 + pad.t + pH - medY))
+  c.fillStyle = isDark ? 'rgba(89,201,127,0.05)' : 'rgba(47,158,87,0.04)'; c.fillRect(ox2 + pad.l, oy2 + pad.t, pW, Math.max(0, medY - oy2 - pad.t))
+  c.fillStyle = isDark ? 'rgba(255,118,131,0.05)' : 'rgba(217,58,76,0.04)'; c.fillRect(ox2 + pad.l, medY, pW, Math.max(0, oy2 + pad.t + pH - medY))
 
   c.beginPath(); c.setLineDash([6, 4]); c.moveTo(ox2 + pad.l, medY); c.lineTo(ox2 + pad.l + pW, medY)
   c.strokeStyle = P.yellow; c.lineWidth = 2.5; c.shadowColor = P.yellow; c.shadowBlur = 6; c.stroke(); c.shadowBlur = 0; c.setLineDash([])
-  c.font = 'bold 13px ui-monospace,monospace'; c.fillStyle = P.yellow; c.textAlign = 'right'
+  c.font = 'bold 13px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.yellow; c.textAlign = 'right'
   c.fillText('Md=' + med.toFixed(2), ox2 + pad.l - 5, medY + 4)
 
   for (let i = 1; i < N; i++) {
     c.beginPath(); c.moveTo(toX(i - 1), toY(pts[i - 1]!)); c.lineTo(toX(i), toY(pts[i]!))
-    c.strokeStyle = pts[i - 1]! >= med ? (isDark ? 'rgba(74,222,128,0.7)' : 'rgba(22,163,74,0.75)') : (isDark ? 'rgba(248,113,113,0.7)' : 'rgba(220,38,38,0.75)')
+    c.strokeStyle = pts[i - 1]! >= med ? (isDark ? 'rgba(89,201,127,0.7)' : 'rgba(47,158,87,0.75)') : (isDark ? 'rgba(255,118,131,0.7)' : 'rgba(217,58,76,0.75)')
     c.lineWidth = 2; c.stroke()
   }
 
   pts.forEach((p, i) => {
     c.beginPath(); c.arc(toX(i), toY(p), 4.5, 0, Math.PI * 2)
-    c.fillStyle = p >= med ? (isDark ? '#4ade80' : 'rgba(22,163,74,0.9)') : (isDark ? '#f87171' : 'rgba(220,38,38,0.9)'); c.fill()
+    c.fillStyle = p >= med ? (isDark ? '#59c97f' : 'rgba(47,158,87,0.9)') : (isDark ? '#ff7683' : 'rgba(217,58,76,0.9)'); c.fill()
   })
 
   const ax0 = toX(2), ax1 = toX(N - 2), ay = oy2 + pad.t + 12
   c.beginPath(); c.moveTo(ax0, ay); c.lineTo(ax1, ay)
   c.strokeStyle = P.red; c.lineWidth = 2; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([])
   c.beginPath(); c.moveTo(ax1 - 10, ay - 5); c.lineTo(ax1, ay); c.lineTo(ax1 - 10, ay + 5); c.strokeStyle = P.red; c.lineWidth = 2; c.stroke()
-  c.font = 'bold 13px system-ui,sans-serif'; c.fillStyle = P.red; c.textAlign = 'center'
+  c.font = 'bold 13px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.red; c.textAlign = 'center'
   c.fillText(es ? 'TENDENCIA (DRIFT) ⚠' : 'DRIFT TREND ⚠', (ax0 + ax1) / 2, ay - 6)
 }
 
@@ -70,23 +70,23 @@ export function guideQQPlot(c: C, ox2: number, oy2: number, W2: number, H2: numb
 
   c.beginPath(); c.setLineDash([7, 5])
   c.moveTo(toX(xMin - xPad), toY(xMin - xPad)); c.lineTo(toX(xMax + xPad), toY(xMax + xPad))
-  const lineCol = isDark ? 'rgba(74,222,128,0.8)' : 'rgba(22,163,74,0.8)'
+  const lineCol = isDark ? 'rgba(89,201,127,0.8)' : 'rgba(47,158,87,0.8)'
   c.strokeStyle = lineCol; c.lineWidth = 2.5
   c.shadowColor = lineCol; c.shadowBlur = 8; c.stroke(); c.shadowBlur = 0; c.setLineDash([])
-  c.font = 'bold 13px ui-monospace,monospace'; c.fillStyle = lineCol; c.textAlign = 'left'
+  c.font = 'bold 13px "Space Grotesk", Inter, sans-serif'; c.fillStyle = lineCol; c.textAlign = 'left'
   c.fillText(es ? 'Línea Normal' : 'Normal Line', ox2 + pad.l + pW * 0.4, oy2 + pad.t + 22)
 
   demoData.forEach((p) => {
     const x = toX(p.obs), y = toY(p.th), yId = toY(p.obs)
     const dev = Math.abs(y - yId), maxDev = pH * 0.22, t2 = Math.min(dev / maxDev, 1)
     let col: string
-    if (t2 < 0.4) col = isDark ? 'rgba(74,222,128,0.9)' : 'rgba(22,163,74,0.85)'
-    else if (t2 < 0.75) col = isDark ? 'rgba(251,191,36,0.9)' : 'rgba(180,83,9,0.85)'
-    else col = isDark ? 'rgba(248,113,113,0.9)' : 'rgba(220,38,38,0.85)'
+    if (t2 < 0.4) col = isDark ? 'rgba(89,201,127,0.9)' : 'rgba(47,158,87,0.85)'
+    else if (t2 < 0.75) col = isDark ? 'rgba(248,184,79,0.9)' : 'rgba(176,112,0,0.85)'
+    else col = isDark ? 'rgba(255,118,131,0.9)' : 'rgba(217,58,76,0.85)'
     c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fillStyle = col; c.shadowColor = col; c.shadowBlur = 5; c.fill(); c.shadowBlur = 0
   })
 
-  c.font = '12px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'center'
+  c.font = '12px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'center'
   c.fillText(es ? 'Datos Obs. →' : 'Observed →', ox2 + pad.l + pW / 2, oy2 + pad.t + pH + 28)
   c.save(); c.translate(ox2 + pad.l - 38, oy2 + pad.t + pH / 2); c.rotate(-Math.PI / 2)
   c.fillText(es ? 'Cuantiles Teóricos' : 'Theoretical Quantiles', 0, 0); c.restore()
@@ -94,7 +94,7 @@ export function guideQQPlot(c: C, ox2: number, oy2: number, W2: number, H2: numb
   const outlierX = toX(demoData[demoN - 1]!.obs), outlierY = toY(demoData[demoN - 1]!.th)
   c.beginPath(); c.moveTo(outlierX, outlierY); c.lineTo(outlierX + 40, outlierY - 30)
   c.strokeStyle = P.red; c.lineWidth = 1.5; c.stroke()
-  c.font = 'bold 13px system-ui,sans-serif'; c.fillStyle = P.red; c.textAlign = 'left'
+  c.font = 'bold 13px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.red; c.textAlign = 'left'
   c.fillText(es ? 'Cola pesada' : 'Heavy tail', outlierX + 44, outlierY - 26)
 }
 
@@ -116,7 +116,7 @@ export function guideBoxPlot(c: C, ox2: number, oy2: number, W2: number, H2: num
 
   const drawSection = (yTop: number, label: string) => {
     const centerY = yTop + sectionH / 2, boxH = sectionH * 0.35
-    c.font = 'bold 14px ui-monospace,monospace'; c.fillStyle = P.text; c.textAlign = 'center'
+    c.font = 'bold 14px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.text; c.textAlign = 'center'
     c.fillText(label, ox2 + pad.l / 2, centerY + 5)
     c.strokeStyle = P.borderLight; c.lineWidth = 0.8
     for (let g = 0; g <= 4; g++) { const x = ox2 + pad.l + (g / 4) * plotW; c.beginPath(); c.moveTo(x, yTop); c.lineTo(x, yTop + sectionH); c.stroke() }
@@ -136,7 +136,7 @@ export function guideBoxPlot(c: C, ox2: number, oy2: number, W2: number, H2: num
     c.fillStyle = gradient; c.fillRect(q1X, centerY - boxH / 2, boxWidth, boxH)
     c.strokeStyle = isDark ? 'rgba(139,92,246,0.95)' : 'rgba(109,40,217,0.95)'; c.lineWidth = 2; c.strokeRect(q1X, centerY - boxH / 2, boxWidth, boxH)
     c.beginPath(); c.moveTo(q2X, centerY - boxH / 2); c.lineTo(q2X, centerY + boxH / 2)
-    c.strokeStyle = isDark ? '#fbbf24' : '#f59e0b'; c.lineWidth = 2.5; c.stroke()
+    c.strokeStyle = isDark ? '#f8b84f' : '#f59e0b'; c.lineWidth = 2.5; c.stroke()
     const meanX = toX(mean); c.beginPath(); c.arc(meanX, centerY, 4, 0, Math.PI * 2)
     c.fillStyle = isDark ? '#06b6d4' : '#0891b2'; c.fill()
     outliers.forEach((v) => { const px = toX(v); c.beginPath(); c.arc(px, centerY, 5, 0, Math.PI * 2); c.fillStyle = P.red; c.fill() })
@@ -147,9 +147,9 @@ export function guideBoxPlot(c: C, ox2: number, oy2: number, W2: number, H2: num
   drawSection(oy2 + pad.t + (sectionH + gap) * 2, 'Specs')
 
   c.strokeStyle = P.textDim; c.lineWidth = 1; c.beginPath(); c.moveTo(ox2 + pad.l, oy2 + H2 - pad.b); c.lineTo(ox2 + W2 - pad.r, oy2 + H2 - pad.b); c.stroke()
-  c.font = '11px ui-monospace,monospace'; c.fillStyle = P.textDim; c.textAlign = 'center'
+  c.font = '11px Inter, sans-serif'; c.fillStyle = P.textDim; c.textAlign = 'center'
   for (let g = 0; g <= 4; g++) { const v = xMin + (g / 4) * (xMax - xMin); c.fillText(v.toFixed(1), ox2 + pad.l + (g / 4) * plotW, oy2 + H2 - pad.b + 14) }
-  c.fillStyle = P.red; c.font = 'bold 11px ui-monospace,monospace'
+  c.fillStyle = P.red; c.font = 'bold 11px "Space Grotesk", Inter, sans-serif'
   c.fillText('LSL', toX(lsl), oy2 + H2 - pad.b + 26)
   c.fillText('USL', toX(usl), oy2 + H2 - pad.b + 26)
 }
@@ -164,7 +164,7 @@ export function guideHistogram(c: C, ox2: number, oy2: number, W2: number, H2: n
 
   const toLX = (v: number) => ox2 + pad.l + ((v - dMin) / (dMax - dMin)) * pW
   const lslX = toLX(lsl), uslX = toLX(usl)
-  c.fillStyle = isDark ? 'rgba(248,113,113,0.12)' : 'rgba(220,38,38,0.08)'
+  c.fillStyle = isDark ? 'rgba(255,118,131,0.12)' : 'rgba(217,58,76,0.08)'
   c.fillRect(ox2 + pad.l, oy2 + pad.t, lslX - ox2 - pad.l, pH)
   c.fillRect(uslX, oy2 + pad.t, ox2 + pad.l + pW - uslX, pH)
 
@@ -175,8 +175,8 @@ export function guideHistogram(c: C, ox2: number, oy2: number, W2: number, H2: n
     const bx = ox2 + pad.l + (i / bins) * pW, bw = pW / bins - 1.5, bh = (h / maxH) * pH * 0.85
     const by = oy2 + pad.t + pH - bh
     const g = c.createLinearGradient(0, by, 0, by + bh)
-    if (isDark) { g.addColorStop(0, 'rgba(79,195,247,0.75)'); g.addColorStop(1, 'rgba(0,229,255,0.15)') }
-    else { g.addColorStop(0, 'rgba(33,150,243,0.65)'); g.addColorStop(1, 'rgba(100,160,240,0.12)') }
+    if (isDark) { g.addColorStop(0, 'rgba(114,168,255,0.75)'); g.addColorStop(1, 'rgba(226,180,255,0.15)') }
+    else { g.addColorStop(0, 'rgba(79,140,255,0.65)'); g.addColorStop(1, 'rgba(100,160,240,0.12)') }
     c.fillStyle = g; c.beginPath(); c.roundRect(bx, by, bw, bh, [2, 2, 0, 0]); c.fill()
   })
 
@@ -188,19 +188,19 @@ export function guideHistogram(c: C, ox2: number, oy2: number, W2: number, H2: n
     if (i === 0) c.moveTo(px, py)
     else c.lineTo(px, py)
   }
-  const curveCol = isDark ? 'rgba(105,240,174,0.9)' : 'rgba(22,163,74,0.9)'
+  const curveCol = isDark ? 'rgba(89,201,127,0.9)' : 'rgba(47,158,87,0.9)'
   c.strokeStyle = curveCol
   c.lineWidth = 3; c.shadowColor = curveCol; c.shadowBlur = 8; c.stroke(); c.shadowBlur = 0
 
   const drawSpecLine = (val: number, lbl: string) => {
     const px = toLX(val)
     c.beginPath(); c.moveTo(px, oy2 + pad.t); c.lineTo(px, oy2 + pad.t + pH)
-    const col = isDark ? 'rgba(239,68,68,0.9)' : 'rgba(185,28,28,0.85)'
+    const col = isDark ? 'rgba(255,118,131,0.9)' : 'rgba(217,58,76,0.85)'
     c.strokeStyle = col; c.lineWidth = 2.5
     c.shadowColor = col; c.shadowBlur = 8; c.stroke(); c.shadowBlur = 0
-    c.font = 'bold 13px ui-monospace,monospace'
+    c.font = 'bold 13px "Space Grotesk", Inter, sans-serif'
     const bw = c.measureText(lbl).width + 10
-    c.fillStyle = isDark ? 'rgba(239,68,68,0.75)' : 'rgba(185,28,28,0.80)'
+    c.fillStyle = isDark ? 'rgba(255,118,131,0.75)' : 'rgba(217,58,76,0.80)'
     c.beginPath(); c.roundRect(px - bw / 2, oy2 + 4, bw, 18, 4); c.fill()
     c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText(lbl, px, oy2 + 16)
   }
@@ -208,8 +208,8 @@ export function guideHistogram(c: C, ox2: number, oy2: number, W2: number, H2: n
 
   const mpx = toLX(mu)
   c.beginPath(); c.setLineDash([4, 3]); c.moveTo(mpx, oy2 + pad.t); c.lineTo(mpx, oy2 + pad.t + pH)
-  c.strokeStyle = isDark ? 'rgba(79,195,247,0.8)' : 'rgba(33,150,243,0.8)'; c.lineWidth = 2; c.stroke(); c.setLineDash([])
-  c.font = 'bold 12px monospace'; c.fillStyle = isDark ? 'rgba(79,195,247,0.9)' : 'rgba(33,150,243,0.9)'; c.textAlign = 'center'
+  c.strokeStyle = isDark ? 'rgba(114,168,255,0.8)' : 'rgba(79,140,255,0.8)'; c.lineWidth = 2; c.stroke(); c.setLineDash([])
+  c.font = 'bold 12px "Space Grotesk", Inter, sans-serif'; c.fillStyle = isDark ? 'rgba(114,168,255,0.9)' : 'rgba(79,140,255,0.9)'; c.textAlign = 'center'
   c.fillText('x̄', mpx, oy2 + pad.t + pH + 18)
 }
 
@@ -223,7 +223,7 @@ export function guideCCChart(c: C, ox2: number, oy2: number, W2: number, H2: num
   const toX = (i: number) => ox2 + pad.l + (i / (n - 1)) * pW
   const toY = (v: number) => oy2 + pad.t + pH - ((v - yMin) / (yMax - yMin)) * pH
 
-  c.fillStyle = isDark ? 'rgba(251,191,36,0.05)' : 'rgba(180,83,9,0.04)'
+  c.fillStyle = isDark ? 'rgba(248,184,79,0.05)' : 'rgba(176,112,0,0.04)'
   c.fillRect(ox2 + pad.l, toY(cl + 2 * sigma), pW, toY(cl + sigma) - toY(cl + 2 * sigma))
   c.fillRect(ox2 + pad.l, toY(cl - sigma), pW, toY(cl - 2 * sigma) - toY(cl - sigma))
 
@@ -231,19 +231,19 @@ export function guideCCChart(c: C, ox2: number, oy2: number, W2: number, H2: num
     c.beginPath(); c.setLineDash(dash); c.moveTo(ox2 + pad.l, y); c.lineTo(ox2 + pad.l + pW, y)
     c.strokeStyle = col; c.lineWidth = lw; c.stroke(); c.setLineDash([])
   }
-  hl2(toY(ucl), isDark ? 'rgba(248,113,113,0.85)' : 'rgba(185,28,28,0.85)', [8, 5], 2.5)
-  hl2(toY(lcl), isDark ? 'rgba(248,113,113,0.85)' : 'rgba(185,28,28,0.85)', [8, 5], 2.5)
-  hl2(toY(cl + 2 * sigma), isDark ? 'rgba(251,191,36,0.5)' : 'rgba(180,83,9,0.5)', [4, 4], 1.5)
-  hl2(toY(cl - 2 * sigma), isDark ? 'rgba(251,191,36,0.5)' : 'rgba(180,83,9,0.5)', [4, 4], 1.5)
-  hl2(toY(cl), isDark ? 'rgba(0,229,255,0.75)' : 'rgba(0,103,187,0.75)', [], 2.5)
+  hl2(toY(ucl), isDark ? 'rgba(255,118,131,0.85)' : 'rgba(217,58,76,0.85)', [8, 5], 2.5)
+  hl2(toY(lcl), isDark ? 'rgba(255,118,131,0.85)' : 'rgba(217,58,76,0.85)', [8, 5], 2.5)
+  hl2(toY(cl + 2 * sigma), isDark ? 'rgba(248,184,79,0.5)' : 'rgba(176,112,0,0.5)', [4, 4], 1.5)
+  hl2(toY(cl - 2 * sigma), isDark ? 'rgba(248,184,79,0.5)' : 'rgba(176,112,0,0.5)', [4, 4], 1.5)
+  hl2(toY(cl), isDark ? 'rgba(226,180,255,0.75)' : 'rgba(139,63,217,0.75)', [], 2.5)
 
-  c.font = 'bold 12px ui-monospace,monospace'; c.fillStyle = isDark ? 'rgba(248,113,113,0.8)' : 'rgba(185,28,28,0.8)'; c.textAlign = 'left'
+  c.font = 'bold 12px "Space Grotesk", Inter, sans-serif'; c.fillStyle = isDark ? 'rgba(255,118,131,0.8)' : 'rgba(217,58,76,0.8)'; c.textAlign = 'left'
   c.fillText('UCL', ox2 + pad.l + pW + 4, toY(ucl) + 4)
   c.fillText('LCL', ox2 + pad.l + pW + 4, toY(lcl) + 4)
-  c.fillStyle = isDark ? 'rgba(0,229,255,0.8)' : 'rgba(0,103,187,0.8)'
+  c.fillStyle = isDark ? 'rgba(226,180,255,0.8)' : 'rgba(139,63,217,0.8)'
   c.fillText('CL', ox2 + pad.l + pW + 4, toY(cl) + 4)
 
-  const lineCol = isDark ? 'rgba(79,195,247,0.85)' : 'rgba(33,150,243,0.85)'
+  const lineCol = isDark ? 'rgba(114,168,255,0.85)' : 'rgba(79,140,255,0.85)'
   c.beginPath(); pts.forEach((p, i) => { if (i === 0) c.moveTo(toX(i), toY(p)); else c.lineTo(toX(i), toY(p)) })
   c.strokeStyle = lineCol; c.lineWidth = 2.5; c.lineJoin = 'round'; c.stroke()
 
@@ -253,7 +253,7 @@ export function guideCCChart(c: C, ox2: number, oy2: number, W2: number, H2: num
     c.beginPath(); c.arc(x, y, isV ? 7 : 4, 0, Math.PI * 2)
     if (isV) {
       c.fillStyle = P.red; c.shadowColor = P.red; c.shadowBlur = 12; c.fill(); c.shadowBlur = 0
-      c.beginPath(); c.arc(x, y, 11, 0, Math.PI * 2); c.strokeStyle = 'rgba(248,113,113,0.3)'; c.lineWidth = 2; c.stroke()
+      c.beginPath(); c.arc(x, y, 11, 0, Math.PI * 2); c.strokeStyle = 'rgba(255,118,131,0.3)'; c.lineWidth = 2; c.stroke()
     } else { c.fillStyle = lineCol; c.fill() }
   })
 }
@@ -266,7 +266,7 @@ export function guideDistComp(c: C, ox2: number, oy2: number, W2: number, H2: nu
   const toX = (v: number) => ox2 + pad.l + ((v - dMin) / (dMax - dMin)) * pW
   const lslX = toX(lsl), uslX = toX(usl)
 
-  c.fillStyle = isDark ? 'rgba(248,113,113,0.1)' : 'rgba(220,38,38,0.07)'
+  c.fillStyle = isDark ? 'rgba(255,118,131,0.1)' : 'rgba(217,58,76,0.07)'
   c.fillRect(ox2 + pad.l, oy2 + pad.t, lslX - ox2 - pad.l, pH)
   c.fillRect(uslX, oy2 + pad.t, ox2 + pad.l + pW - uslX, pH)
 
@@ -279,20 +279,20 @@ export function guideDistComp(c: C, ox2: number, oy2: number, W2: number, H2: nu
   pts2.forEach((p) => c.lineTo(p.x, p.y))
   c.lineTo(pts2[pts2.length - 1]!.x, oy2 + pad.t + pH); c.closePath()
   const g = c.createLinearGradient(0, oy2 + pad.t, 0, oy2 + pad.t + pH)
-  g.addColorStop(0, centered ? (isDark ? 'rgba(74,222,128,0.45)' : 'rgba(22,163,74,0.35)') : (isDark ? 'rgba(251,191,36,0.35)' : 'rgba(180,83,9,0.30)'))
+  g.addColorStop(0, centered ? (isDark ? 'rgba(89,201,127,0.45)' : 'rgba(47,158,87,0.35)') : (isDark ? 'rgba(248,184,79,0.35)' : 'rgba(176,112,0,0.30)'))
   g.addColorStop(1, 'transparent')
   c.fillStyle = g; c.fill()
   c.beginPath(); pts2.forEach((p, i) => { if (i === 0) c.moveTo(p.x, p.y); else c.lineTo(p.x, p.y) })
-  c.strokeStyle = centered ? (isDark ? P.green : 'rgba(22,163,74,0.9)') : (isDark ? P.yellow : 'rgba(180,83,9,0.9)')
+  c.strokeStyle = centered ? (isDark ? P.green : 'rgba(47,158,87,0.9)') : (isDark ? P.yellow : 'rgba(176,112,0,0.9)')
   c.lineWidth = 2.5; c.stroke()
 
   ;[lsl, usl].forEach((v, i) => {
     const px = toX(v)
     c.beginPath(); c.moveTo(px, oy2 + pad.t); c.lineTo(px, oy2 + pad.t + pH)
-    const col = isDark ? 'rgba(248,113,113,0.85)' : 'rgba(185,28,28,0.85)'
+    const col = isDark ? 'rgba(255,118,131,0.85)' : 'rgba(217,58,76,0.85)'
     c.strokeStyle = col; c.lineWidth = 2
     c.shadowColor = col; c.shadowBlur = 6; c.stroke(); c.shadowBlur = 0
-    c.font = 'bold 12px monospace'; c.fillStyle = 'rgba(248,113,113,0.9)'; c.textAlign = 'center'
+    c.font = 'bold 12px "Space Grotesk", Inter, sans-serif'; c.fillStyle = 'rgba(255,118,131,0.9)'; c.textAlign = 'center'
     c.fillText(i === 0 ? 'LSL' : 'USL', px, oy2 + pad.t - 6)
   })
 
@@ -300,7 +300,7 @@ export function guideDistComp(c: C, ox2: number, oy2: number, W2: number, H2: nu
   const lblCol = centered ? P.green : P.yellow
   const lblBg = centered ? P.greenBg : P.yellowBg
   const lblBd = centered ? P.greenBd : P.yellowBd
-  c.font = '600 15px ui-monospace,monospace'
+  c.font = '600 15px Inter, sans-serif'
   const lw = c.measureText(lbl).width + 20
   const lx = ox2 + W2 / 2 - lw / 2
   c.beginPath(); c.roundRect(lx, oy2 + 8, lw, 24, 12); c.fillStyle = lblBg; c.fill()

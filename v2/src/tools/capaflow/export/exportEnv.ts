@@ -1,7 +1,9 @@
-// Entorno común de las exportaciones de CapaFlow. Las salidas conservan el aspecto ORIGINAL (paleta propia, sin Nebulosa).
+// Entorno común de las exportaciones de CapaFlow. Las salidas usan el diseño Nebulosa del toolbox (petición del dueño, 2026-10-30);
+// el contenido (datos, textos, secciones) es el del original, solo cambia el aspecto.
 import { translate, type CapaKey } from '../i18n'
 import type { Lang } from '../logic'
 import type { CapaPoint, PhotoMarker } from '../store'
+import { NEBULA_FONT_SPECS } from './nebulaKit'
 
 export interface ExportEnv {
   lang: Lang
@@ -21,7 +23,7 @@ export interface ProjectExportData {
   projectName: string
 }
 
-/** Paleta del original (`_drawPNG`, `generateComparativeSummary`): idéntica en ambas salidas. */
+/** Paleta Nebulosa (oscura/clara) compartida por el resumen ejecutivo, el resumen comparativo y el plano. */
 export interface ExportPalette {
   bg: string
   surface: string
@@ -54,31 +56,31 @@ export interface ExportPalette {
 }
 
 const DARK: ExportPalette = {
-  bg: '#050d2a', surface: '#0c1a3e', surface2: '#0f2050',
-  border: 'rgba(255,255,255,0.11)', borderLight: 'rgba(255,255,255,0.06)',
-  text: '#eef2ff', textSub: 'rgba(230,235,255,0.65)', textDim: 'rgba(200,210,255,0.35)',
-  accent: '#00E5FF', accent2: '#4FC3F7',
-  green: '#4ade80', greenBg: 'rgba(74,222,128,0.1)', greenBorder: 'rgba(74,222,128,0.3)',
-  yellow: '#fbbf24', yellowBg: 'rgba(251,191,36,0.1)', yellowBorder: 'rgba(251,191,36,0.3)',
-  red: '#f87171', redBg: 'rgba(248,113,113,0.1)', redBorder: 'rgba(248,113,113,0.3)',
-  barA: 'rgba(79,195,247,0.8)', barB: 'rgba(0,229,255,0.15)',
-  curve: '#4ade80', specLine: '#f87171', meanLine: 'rgba(79,195,247,0.75)', targetLine: '#fbbf24',
-  grid: 'rgba(255,255,255,0.04)', rowAlt: 'rgba(255,255,255,0.025)',
-  headerBg: 'rgba(0,229,255,0.07)',
+  bg: '#160c2e', surface: 'rgba(255,255,255,0.07)', surface2: 'rgba(255,255,255,0.10)',
+  border: 'rgba(255,255,255,0.16)', borderLight: 'rgba(255,255,255,0.09)',
+  text: '#efe9ff', textSub: '#b3a6d9', textDim: '#9a8fc0',
+  accent: '#e2b4ff', accent2: '#72a8ff',
+  green: '#59c97f', greenBg: 'rgba(89,201,127,0.14)', greenBorder: 'rgba(89,201,127,0.40)',
+  yellow: '#f8b84f', yellowBg: 'rgba(248,184,79,0.14)', yellowBorder: 'rgba(248,184,79,0.40)',
+  red: '#ff7683', redBg: 'rgba(255,118,131,0.14)', redBorder: 'rgba(255,118,131,0.40)',
+  barA: 'rgba(114,168,255,0.85)', barB: 'rgba(209,107,255,0.18)',
+  curve: '#59c97f', specLine: '#ff7683', meanLine: 'rgba(114,168,255,0.85)', targetLine: '#f8b84f',
+  grid: 'rgba(255,255,255,0.06)', rowAlt: 'rgba(255,255,255,0.035)',
+  headerBg: 'rgba(209,107,255,0.12)',
 }
 
 const LIGHT: ExportPalette = {
-  bg: '#f0f3f8', surface: '#ffffff', surface2: '#f7f9fc',
-  border: 'rgba(30,60,120,0.13)', borderLight: 'rgba(30,60,120,0.07)',
-  text: '#1a2340', textSub: '#4a5580', textDim: '#9aa5c0',
-  accent: '#0067bb', accent2: '#2196F3',
-  green: '#16a34a', greenBg: 'rgba(22,163,74,0.08)', greenBorder: 'rgba(22,163,74,0.3)',
-  yellow: '#b45309', yellowBg: 'rgba(180,83,9,0.08)', yellowBorder: 'rgba(180,83,9,0.3)',
-  red: '#dc2626', redBg: 'rgba(220,38,38,0.08)', redBorder: 'rgba(220,38,38,0.3)',
-  barA: 'rgba(33,150,243,0.75)', barB: 'rgba(100,160,240,0.1)',
-  curve: '#16a34a', specLine: '#dc2626', meanLine: 'rgba(33,150,243,0.7)', targetLine: '#b45309',
-  grid: 'rgba(30,60,120,0.05)', rowAlt: 'rgba(30,60,120,0.03)',
-  headerBg: 'rgba(0,103,187,0.06)',
+  bg: '#fbf7ff', surface: 'rgba(255,255,255,0.78)', surface2: '#f3ecff',
+  border: 'rgba(37,26,64,0.14)', borderLight: 'rgba(37,26,64,0.08)',
+  text: '#251a40', textSub: '#6d6290', textDim: '#8a7fae',
+  accent: '#8b3fd9', accent2: '#4f8cff',
+  green: '#2f9e57', greenBg: 'rgba(47,158,87,0.10)', greenBorder: 'rgba(47,158,87,0.35)',
+  yellow: '#b07000', yellowBg: 'rgba(176,112,0,0.10)', yellowBorder: 'rgba(176,112,0,0.35)',
+  red: '#d93a4c', redBg: 'rgba(217,58,76,0.09)', redBorder: 'rgba(217,58,76,0.35)',
+  barA: 'rgba(79,140,255,0.8)', barB: 'rgba(139,63,217,0.12)',
+  curve: '#2f9e57', specLine: '#d93a4c', meanLine: 'rgba(79,140,255,0.8)', targetLine: '#b07000',
+  grid: 'rgba(37,26,64,0.06)', rowAlt: 'rgba(37,26,64,0.035)',
+  headerBg: 'rgba(139,63,217,0.08)',
 }
 
 export const exportPalette = (isDark: boolean): ExportPalette => (isDark ? DARK : LIGHT)
@@ -105,9 +107,10 @@ export function newCanvas(width: number, height: number): { cv: HTMLCanvasElemen
   return { cv, c }
 }
 
-/** Receta anti-regresión: las fuentes del sistema deben estar listas antes de medir y dibujar texto. */
+/** Receta anti-regresión: Space Grotesk/Inter deben estar listas antes de medir y dibujar texto. */
 export async function fontsReady(): Promise<void> {
   try {
+    if (document.fonts?.load) await Promise.all(NEBULA_FONT_SPECS.map((f) => document.fonts.load(f).catch(() => [])))
     await document.fonts?.ready
   } catch {
     /* sin API de fuentes: se sigue igual */

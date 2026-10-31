@@ -57,6 +57,17 @@ describe('Resumen Ejecutivo PNG', () => {
   })
 })
 
+describe('Diseño Nebulosa', () => {
+  it('el resumen ejecutivo usa Space Grotesk/Inter y el texto Nebulosa, sin tipografías del diseño viejo', () => {
+    drawExecutivePng(point(0).result, 'auto', es)
+    const main = made.find((m) => m.width === 1600)!
+    const fonts = main.rec.sets.filter((x) => x.prop === 'font').map((x) => String(x.value))
+    expect(fonts.some((f) => f.includes('"Space Grotesk"'))).toBe(true)
+    expect(fonts.some((f) => /monospace|system-ui/.test(f))).toBe(false)
+    expect(main.rec.sets.some((x) => x.prop === 'fillStyle' && String(x.value) === '#efe9ff')).toBe(true)
+  })
+})
+
 describe('Resumen comparativo', () => {
   it('reparte en páginas equilibradas de máximo 24 análisis', () => {
     expect(splitPages(Array.from({ length: 24 }, (_, i) => i)).map((p) => p.length)).toEqual([24])
@@ -143,6 +154,10 @@ describe('Exportar Plano PNG', () => {
     expect(m.height).toBe(600)
     expect(m.rec.count('arc')).toBe(2)
     expect(texts(m)).toEqual(['2', 'B'])
+    // el plano pasa colores reales al canvas (el original dejaba `var(--...)` y los marcadores salían negros)
+    const fills = m.rec.sets.filter((x) => x.prop === 'fillStyle' || x.prop === 'shadowColor').map((x) => String(x.value))
+    expect(fills.some((v) => v.includes('var('))).toBe(false)
+    expect(fills).toContain('#59c97f')
   })
 })
 
