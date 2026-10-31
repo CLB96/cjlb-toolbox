@@ -21,7 +21,7 @@ export function recordingCtx(): RecordingCtx {
     get(target, prop: string) {
       if (prop in target) return target[prop]
       if (prop === 'measureText') return (text: string) => ({ width: text.length * 6 })
-      if (prop === 'createLinearGradient') return () => gradient
+      if (prop === 'createLinearGradient' || prop === 'createRadialGradient') return () => gradient
       return (...args: unknown[]) => {
         calls.push({ name: prop, args })
       }
