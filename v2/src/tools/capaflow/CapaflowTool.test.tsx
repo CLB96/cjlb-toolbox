@@ -157,13 +157,22 @@ describe('CapaflowTool', () => {
     expect(screen.getByText('Measurement Point 1')).toBeInTheDocument()
   })
 
-  it('los botones de la fase 2b existen con su texto y no hacen nada', async () => {
+  it('fase 2b: el conversor abre su modal y el PNG ejecutivo se descarga con su nombre y avisos', async () => {
+    const downloads: string[] = []
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      downloads.push(this.download)
+    })
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,QUJD')
     await withSample()
-    for (const name of ['📖 Guía de Lectura', '🔄 Conversor MWX/MWP/MPX → Excel', '⬇ Resumen Ejecutivo PNG', '📊 Generar Resumen', '⬇ Descargar Proyecto (ZIP)']) {
-      fireEvent.click(screen.getByRole('button', { name }))
-    }
-    expect(toasts()).toEqual([])
-    expect(screen.getByTestId('cf-results')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '🔄 Conversor MWX/MWP/MPX → Excel' }))
+    expect(screen.getByText('Arrastra archivos .MWX, .MWP o .MPX aquí')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Convertir a Excel' })).toBeDisabled()
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    fireEvent.click(screen.getByRole('button', { name: '⬇ Resumen Ejecutivo PNG' }))
+    expect(toasts()).toContain('Generando PNG...')
+    await waitFor(() => expect(toasts()).toContain('¡PNG descargado!'))
+    expect(downloads[0]).toMatch(/^CapaFlow_Resumen_\d{4}-\d{2}-\d{2}\.png$/)
   })
 
   it('plano: cargar foto, colocar un marcador desde la bandeja y quitarlo', async () => {

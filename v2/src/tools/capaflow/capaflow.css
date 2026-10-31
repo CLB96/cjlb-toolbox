@@ -171,6 +171,19 @@
 .cf-marker:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 3px; }
 .cf-marker--dragging { cursor: grabbing; z-index: 50; }
 
+.cf-mwx { display: grid; gap: 12px; min-width: min(560px, 80vw); }
+.cf-mwx__files { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cf-mwx__file { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--edge); border-radius: var(--radius-md); background: var(--glass-dense); }
+.cf-mwx__ext { font: 700 11px ui-monospace, Consolas, monospace; padding: 2px 6px; border-radius: 4px; background: var(--accent-1); color: var(--btn-fg); }
+.cf-mwx__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cf-mwx__rm { background: none; border: 0; color: var(--fg); cursor: pointer; font-size: 18px; line-height: 1; }
+.cf-mwx__rm:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+.cf-mwx__log { max-height: 220px; overflow: auto; padding: 8px 10px; border: 1px solid var(--edge); border-radius: var(--radius-md); font: 12px ui-monospace, Consolas, monospace; }
+.cf-mwx__entry--success { color: var(--ok, #16a34a); }
+.cf-mwx__entry--error { color: var(--error, #dc2626); }
+.cf-mwx__entry--warning { color: var(--warn, #b45309); }
+.cf-project__name { min-width: 160px; flex: 0 1 220px; }
+
 @media (max-width: 1100px) {
   .cf-layout, .cf-two { grid-template-columns: 1fr; }
   .cf-bento { grid-template-columns: repeat(3, 1fr); }

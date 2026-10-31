@@ -7,16 +7,15 @@ interface Props {
   lastSavedAt: number | null
   disabled: boolean
   onHistory: () => void
-  /** Fase 2b: Resumen Ejecutivo PNG, Guía de Lectura y Conversor MWX/MWP/MPX. */
   onExport: () => void
+  exportBusy?: boolean
   onGuide: () => void
   onConverter: () => void
 }
 
 /** Franja superior del mockup: título, guardado y acciones. */
-export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, onConverter }: Props) {
+export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, onConverter, exportBusy = false }: Props) {
   const { t } = useCapaT()
-  const pending = t('v2.pending')
   return (
     <GlassPanel as="header" className="cf-head">
       <h1 className="cf-head__title">CapaFlow</h1>
@@ -24,9 +23,9 @@ export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, on
       <SavedIndicator lastSavedAt={lastSavedAt} />
       <div className="cf-head__actions">
         <Button variant="ghost" onClick={onHistory} disabled={disabled}>{t('v2.history')}</Button>
-        <Button variant="ghost" title={pending} onClick={onGuide}>{`📖 ${t('panel.guideTitle')}`}</Button>
-        <Button variant="ghost" title={pending} onClick={onConverter}>{`🔄 ${t('panel.mwxTitle')}`}</Button>
-        <Button title={pending} onClick={onExport}>{`⬇ ${t('panel.exportTitle')}`}</Button>
+        <Button variant="ghost" onClick={onGuide}>{`📖 ${t('panel.guideTitle')}`}</Button>
+        <Button variant="ghost" onClick={onConverter}>{`🔄 ${t('panel.mwxTitle')}`}</Button>
+        <Button onClick={onExport} disabled={exportBusy}>{`⬇ ${t('panel.exportTitle')}`}</Button>
       </div>
     </GlassPanel>
   )

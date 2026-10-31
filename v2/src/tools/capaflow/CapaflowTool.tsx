@@ -4,22 +4,21 @@ import { HistoryPanel } from '../../persistence/HistoryPanel'
 import { Dialog } from '../../ui/Dialog'
 import type { ToolProps } from '../types'
 import { CapaflowStoreProvider } from './CapaflowStoreProvider'
+import { MwxDialog } from './components/MwxDialog'
 import { Header } from './components/Header'
 import { ProcessForm } from './components/ProcessForm'
 import { ProjectBar } from './components/ProjectBar'
 import { Results } from './components/Results'
+import { useCapaExports } from './useCapaExports'
 import { useCapaflowPersistence } from './useCapaflowPersistence'
 import './capaflow.css'
-
-/** Fase 2b: exportaciones (PNG ejecutivo, guía, resumen, ZIP, conversor, plano PNG). Botones cableados sin efecto. */
-const todoPhase2b = (): void => {
-  // TODO(fase 2b): implementar la exportación correspondiente.
-}
 
 function CapaflowBody({ toolId }: ToolProps) {
   const { t: tApp } = useI18n()
   const { lastSavedAt, restoreVersion, restored } = useCapaflowPersistence()
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [mwxOpen, setMwxOpen] = useState(false)
+  const exports = useCapaExports()
   const nameRef = useRef<HTMLInputElement>(null)
   const disabled = !restored
 
@@ -34,15 +33,24 @@ function CapaflowBody({ toolId }: ToolProps) {
         lastSavedAt={lastSavedAt}
         disabled={disabled}
         onHistory={() => setHistoryOpen(true)}
-        onExport={todoPhase2b}
-        onGuide={todoPhase2b}
-        onConverter={todoPhase2b}
+        onExport={exports.executive}
+        exportBusy={exports.executiveBusy}
+        onGuide={exports.guide}
+        onConverter={() => setMwxOpen(true)}
       />
-      <ProjectBar disabled={disabled} onNewPoint={() => nameRef.current?.focus()} onSummary={todoPhase2b} onZip={todoPhase2b} />
+      <ProjectBar
+        disabled={disabled}
+        onNewPoint={() => nameRef.current?.focus()}
+        onSummary={exports.summary}
+        onZip={exports.zip}
+        summaryBusy={exports.summaryBusy}
+        zipLabel={exports.zipLabel}
+      />
       <div className="cf-layout">
         <ProcessForm ref={nameRef} disabled={disabled} />
-        <Results disabled={disabled} onExportPlan={todoPhase2b} />
+        <Results disabled={disabled} onExportPlan={exports.plan} />
       </div>
+      <MwxDialog open={mwxOpen} onClose={() => setMwxOpen(false)} />
       <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} title={tApp('persist.history')}>
         <HistoryPanel toolId={toolId} onRestore={onRestore} lastSavedAt={lastSavedAt} />
       </Dialog>

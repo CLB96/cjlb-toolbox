@@ -98,7 +98,7 @@ export function PlanSection({ onExport }: { onExport: () => void }) {
               {t('photo.change')}
               <input type="file" className="cf-file-input" accept="image/*" data-testid="cf-photo-change" onChange={onPick} />
             </label>
-            <Button variant="ghost" title={t('v2.pending')} onClick={onExport}>{t('photo.exportBtn')}</Button>
+            <Button variant="ghost" onClick={onExport}>{t('photo.exportBtn')}</Button>
           </div>
           <div className="cf-tray" data-testid="cf-tray">
             {unplaced.length > 0 && <div className="cf-tray__label">{INLINE.dragTo[lang]}</div>}
