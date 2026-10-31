@@ -28,12 +28,12 @@ function createTooltip(): HTMLDivElement {
   return el
 }
 
-function showTooltip(el: HTMLDivElement, e: MouseEvent, abs: number, originalX: number) {
+function showTooltip(el: HTMLDivElement, e: MouseEvent, abs: number, originalX: number, rangeStart: number) {
   const delta = dragDelta(abs, originalX)
   const span = document.createElement('span')
   span.style.color = TONE_COLOR[delta.tone]
   span.textContent = `${delta.text}s`
-  el.replaceChildren(span, ` — t=${abs}s`)
+  el.replaceChildren(span, ` — t=${abs - rangeStart}s`)
   el.style.display = 'block'
   el.style.left = `${e.clientX + 12}px`
   el.style.top = `${e.clientY - 35}px`
@@ -41,7 +41,8 @@ function showTooltip(el: HTMLDivElement, e: MouseEvent, abs: number, originalX: 
 
 /**
  * Clic + arrastre de las líneas de suceso (inventario §5E). R3: el hit-test usa la posición
- * en el eje (`x - inicio del rango`) y se escribe el segundo absoluto. Un solo juego de
+ * en el eje (`x - inicio del rango`) y se escribe el segundo absoluto; el tooltip muestra el
+ * tiempo relativo al inicio del rango (A18). Un solo juego de
  * listeners y un solo tooltip por gráfica; `chartRef` debe tener la gráfica creada al montar.
  */
 export function useEventDrag(
@@ -90,7 +91,7 @@ export function useEventDrag(
       const rel = Math.round(chart.scales.x.getValueForPixel(localX(e)) ?? NaN)
       const abs = dragToAbsolute(rel, r, rows)
       if (abs === null) return
-      showTooltip(tooltip, e, abs, originalX)
+      showTooltip(tooltip, e, abs, originalX, r.start)
       write(selected.id as EventInputId, String(abs))
     }
     const onUp = () => {

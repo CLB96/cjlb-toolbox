@@ -1,4 +1,5 @@
 import { useBondline, useBondlineApi } from '../BondlineStoreProvider'
+import { toast } from '../../../ui/toastStore'
 import { useBondlineT, type BondlineKey } from '../i18n'
 import type { EventInputId } from '../logic/types'
 import type { CoolingParams } from '../store'
@@ -70,7 +71,11 @@ export function Events({ disabled }: { disabled: boolean }) {
                   placeholder="s"
                   value={events[e.id]}
                   disabled={disabled}
-                  onChange={(ev) => setEvent(e.id, ev.target.value)}
+                  aria-invalid={e.id === 'eventCoolingStart' && parseFloat(events[e.id]) < 0 ? true : undefined}
+                  onChange={(ev) => {
+                    setEvent(e.id, ev.target.value)
+                    if (e.id === 'eventCoolingStart' && parseFloat(ev.target.value) < 0) toast('error', t('coolingStartNegative'))
+                  }}
                 />
               </div>
             ))}

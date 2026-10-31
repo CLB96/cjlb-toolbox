@@ -52,6 +52,9 @@ const es = {
     resultOutTitle:'⚠ Ventana de activación fuera de rango',
     resultOut:(t: A, dur: A, min: A, max: A) =>`La activación inició en t=${t}s, pero durante la ventana de ${dur}s algunos termopares salieron del rango ${min}°C – ${max}°C.`,
     // Cooling result
+    resultIncompleteTitle:'⚠ Ventana de activación incompleta',
+    resultIncomplete:(t: A, dur: A) =>`La activación inició en t=${t}s, pero la ventana de ${dur}s no está completa: los datos visibles terminan antes.`,
+    coolingStartNegative:'El inicio del cooling debe ser mayor o igual a 0',
     coolingResultTitle:'✓ Enfriamiento correcto',
     coolingResult:(time: A, target: A) =>`La pieza alcanzó el correcto enfriamiento (${target}°C) ${time}s después de haber iniciado el ciclo de cooling.`,
     coolingResultFailTitle:'⚠ Enfriamiento no alcanzado',
@@ -200,6 +203,9 @@ const en: Record<BondlineKey, Entry> = {
     resultOutTitle:'⚠ Activation window out of range',
     resultOut:(t: A, dur: A, min: A, max: A) =>`Activation started at t=${t}s, but during the ${dur}s window some thermocouples went outside the ${min}°C – ${max}°C range.`,
     // Cooling result
+    resultIncompleteTitle:'⚠ Activation window incomplete',
+    resultIncomplete:(t: A, dur: A) =>`Activation started at t=${t}s, but the ${dur}s window is incomplete: the visible data ends earlier.`,
+    coolingStartNegative:'The cooling start must be 0 or greater',
     coolingResultTitle:'✓ Correct cooling achieved',
     coolingResult:(time: A, target: A) =>`The part reached correct cooling (${target}°C) ${time}s after the cooling cycle started.`,
     coolingResultFailTitle:'⚠ Cooling not achieved',

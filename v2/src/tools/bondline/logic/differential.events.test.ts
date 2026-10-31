@@ -65,7 +65,11 @@ describe('coolingCheck ≡ legacyCooling', () => {
     )
     expect(T('en', 'coolingResult', 4, 35)).toBe(I18N.en.coolingResult(4, 35))
     const d = coolingCheck(columns, totalRows, { eventCoolingStart: '40.5', eventCoolingClosed: '', eventCoolingEnd: '' }, 100)
-    expect([d.achievedAt, d.elapsed]).toEqual([40, -0.5])
+    expect([d.achievedAt, d.elapsed]).toEqual([40, 0]) // -0.5 del original, ahora redondeado (A12)
+    const e = coolingCheck(columns, totalRows, { eventCoolingStart: '85.4', eventCoolingClosed: '', eventCoolingEnd: '' }, 35)
+    expect(Number.isInteger(e.elapsed)).toBe(true)
+    // inicio negativo: sin chequeo de cooling (A12)
+    expect(coolingCheck(columns, totalRows, { eventCoolingStart: '-5', eventCoolingClosed: '', eventCoolingEnd: '' }, 100).show).toBe(false)
   })
 })
 

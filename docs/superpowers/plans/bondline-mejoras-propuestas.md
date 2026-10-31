@@ -48,17 +48,17 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 8. Duración y activación del PNG distintas de la pantalla (§10.11)
 - **Qué pasa hoy:** con rango temporal activo, el PNG muestra la duración del rango (p. ej. 60s con rango 20–80) y el segundo de activación **absoluto** (t=53s en el Excel real); en pantalla el resultado es relativo al inicio del rango (puede salir negativo).
 - **Qué se ganaría:** un solo criterio (siempre relativo o siempre absoluto).
-- **Estado:** conservado — **pendiente de decisión del dueño**: cambiarlo altera valores mostrados (duración/activación del PNG, t=53s verificado) y hay que elegir el criterio (relativo o absoluto).
+- **Estado:** aplicado 2026-10-30. Criterio único: relativo al inicio del rango activo; duración y activación del PNG y de la pantalla coinciden (sin rango, relativo = absoluto).
 
 ### 9. La validación de la ventana de activación (§10.12)
 - **Qué pasa hoy:** se validan 30 muestras (desde el inicio hasta inicio+29), la caja dibuja hasta inicio+30 y se exige que la ventana termine dentro de los datos; una ventana que se pasa del final cuenta como NOK aunque las muestras existentes estén en rango.
 - **Qué se ganaría:** criterio más claro para ventanas al final del ciclo.
-- **Estado:** conservado — **pendiente de decisión del dueño**: cambiar el criterio altera el resultado OK/NOK calculado.
+- **Estado:** aplicado 2026-10-30. Se validan exactamente las muestras de la caja (inicio..inicio+30 inclusive); si la ventana pasa del final de los datos es NOK y el texto dice que está incompleta.
 
 ### 10. Activación, cooling, mínimo y máximo ignoran visibilidad y rango (§10.13)
 - **Qué pasa hoy:** ocultar un termopar o recortar el rango no cambia el mínimo, el máximo, la activación ni el cooling (se calculan con todos los termopares y todos los datos).
 - **Qué se ganaría:** resultados que siguen lo que se está viendo.
-- **Estado:** conservado — **pendiente de decisión del dueño**: cambiarlo altera mínimo, máximo, activación y cooling calculados.
+- **Estado:** aplicado 2026-10-30. Mínimo, máximo, activación y cooling usan solo los termopares visibles y los datos dentro del rango temporal activo.
 
 ### 11. Eje Y fijo en 80 (§10.13)
 - **Qué pasa hoy:** `yMax` es 80; datos o adhesivos con máximo mayor quedan cortados.
@@ -68,7 +68,7 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 12. Tiempo de cooling con decimales sin redondear (§10.19)
 - **Qué pasa hoy:** con un inicio no entero, el tiempo transcurrido muestra la diferencia tal cual (decimales largos). Un inicio negativo pasa el chequeo de cooling aunque no tenga sentido.
 - **Qué se ganaría:** valores enteros y entradas validadas.
-- **Estado:** conservado — **pendiente de decisión del dueño**: redondear o rechazar inicios negativos cambia el valor mostrado y el resultado del chequeo de cooling.
+- **Estado:** aplicado 2026-10-30. El tiempo de cooling se muestra en segundos enteros (redondeado); un inicio negativo se rechaza (sin resultado de cooling y con aviso).
 
 ### 13. El sustrato no afecta el cálculo (§10.21)
 - **Qué pasa hoy:** PC-ABS, PP, etc. solo cambian el texto "Necesita Flama" (PP = SÍ); la activación no cambia.
@@ -98,7 +98,7 @@ Decisiones del dueño ya tomadas en GapCheck que aplican aquí: la lectura permi
 ### 18. El arrastre de un suceso muestra el segundo absoluto
 - **Qué pasa hoy:** al arrastrar una línea de suceso, el tooltip muestra el segundo absoluto del ciclo (no relativo al rango), coherente con R3.
 - **Qué se ganaría:** posibilidad de mostrar el tiempo relativo si hay rango activo.
-- **Estado:** conservado — **pendiente de decisión del dueño**: depende del criterio del ítem 8 (tiempo relativo o absoluto).
+- **Estado:** aplicado 2026-10-30. Con rango activo el tooltip muestra el tiempo relativo al inicio del rango (sin rango, igual que el absoluto); el valor escrito sigue siendo absoluto.
 
 ---
 

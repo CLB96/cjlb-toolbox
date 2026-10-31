@@ -44,7 +44,7 @@ test('con rango {20, null}: arrastrar Inicia Prensa (x=30) a la posición relati
   drag(canvas, (30 - 20) * PX, 15 * PX)
   expect(setEvent).toHaveBeenLastCalledWith('eventPressStart', '35')
   expect(tip().style.display).toBe('block')
-  expect(tip().innerHTML).toBe('<span style="color: var(--ok);">+5s</span> — t=35s')
+  expect(tip().innerHTML).toBe('<span style="color: var(--ok);">+5s</span> — t=15s')
   expect(canvas.style.cursor).toBe('grabbing')
   fireEvent.mouseUp(canvas)
   expect(tip().style.display).toBe('none')

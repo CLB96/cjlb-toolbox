@@ -135,5 +135,5 @@ test('arrastrar un suceso con rango activo escribe el segundo absoluto y mueve l
   expect(api.getState().config.events.eventPressStart).toBe('35')
   expect(chart.options.plugins.annotation.annotations.event_0.xMin).toBe(15)
   expect(document.querySelectorAll('#dragEventTooltip')).toHaveLength(1)
-  expect(document.querySelector('#dragEventTooltip')).toHaveTextContent('+5s — t=35s')
+  expect(document.querySelector('#dragEventTooltip')).toHaveTextContent('+5s — t=15s')
 })

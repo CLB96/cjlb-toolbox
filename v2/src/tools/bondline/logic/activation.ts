@@ -1,4 +1,3 @@
-import type { EffectiveRange } from './range'
 import { ACTIVATION_DURATION, type AdhesiveType, type BondlineDefaults, type Column } from './types'
 
 export interface AdhesiveCfg {
@@ -21,24 +20,36 @@ export function findActivationStart(columns: Column[], totalRows: number, min: n
   return null
 }
 
-/** true si la ventana de 30 s cabe en el rango visible y todas las lecturas están en [min, max]. */
-export function isWindowInRange(
+export interface WindowStatus {
+  /** La ventana (inicio..inicio+30, ambos incluidos, como la caja dibujada) cabe en los datos. */
+  complete: boolean
+  /** Todas las lecturas existentes de la ventana están en [min, max]. */
+  inRange: boolean
+}
+
+/**
+ * Valida exactamente las muestras que cubre la caja verde (A9): inicio..inicio+30 inclusive.
+ * `columns` ya son los datos visibles dentro del rango; una ventana que pasa del final es incompleta.
+ */
+export function windowStatus(
   columns: Column[],
   totalRows: number,
   activationStart: number,
-  range: Pick<EffectiveRange, 'start' | 'end'>,
   cfg: Pick<AdhesiveCfg, 'min' | 'max'>,
-): boolean {
-  const activationEnd = activationStart + ACTIVATION_DURATION
-  if (!(activationStart >= range.start && activationEnd <= range.end)) return false
-  const end = Math.min(activationEnd, totalRows)
-  for (let r = activationStart; r < end; r++) {
+): WindowStatus {
+  const last = activationStart + ACTIVATION_DURATION
+  const complete = last <= totalRows - 1
+  let inRange = true
+  for (let r = activationStart; r <= Math.min(last, totalRows - 1) && inRange; r++) {
     for (const col of columns) {
       const v = col[r]
-      if (v === null || v < cfg.min || v > cfg.max) return false
+      if (v === null || v === undefined || v < cfg.min || v > cfg.max) {
+        inRange = false
+        break
+      }
     }
   }
-  return true
+  return { complete, inRange }
 }
 
 /** Máximo del eje Y del original; ahora es el mínimo del tope (mejora A11). */

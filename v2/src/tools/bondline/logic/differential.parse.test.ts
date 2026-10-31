@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { FIXTURES } from '../../../../legacy-fixtures/bondline/fixtures'
 import { legacyActivationResultHtml, legacyLoadSheet, legacyRenderCalc, legacyStatsTexts } from '../../../../legacy-fixtures/bondline/legacyReference'
-import { adhesiveConfig, findActivationStart, isWindowInRange, yLimits } from './activation'
+import { adhesiveConfig, findActivationStart, windowStatus, yLimits } from './activation'
 import { parseSheetRows } from './parse'
 import { effectiveRange, trimColumns } from './range'
 import { activationResult } from './results'
@@ -54,7 +54,9 @@ describe('rango, activación, KPIs y resultado ≡ original (combinaciones repre
           expect(trimmed).toEqual(lc.trimmedColumns)
           const act = findActivationStart(columns, totalRows, cfg.min)
           expect(act).toBe(lc.activationStart)
-          expect(act !== null && isWindowInRange(columns, totalRows, act, range, cfg)).toBe(lc.allInRange)
+          // la ventana valida 31 muestras (A9) y los datos ya vienen recortados al rango (A10): solo más estricta que el original
+          const w = act !== null ? windowStatus(columns, totalRows, act, cfg) : null
+          if (w?.complete && w.inRange && !tr.active) expect(lc.allInRange).toBe(true)
           // yMax ya no es fijo (mejora A11): 80 del original salvo que los datos lo superen
           const peak = Math.max(...trimmed.flat().filter((v): v is number => v !== null))
           expect(yLimits(trimmed)).toEqual({ yMin: lc.yMin, yMax: Math.max(lc.yMax, Math.ceil(peak)) })

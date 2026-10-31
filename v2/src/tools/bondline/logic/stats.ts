@@ -28,8 +28,8 @@ export function kpiTexts(data: ParsedSheet, activationStart: number | null): Kpi
   return {
     tc: `${data.columns.length}`,
     duration: `${data.totalRows}s`,
-    min: `${min.toFixed(1)}°`,
-    max: `${max.toFixed(1)}°`,
+    min: Number.isFinite(min) ? `${min.toFixed(1)}°` : '—',
+    max: Number.isFinite(max) ? `${max.toFixed(1)}°` : '—',
     activation: activationStart !== null ? `t=${activationStart}s` : '—',
     activated: activationStart !== null,
   }

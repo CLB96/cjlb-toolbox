@@ -6,7 +6,7 @@ import type { BondlineDefaultsApi } from './useBondlineDefaults'
 import {
   adhesiveConfig,
   findActivationStart,
-  isWindowInRange,
+  windowStatus,
   yLimits,
   type AdhesiveCfg,
 } from './logic/activation'
@@ -32,6 +32,8 @@ export interface BondlineView {
   activationStart: number | null
   activationEnd: number | null
   allInRange: boolean
+  /** false si la ventana de activación pasa del final de los datos visibles (A9). */
+  windowComplete: boolean
   yMin: number
   yMax: number
   kpis: KpiTexts
@@ -53,10 +55,18 @@ export function computeView(
   // con un rango inválido conservado del original (fin NaN, inicio >= total) la longitud queda en 0
   const labels = Array.from({ length: Math.max(0, range.rows || 0) }, (_, i) => i)
   const trimmed = trimColumns(columns, range.start, range.end)
-  const activationStart = findActivationStart(columns, totalRows, cfg.min)
+  // A10: mínimo, máximo, activación y cooling usan solo los TC visibles y los datos del rango activo
+  const reset = config.tcVisibility.length !== columns.length
+  const visible = columns.map((_, i) => reset || config.tcVisibility[i])
+  const analysis = trimmed.filter((_, i) => visible[i])
+  const rows = labels.length
+  const relStart = analysis.length > 0 ? findActivationStart(analysis, rows, cfg.min) : null
+  const win = relStart !== null ? windowStatus(analysis, rows, relStart, cfg) : null
+  // activationStart sigue siendo el segundo absoluto de la hoja; lo mostrado es relativo al rango (A8)
+  const activationStart = relStart !== null ? relStart + range.start : null
   const activationEnd = activationStart !== null ? activationStart + ACTIVATION_DURATION : null
-  const allInRange =
-    activationStart !== null && isWindowInRange(columns, totalRows, activationStart, range, cfg)
+  const allInRange = win !== null && win.complete && win.inRange
+  const windowComplete = win?.complete ?? true
   const { yMin, yMax } = yLimits(trimmed, cfg.max)
   return {
     cfg,
@@ -66,11 +76,21 @@ export function computeView(
     activationStart,
     activationEnd,
     allInRange,
+    windowComplete,
     yMin,
     yMax,
-    kpis: kpiTexts(data, activationStart),
-    result: activationResult(activationStart, allInRange, range.start, cfg),
-    cooling: coolingCheck(columns, totalRows, config.events, defaults.coolingTarget),
+    kpis: {
+      ...kpiTexts({ columns: analysis, totalRows: rows }, relStart),
+      tc: `${columns.length}`,
+    },
+    result: activationResult(activationStart, allInRange, range.start, cfg, windowComplete),
+    cooling: coolingCheck(
+      columns.filter((_, i) => visible[i]),
+      Math.min(range.end, totalRows),
+      config.events,
+      defaults.coolingTarget,
+      range.start,
+    ),
     events: activeEvents(config.events, lang),
   }
 }
