@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { barTipText, detectMode, dragDates, pxToDays, undoMessage } from './barDrag'
+import { barTipText, detectMode, dragDates, pxToDays, TOUCH_EDGE_PX, undoMessage } from './barDrag'
 import { fmtDate } from './dates'
 
 const d = (s: string) => new Date(s + 'T00:00:00')
@@ -13,6 +13,12 @@ describe('arrastre de barras', () => {
     expect(detectMode(92, 100, false)).toBe('resize-right')
     expect(detectMode(50, 100, false)).toBeNull()
     expect(detectMode(50, 100, true)).toBe('move')
+  })
+
+  it('táctil: bordes de 16 px redimensionan y el centro mueve (mejora B6)', () => {
+    expect(detectMode(14, 100, true, TOUCH_EDGE_PX)).toBe('resize-left')
+    expect(detectMode(86, 100, true, TOUCH_EDGE_PX)).toBe('resize-right')
+    expect(detectMode(50, 100, true, TOUCH_EDGE_PX)).toBe('move')
   })
 
   it('px a días redondea', () => {

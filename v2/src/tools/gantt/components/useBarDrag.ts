@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from 'react'
 import { useGanttApi } from '../GanttStoreProvider'
-import { dragDates, detectMode, pxToDays, type DragMode } from '../logic/barDrag'
+import { dragDates, detectMode, pxToDays, TOUCH_EDGE_PX, type DragMode } from '../logic/barDrag'
 import { fmtDate } from '../logic/dates'
 import type { Task } from '../logic/types'
 
@@ -40,8 +40,9 @@ function cellWidthOf(table: HTMLElement | null): number {
 }
 
 /**
- * Arrastre de barras del original (solo vista Días, ratón): bordes de 8 px redimensionan,
- * Ctrl/Alt + centro mueve; Escape, blur o pestaña oculta cancelan.
+ * Arrastre de barras del original (solo vista Días): con ratón, bordes de 8 px redimensionan y
+ * Ctrl/Alt + centro mueve; con el dedo (mejora B6), bordes de 16 px y el centro mueve.
+ * Escape, blur o pestaña oculta cancelan.
  */
 export function useBarDrag(
   tableRef: React.RefObject<HTMLElement>,
@@ -68,10 +69,10 @@ export function useBarDrag(
       document.body.style.userSelect = ''
       document.body.style.cursor = ''
     }
-    const onMove = (e: MouseEvent) => {
+    const moveTo = (clientX: number) => {
       const d = drag.current
       if (!d) return
-      const deltaDays = pxToDays(e.clientX - d.startX, d.cellWidth)
+      const deltaDays = pxToDays(clientX - d.startX, d.cellWidth)
       const r = dragDates(d.mode, d.origStart, d.origEnd, deltaDays)
       setLiveBoth({ id: d.id, mode: d.mode, start: r.start, end: r.end, delta: r.tooltipDelta, tip: true })
     }
@@ -90,20 +91,32 @@ export function useBarDrag(
     const cancel = () => {
       if (drag.current) cleanup()
     }
+    const onMouseMove = (e: MouseEvent) => moveTo(e.clientX)
+    const onTouchMove = (e: TouchEvent) => {
+      if (!drag.current || e.touches.length !== 1) return
+      e.preventDefault()
+      moveTo(e.touches[0]!.clientX)
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') cancel()
     }
     const onVisibility = () => {
       if (document.hidden) cancel()
     }
-    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onUp)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onUp)
+    document.addEventListener('touchcancel', cancel)
     document.addEventListener('keydown', onKey)
     document.addEventListener('visibilitychange', onVisibility)
     window.addEventListener('blur', cancel)
     return () => {
-      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onUp)
+      document.removeEventListener('touchcancel', cancel)
       document.removeEventListener('keydown', onKey)
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('blur', cancel)
@@ -114,6 +127,25 @@ export function useBarDrag(
   const modeAt = (e: ReactMouseEvent<HTMLElement>): DragMode | null => {
     const r = e.currentTarget.getBoundingClientRect()
     return detectMode(e.clientX - r.left, r.width, e.ctrlKey || e.altKey)
+  }
+
+  /** Empieza el arrastre; devuelve false si no aplica. */
+  const begin = (id: number, mode: DragMode | null, clientX: number): boolean => {
+    if (!enabled || drag.current || document.body.dataset.gtBusy || !mode) return false
+    const t = tasks.find((x) => x.id === id)
+    if (!t) return false
+    drag.current = {
+      id,
+      mode,
+      origStart: new Date(t.start),
+      origEnd: new Date(t.end),
+      startX: clientX,
+      cellWidth: cellWidthOf(tableRef.current),
+    }
+    setLiveBoth({ id, mode, start: new Date(t.start), end: new Date(t.end), delta: 0, tip: false })
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = mode === 'move' ? 'grabbing' : 'ew-resize'
+    return true
   }
 
   /** Props para la barra interactiva de una tarea sin hijas. */
@@ -128,25 +160,16 @@ export function useBarDrag(
       if (!drag.current) e.currentTarget.removeAttribute(CURSOR_ATTR)
     },
     onMouseDown: (e: ReactMouseEvent<HTMLElement>) => {
-      if (e.button !== 0 || !enabled || drag.current) return
-      if (document.body.dataset.gtBusy) return
-      const mode = modeAt(e)
-      if (!mode) return
-      const t = tasks.find((x) => x.id === id)
-      if (!t) return
+      if (e.button !== 0) return
+      if (!begin(id, modeAt(e), e.clientX)) return
       e.preventDefault()
       e.stopPropagation()
-      drag.current = {
-        id,
-        mode,
-        origStart: new Date(t.start),
-        origEnd: new Date(t.end),
-        startX: e.clientX,
-        cellWidth: cellWidthOf(tableRef.current),
-      }
-      setLiveBoth({ id, mode, start: new Date(t.start), end: new Date(t.end), delta: 0, tip: false })
-      document.body.style.userSelect = 'none'
-      document.body.style.cursor = mode === 'move' ? 'grabbing' : 'ew-resize'
+    },
+    onTouchStart: (e: ReactTouchEvent<HTMLElement>) => {
+      if (e.touches.length !== 1) return
+      const x = e.touches[0]!.clientX
+      const r = e.currentTarget.getBoundingClientRect()
+      if (begin(id, detectMode(x - r.left, r.width, true, TOUCH_EDGE_PX), x)) e.stopPropagation()
     },
   })
 

@@ -5,11 +5,13 @@ import { addDays, dayDiff } from './dates'
 export type DragMode = 'move' | 'resize-left' | 'resize-right'
 
 export const EDGE_PX = 8
+/** Con el dedo los bordes son más anchos (mejora B6). */
+export const TOUCH_EDGE_PX = 16
 
 /** detectMode: bordes de 8 px redimensionan; el centro solo mueve con Ctrl o Alt. */
-export function detectMode(x: number, width: number, ctrlOrAlt: boolean): DragMode | null {
-  if (x <= EDGE_PX) return 'resize-left'
-  if (x >= width - EDGE_PX) return 'resize-right'
+export function detectMode(x: number, width: number, ctrlOrAlt: boolean, edge = EDGE_PX): DragMode | null {
+  if (x <= edge) return 'resize-left'
+  if (x >= width - edge) return 'resize-right'
   return ctrlOrAlt ? 'move' : null
 }
 

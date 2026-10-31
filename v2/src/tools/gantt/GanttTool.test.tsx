@@ -227,6 +227,21 @@ describe('GanttTool', () => {
     expect(toasts()).toContain('Deshecho ↩')
   })
 
+  it('con el dedo se mueve una barra y "Deshacer" la restaura (mejora B6)', async () => {
+    await seed()
+    renderTool()
+    await waitFor(() => expect(rows()).toHaveLength(7))
+    mockRects()
+    const bar = document.querySelector('[data-bar-id="6"]') as HTMLElement
+    fireEvent.touchStart(bar, { touches: [{ clientX: 50 }] })
+    fireEvent.touchMove(document, { touches: [{ clientX: 114 }] })
+    expect(screen.getByText('+2 días →')).toBeInTheDocument()
+    fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 114, clientY: 0 }] })
+    expect(screen.getByText('2026-10-23 → 2026-10-25 · 3d')).toBeInTheDocument()
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Deshacer ↩' })))
+    expect(screen.getByText('2026-10-21 → 2026-10-23 · 3d')).toBeInTheDocument()
+  })
+
   it('Escape durante el arrastre cancela sin cambiar fechas', async () => {
     await seed()
     renderTool()

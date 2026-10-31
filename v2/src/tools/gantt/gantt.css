@@ -158,6 +158,7 @@ td.gt-today-col[colspan]::after { display: none; }
 .gt-bar--interactive[data-cursor='resize-left'] { cursor: w-resize; }
 .gt-bar--interactive[data-cursor='resize-right'] { cursor: e-resize; }
 .gt-bar--interactive[data-cursor='move'] { cursor: grab; }
+.gt-bar--interactive { touch-action: none; }
 .gt-bar-tip {
   position: absolute; right: 0; bottom: calc(100% + 6px); padding: 3px 8px; border-radius: 8px; white-space: nowrap;
   font-size: 11px; font-weight: 800; background: var(--gt-sticky); border: 1px solid var(--edge); color: var(--fg); z-index: 3;
