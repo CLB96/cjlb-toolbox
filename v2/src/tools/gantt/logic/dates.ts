@@ -9,9 +9,10 @@ const WDAYS_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 export const getMonths = (lang: Lang) => (lang === 'en' ? MONTHS_EN : MONTHS_ES)
 export const getWdays = (lang: Lang) => (lang === 'en' ? WDAYS_EN : WDAYS_ES)
 
-/** Serializa con toISOString como el original (mejora A3: en husos positivos puede restar un día). */
+/** Fecha local YYYY-MM-DD (mejora A3: el original usaba toISOString y en husos positivos restaba un día). */
 export function fmtDate(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 export function addDays(d: Date, n: number): Date {
   const r = new Date(d)
@@ -41,7 +42,7 @@ export function getWeekNum(d: Date): number {
 export function isWeekend(d: Date): boolean {
   return d.getDay() === 0 || d.getDay() === 6
 }
-/** "Hoy" a medianoche local, calculado una vez como el original (mejora A4). */
+/** "Hoy" a medianoche local. */
 export function startOfToday(now = new Date()): Date {
   const t = new Date(now)
   t.setHours(0, 0, 0, 0)

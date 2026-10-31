@@ -126,8 +126,30 @@ function GanttBody({ toolId, active }: ToolProps) {
   )
 }
 
+const DAY_CHECK_MS = 60_000
+
+/** "Hoy" se recalcula al cambiar de día (mejora A4): cada minuto y al volver a la pestaña. */
+function useToday(): Date {
+  const [today, setToday] = useState(() => startOfToday())
+  useEffect(() => {
+    const check = () => {
+      const now = startOfToday()
+      setToday((prev) => (prev.getTime() === now.getTime() ? prev : now))
+    }
+    const timer = setInterval(check, DAY_CHECK_MS)
+    window.addEventListener('focus', check)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [])
+  return today
+}
+
 export default function GanttTool(props: ToolProps) {
-  const [today] = useState(() => startOfToday())
+  const today = useToday()
   return (
     <GanttStoreProvider>
       <TodayContext.Provider value={today}>

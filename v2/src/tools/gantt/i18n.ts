@@ -385,8 +385,6 @@ export function useGanttT(): { t: GanttT; lang: Lang } {
 
 /** Literales del original fuera del diccionario (inventario §8). */
 export const STATIC_TEXTS = {
-  /** El botón real no usa formBtnAdd (mejora A6): siempre en español. */
-  addButton: '+ Agregar',
   visibleTasks: { es: 'Tareas visibles', en: 'Visible tasks' },
   undo: { es: 'Deshacer', en: 'Undo' },
   undone: { es: 'Deshecho ↩', en: 'Undone ↩' },

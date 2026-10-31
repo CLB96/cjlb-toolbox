@@ -23,7 +23,7 @@ export interface GanttView {
   activeTodayFiltered: number
 }
 
-/** "Hoy" de esta instancia (calculado al montar, como el original). */
+/** "Hoy" de esta instancia (se actualiza al cambiar de día). */
 export const TodayContext = createContext<Date>(new Date(0))
 export const useToday = () => useContext(TodayContext)
 

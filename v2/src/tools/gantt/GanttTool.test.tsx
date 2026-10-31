@@ -162,7 +162,7 @@ describe('GanttTool', () => {
     expect(screen.getByRole('columnheader', { name: /W44/ })).toHaveClass('gt-today-head')
   })
 
-  it('en inglés traduce como el original y "+ Agregar" queda en español', async () => {
+  it('en inglés traduce como el original y el botón dice "+ Add"', async () => {
     localStorage.setItem('cjlb.lang', 'en')
     __resetI18nForTests()
     await seed()
@@ -170,7 +170,7 @@ describe('GanttTool', () => {
     await waitFor(() => expect(rows()).toHaveLength(7))
     expect(screen.getByText('Visible tasks')).toBeInTheDocument()
     expect(screen.getByText('Today · 30 Oct 2026')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '+ Agregar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Add' })).toBeInTheDocument()
     expect(screen.getByText('New task')).toBeInTheDocument()
   })
 
@@ -239,6 +239,16 @@ describe('GanttTool', () => {
     fireEvent.mouseUp(document, { clientX: -64 })
     expect(screen.getByText('2026-10-21 → 2026-10-23 · 3d')).toBeInTheDocument()
     expect(screen.queryByText(/Deshacer/)).toBeNull()
+  })
+
+  it('"hoy" se recalcula al cambiar de día (mejora A4)', async () => {
+    renderTool()
+    await ready()
+    vi.setSystemTime(new Date(2026, 9, 31, 0, 5, 0))
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
+    expect(screen.getByText('Hoy · 31 Oct 2026')).toBeInTheDocument()
   })
 
   it('Ctrl+K enfoca la búsqueda', async () => {

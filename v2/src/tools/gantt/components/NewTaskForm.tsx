@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../../ui/Button'
 import { toast } from '../../../ui/toastStore'
 import { useGantt, useGanttApi } from '../GanttStoreProvider'
-import { STATIC_TEXTS, useGanttT } from '../i18n'
+import { useGanttT } from '../i18n'
 import { addDays, fmtDate } from '../logic/dates'
 import type { ParentOption } from '../logic/tree'
 import type { Status } from '../logic/types'
@@ -108,7 +108,7 @@ export function NewTaskForm({ today, parents, disabled }: Props) {
             onChange={(e) => setComment(e.target.value)}
           />
           <Button onClick={add} disabled={disabled}>
-            {STATIC_TEXTS.addButton}
+            {t('formBtnAdd')}
           </Button>
         </div>
         <div className="gt-tip">{t('formTip')}</div>
