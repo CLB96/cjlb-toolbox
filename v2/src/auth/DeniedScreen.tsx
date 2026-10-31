@@ -53,8 +53,10 @@ export function DeniedScreen({ email, uid, displayName, onSignOut, onRecheck }: 
       : request?.status === 'rejected'
         ? t('access.rejected')
         : request?.status === 'approved'
-          ? t('access.approved')
+          ? t('access.approvedNoAccess')
           : null
+  // Sin solicitud, o ya respondida sin dar acceso: se puede enviar una nueva.
+  const canRequest = request === null || request?.status === 'rejected' || request?.status === 'approved'
 
   return (
     <>
@@ -65,8 +67,17 @@ export function DeniedScreen({ email, uid, displayName, onSignOut, onRecheck }: 
           <p>{t('auth.denied.body')}</p>
           <p className="auth-card__muted">{email}</p>
           {statusText && <p role="status">{statusText}</p>}
-          {request === null && (
-            <RequestAccessForm email={email} uid={uid} defaultName={displayName ?? ''} />
+          {canRequest && (
+            <>
+              {request && <p>{t('access.requestAgain')}</p>}
+              <RequestAccessForm
+                key={request?.status ?? 'none'}
+                email={email}
+                uid={uid}
+                defaultName={request?.name || displayName || ''}
+                onSent={() => setRequest((r) => (r ? { ...r, status: 'pending' } : r))}
+              />
+            </>
           )}
           <Button variant="ghost" onClick={onRecheck}>
             {t('access.recheck')}

@@ -31,9 +31,11 @@ type Props = {
   uid?: string
   defaultName?: string
   onBack?: () => void
+  /** Con cuenta: se llama al quedar la solicitud pendiente. */
+  onSent?: () => void
 }
 
-export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', onBack }: Props) {
+export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', onBack, onSent }: Props) {
   const { t } = useI18n()
   const [email, setEmail] = useState(fixedEmail ?? '')
   const [name, setName] = useState(defaultName)
@@ -41,7 +43,8 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
   const [trap, setTrap] = useState('')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<SubmitResult | null>(null)
-  const [locked, setLocked] = useState(inCooldown)
+  // El enfriamiento local solo aplica sin cuenta; con cuenta las reglas impiden duplicar pendientes.
+  const [locked, setLocked] = useState(() => fixedEmail === undefined && inCooldown())
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -55,6 +58,7 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
     setResult(r)
     setLocked(true)
     if (r !== 'ignored') markRequested()
+    if (r === 'sent') onSent?.()
   }
 
   // Sin cuenta, todos los resultados muestran el mismo texto para no revelar si el correo ya solicitó.
@@ -64,7 +68,9 @@ export function RequestAccessForm({ email: fixedEmail, uid, defaultName = '', on
       ? null
       : signedIn && result === 'sent'
         ? t('access.sent')
-        : t('access.pending')
+        : signedIn
+          ? t('access.pending')
+          : t('access.pendingSignIn')
 
   return (
     <form className="auth-card__form" onSubmit={onSubmit}>

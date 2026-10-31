@@ -138,6 +138,41 @@ describe('accessRequests', () => {
   })
 })
 
+describe('accessRequests: reabrir una solicitud respondida', () => {
+  const seed = (id: string, status: string) =>
+    env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `accessRequests/${id}`), request({ email: id, status }))
+    })
+  const eveReq = (over: Record<string, unknown> = {}) => request({ email: 'eve@x.com', uid: 'eve', createdAt: serverTimestamp(), ...over })
+
+  it('el dueño puede reabrir una solicitud rechazada o aprobada como pendiente', async () => {
+    await seed('eve@x.com', 'rejected')
+    await assertSucceeds(setDoc(doc(eve(env), 'accessRequests/eve@x.com'), eveReq()))
+    await seed('eve@x.com', 'approved')
+    await assertSucceeds(setDoc(doc(eve(env), 'accessRequests/eve@x.com'), eveReq()))
+  })
+  it('no puede reescribir una solicitud que sigue pendiente', async () => {
+    await seed('eve@x.com', 'pending')
+    await assertFails(setDoc(doc(eve(env), 'accessRequests/eve@x.com'), eveReq()))
+  })
+  it('no puede tocar la solicitud de otro', async () => {
+    await seed('bob@x.com', 'rejected')
+    await assertFails(setDoc(doc(eve(env), 'accessRequests/bob@x.com'), request({ uid: 'eve' })))
+  })
+  it('solo puede dejarla en pending y con campos válidos', async () => {
+    await seed('eve@x.com', 'rejected')
+    await assertFails(setDoc(doc(eve(env), 'accessRequests/eve@x.com'), eveReq({ status: 'approved' })))
+    await assertFails(updateDoc(doc(eve(env), 'accessRequests/eve@x.com'), { status: 'approved' }))
+    await assertFails(setDoc(doc(eve(env), 'accessRequests/eve@x.com'), eveReq({ name: 'x'.repeat(81) })))
+  })
+  it('sin login o sin verificar no puede reabrir', async () => {
+    await seed('bob@x.com', 'rejected')
+    await assertFails(setDoc(doc(anon(env), 'accessRequests/bob@x.com'), request()))
+    await seed('ana@x.com', 'rejected')
+    await assertFails(setDoc(doc(anaUnverified(env), 'accessRequests/ana@x.com'), request({ email: 'ana@x.com', uid: 'ana' })))
+  })
+})
+
 describe('allowlist y config', () => {
   it('no admin no escribe allowlist; admin sí', async () => {
     await assertFails(setDoc(doc(ana(env), 'allowlist/new@x.com'), { addedAt: 1, addedBy: 'ana' }))

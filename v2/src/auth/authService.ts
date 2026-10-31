@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   sendEmailVerification,
   setPersistence,
@@ -47,6 +48,13 @@ export const authService = {
   async signInWithEmail(email: string, password: string): Promise<void> {
     await ensurePersistence()
     await signInWithEmailAndPassword(auth, normalizeEmail(email), password)
+  },
+
+  /** Alta con correo/contraseña; envía la verificación (las reglas exigen email_verified). */
+  async signUpWithEmail(email: string, password: string): Promise<void> {
+    await ensurePersistence()
+    const cred = await createUserWithEmailAndPassword(auth, normalizeEmail(email), password)
+    await sendEmailVerification(cred.user)
   },
 
   async signOut(): Promise<void> {

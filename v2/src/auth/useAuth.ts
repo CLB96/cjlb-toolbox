@@ -75,6 +75,7 @@ export function useAuth() {
     isAdmin: state.isAdmin,
     signInWithGoogle: authService.signInWithGoogle,
     signInWithEmail: authService.signInWithEmail,
+    signUpWithEmail: authService.signUpWithEmail,
     signOut: authService.signOut,
     sendVerification: authService.sendVerification,
     reloadUser: authService.reloadUser,

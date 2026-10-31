@@ -9,9 +9,11 @@ import { useTheme } from '../theme/useTheme'
 type Props = {
   signInWithGoogle: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<void>
+  /** Sin esto, quien solicitó acceso sin cuenta de Google no tenía forma de entrar. */
+  signUpWithEmail?: (email: string, password: string) => Promise<void>
 }
 
-export function LoginScreen({ signInWithGoogle, signInWithEmail }: Props) {
+export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail }: Props) {
   const { t } = useI18n()
   const { resolved } = useTheme()
   const logoSrc = resolved === 'dark' ? '/logo-dark.png' : '/logo-light.png'
@@ -94,6 +96,15 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail }: Props) {
             <Button type="submit" disabled={busy}>
               {t('auth.submit')}
             </Button>
+            {signUpWithEmail && (
+              <Button
+                variant="ghost"
+                disabled={busy || !email || !password}
+                onClick={() => void run(() => signUpWithEmail(email, password), 'auth.signUpFailed')}
+              >
+                {t('auth.signUp')}
+              </Button>
+            )}
           </form>
           <Button variant="ghost" onClick={() => setRequesting(true)}>
             {t('access.link')}

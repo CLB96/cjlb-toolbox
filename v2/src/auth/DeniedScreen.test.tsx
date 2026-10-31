@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { DeniedScreen } from './DeniedScreen'
 
 vi.mock('../access/accessService', () => ({
@@ -6,7 +7,7 @@ vi.mock('../access/accessService', () => ({
   submitAccessRequest: vi.fn(),
   watchMyAllowlist: vi.fn(),
 }))
-import { getMyRequest, watchMyAllowlist } from '../access/accessService'
+import { getMyRequest, submitAccessRequest, watchMyAllowlist } from '../access/accessService'
 const get = vi.mocked(getMyRequest)
 const watch = vi.mocked(watchMyAllowlist)
 
@@ -32,5 +33,20 @@ test('al aparecer en la allowlist vuelve a evaluar el acceso sin recargar', asyn
   expect(watch).toHaveBeenCalledWith('ana@x.com', onRecheck, expect.any(Function))
   watch.mock.calls[0][1]()
   expect(onRecheck).toHaveBeenCalledTimes(1)
-  await screen.findByText('Tu solicitud fue aprobada. Entrando…')
+  await screen.findByText('Tu solicitud figura como aprobada, pero esta cuenta aún no tiene acceso.')
 })
+
+test.each(['rejected', 'approved'] as const)(
+  'con solicitud %s y sin acceso permite enviar una nueva y pasa a pendiente',
+  async (status) => {
+    get.mockResolvedValue({ ...base, status })
+    vi.mocked(submitAccessRequest).mockResolvedValue('sent')
+    render(ui)
+    expect(await screen.findByText('Puedes enviar una nueva solicitud.')).toBeInTheDocument()
+    expect(screen.queryByText('Tu solicitud fue aprobada. Entrando…')).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Solicitar acceso' }))
+    expect(submitAccessRequest).toHaveBeenCalledWith(expect.objectContaining({ email: 'ana@x.com', uid: 'u1' }))
+    expect(await screen.findByText('Solicitud enviada, pendiente de aprobación')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Solicitar acceso' })).toBeNull()
+  },
+)

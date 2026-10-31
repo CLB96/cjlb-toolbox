@@ -30,7 +30,7 @@ test('sin cuenta: sent, alreadyExists e ignored muestran el mismo texto neutral'
     unmount()
   }
   expect(new Set(texts).size).toBe(1)
-  expect(texts[0]).toBe('Si ya enviaste una solicitud, está pendiente de aprobación.')
+  expect(texts[0]).toBe('Si ya enviaste una solicitud, está pendiente de aprobación. Cuando sea aprobada, entra con Google o crea una cuenta con ese mismo correo.')
 })
 
 test('con cuenta: sent y alreadyExists muestran mensajes distintos', async () => {

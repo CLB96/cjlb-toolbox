@@ -45,7 +45,13 @@ function renderBranch(auth: Auth, session: Session | null): ReactNode {
   const { status, user } = auth
   if (status === 'loading') return <Starfield />
   if (status === 'signedOut' || !user) {
-    return <LoginScreen signInWithGoogle={auth.signInWithGoogle} signInWithEmail={auth.signInWithEmail} />
+    return (
+      <LoginScreen
+        signInWithGoogle={auth.signInWithGoogle}
+        signInWithEmail={auth.signInWithEmail}
+        signUpWithEmail={auth.signUpWithEmail}
+      />
+    )
   }
 
   const onSignOut = () => void auth.signOut()

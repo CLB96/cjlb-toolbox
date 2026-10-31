@@ -36,3 +36,24 @@ test('el enlace de solicitud muestra el formulario sin login y permite volver', 
   await userEvent.click(screen.getByRole('button', { name: 'Volver' }))
   expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
 })
+
+test('crear cuenta llama al alta con el correo y la contraseña escritos', async () => {
+  const signUpWithEmail = vi.fn().mockResolvedValue(undefined)
+  const signInWithEmail = vi.fn()
+  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={signInWithEmail} signUpWithEmail={signUpWithEmail} />)
+  await userEvent.type(screen.getByLabelText('Correo'), 'nuevo@b.com')
+  await userEvent.type(screen.getByLabelText('Contraseña'), 'secreta1')
+  await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+  expect(signUpWithEmail).toHaveBeenCalledWith('nuevo@b.com', 'secreta1')
+  expect(signInWithEmail).not.toHaveBeenCalled()
+})
+
+test('si el alta falla muestra un mensaje genérico', async () => {
+  const signUpWithEmail = vi.fn().mockRejectedValue(new Error('auth/weak-password'))
+  render(<LoginScreen signInWithGoogle={vi.fn()} signInWithEmail={vi.fn()} signUpWithEmail={signUpWithEmail} />)
+  await userEvent.type(screen.getByLabelText('Correo'), 'nuevo@b.com')
+  await userEvent.type(screen.getByLabelText('Contraseña'), '1')
+  await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo crear la cuenta')
+  expect(screen.queryByText(/weak-password/)).toBeNull()
+})
