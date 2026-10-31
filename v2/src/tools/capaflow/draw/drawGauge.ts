@@ -1,4 +1,4 @@
-import type { Lang } from '../logic'
+import { classifyCpk, type Lang } from '../logic'
 import type { HitTest } from './canvas'
 
 export const GAUGE_W = 280
@@ -77,16 +77,10 @@ export function drawGauge(canvas: HTMLCanvasElement, cpk: number | null, color: 
     const dy = my - cy
     const d = Math.sqrt(dx * dx + dy * dy)
     if (d < innerR || d > R) return null
-    let angle = Math.atan2(dy, dx)
-    if (angle < -Math.PI / 2) angle += 2 * Math.PI
-    const normAngle = (angle - Math.PI) / Math.PI
+    // Upper half only: angle in [-PI, 0] maps to 0..1 across the whole arc (C4).
+    const normAngle = (Math.atan2(dy, dx) + Math.PI) / Math.PI
     if (normAngle < 0 || normAngle > 1) return null
     const hovered = normAngle * MAX_V
-    const es = lang === 'es'
-    let label = es ? 'No Capaz' : 'Not Capable'
-    if (hovered >= 1.67) label = 'World Class'
-    else if (hovered >= 1.33) label = es ? 'Capaz' : 'Capable'
-    else if (hovered >= 1.0) label = 'Marginal'
-    return `Cpk: ${hovered.toFixed(3)}\n${label}`
+    return `Cpk: ${hovered.toFixed(3)}\n${classifyCpk(hovered, lang).label}`
   }
 }

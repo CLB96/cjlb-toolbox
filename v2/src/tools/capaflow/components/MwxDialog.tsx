@@ -18,7 +18,7 @@ const extOf = (name: string): string => {
 
 /** Modal del conversor MWX/MWP/MPX -> Excel (openMwxConverter, clearMwxFiles, convertMwxFiles). */
 export function MwxDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useCapaT()
+  const { t, lang } = useCapaT()
   const [files, setFiles] = useState<File[]>([])
   const [log, setLog] = useState<LogEntry[]>([])
   const [busy, setBusy] = useState(false)
@@ -27,7 +27,7 @@ export function MwxDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const counter = useRef(0)
 
   const addLog = (text: string, type: MwxLogType = 'info') => {
-    const entry: LogEntry = { id: counter.current++, type, text: `[${new Date().toLocaleTimeString()}] ${text}` }
+    const entry: LogEntry = { id: counter.current++, type, text: `[${new Date().toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US')}] ${text}` }
     setLog((l) => [...l, entry])
   }
   const clear = () => {
@@ -44,7 +44,7 @@ export function MwxDialog({ open, onClose }: { open: boolean; onClose: () => voi
     setOver(false)
     const dropped = Array.from(e.dataTransfer.files).filter((f) => isMwx(f.name))
     if (dropped.length > 0) setFiles((f) => [...f, ...dropped])
-    else addLog('⚠ Solo archivos .MWX, .MWP o .MPX son permitidos', 'warning')
+    else addLog(t('v2.onlyMwx'), 'warning')
   }
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? [])
@@ -55,7 +55,7 @@ export function MwxDialog({ open, onClose }: { open: boolean; onClose: () => voi
     setBusy(true)
     setLog([])
     try {
-      await convertMwxFiles(files, addLog)
+      await convertMwxFiles(files, addLog, lang)
     } finally {
       setBusy(false)
     }
@@ -89,14 +89,14 @@ export function MwxDialog({ open, onClose }: { open: boolean; onClose: () => voi
                 <span className="cf-mwx__ext">{extOf(file.name)}</span>
                 <span className="cf-mwx__name">{file.name}</span>
                 <span className="cf-muted">{(file.size / 1024).toFixed(1)} KB</span>
-                <button type="button" className="cf-mwx__rm" title="Eliminar" aria-label="Eliminar" onClick={() => removeAt(index)}>×</button>
+                <button type="button" className="cf-mwx__rm" title={t('v2.remove')} aria-label={t('v2.remove')} onClick={() => removeAt(index)}>×</button>
               </li>
             ))}
           </ul>
         )}
         <div className="cf-head__actions">
           <Button variant="ghost" onClick={clear} disabled={busy}>{t('mwx.clear')}</Button>
-          <Button onClick={onConvert} disabled={busy || files.length === 0}>{busy ? '⏳ Procesando...' : t('mwx.convert')}</Button>
+          <Button onClick={onConvert} disabled={busy || files.length === 0}>{busy ? t('v2.processing') : t('mwx.convert')}</Button>
         </div>
         {log.length > 0 && (
           <div className="cf-mwx__log" data-testid="cf-mwx-log" role="log">

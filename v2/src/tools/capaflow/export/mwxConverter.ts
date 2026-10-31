@@ -1,5 +1,7 @@
 // Conversor MWX/MWP/MPX -> Excel (convertSingleMwxFile). JSZip 3.10.1 + SheetJS 0.18.5, ambos bajo demanda.
-// Igual que el original: lee solo la primera hoja (sheet.json), mensajes de registro fijos en español.
+// Lee la primera hoja (sheet.json); si hay más, avisa en el registro cuáles se omiten (C8). Mensajes en el idioma del toolbox.
+import { fill, translate, type CapaKey } from '../i18n'
+import type { Lang } from '../logic'
 
 export type MwxLogType = 'info' | 'success' | 'error' | 'warning'
 export type MwxLog = (message: string, type?: MwxLogType) => void
@@ -20,20 +22,25 @@ export const MWX_EXT = /\.(mwx|mwp|mpx)$/i
 export const xlsxName = (name: string): string => name.replace(MWX_EXT, '.xlsx')
 
 /** Convierte el contenido del archivo en un libro XLSX (bytes). Lanza los mismos errores que el original. */
-export async function mwxToXlsx(buffer: ArrayBuffer, log: MwxLog): Promise<Uint8Array> {
+export async function mwxToXlsx(buffer: ArrayBuffer, log: MwxLog, lang: Lang = 'es'): Promise<Uint8Array> {
+  const tr = (key: CapaKey, vars: Record<string, string | number> = {}) => fill(translate(lang, key), vars)
   const { default: JSZip } = await import('jszip')
   const XLSX = await import('xlsx')
   const zip = await JSZip.loadAsync(buffer)
-  const sheetJsonFile = zip.file(/sheets\/.*\/sheet\.json$/i)[0]
+  const sheetFiles = zip.file(/sheets\/.*\/sheet\.json$/i)
+  const sheetJsonFile = sheetFiles[0]
   if (!sheetJsonFile) {
-    throw new Error('No se encontró sheet.json en el archivo (verifica que sea un MWX/MWP/MPX válido)')
+    throw new Error(tr('mwx.err.noSheet'))
   }
   const data = JSON.parse(await sheetJsonFile.async('text')) as MwxSheet
   const columns = data.Data?.Columns || []
   if (columns.length === 0) {
-    throw new Error('No se encontraron columnas de datos')
+    throw new Error(tr('mwx.err.noColumns'))
   }
-  log(`  └─ Encontradas ${columns.length} columna(s) de datos`, 'info')
+  if (sheetFiles.length > 1) {
+    log(tr('mwx.log.sheets', { n: sheetFiles.length, first: sheetJsonFile.name, others: sheetFiles.slice(1).map((f) => f.name).join(', ') }), 'warning')
+  }
+  log(tr('mwx.log.columns', { n: columns.length }), 'info')
 
   const wb = XLSX.utils.book_new()
   const sheetName = data.Data?.PrivateTitle || 'Hoja 1'
@@ -49,7 +56,7 @@ export async function mwxToXlsx(buffer: ArrayBuffer, log: MwxLog): Promise<Uint8
     columnData.push(colValues)
     maxRows = Math.max(maxRows, colValues.length)
   })
-  log(`  └─ Total de ${maxRows} filas de datos`, 'info')
+  log(tr('mwx.log.rows', { n: maxRows }), 'info')
 
   const excelData: (number | string)[][] = [headers]
   for (let row = 0; row < maxRows; row++) {
@@ -63,14 +70,14 @@ export async function mwxToXlsx(buffer: ArrayBuffer, log: MwxLog): Promise<Uint8
   XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31))
 
   if ((data.Data?.Charts?.length ?? 0) > 0 || (data.Data?.Analysis?.length ?? 0) > 0) {
-    log('  ⚠ Archivo contiene gráficas/análisis no convertibles', 'warning')
+    log(tr('mwx.log.unconvertible'), 'warning')
   }
   return XLSX.write(wb, { bookType: 'xlsx', type: 'array' }) as Uint8Array
 }
 
 /** Convierte y descarga un archivo (un .xlsx por entrada). */
-export async function convertMwxFile(file: File, log: MwxLog): Promise<void> {
-  const bytes = await mwxToXlsx(await file.arrayBuffer(), log)
+export async function convertMwxFile(file: File, log: MwxLog, lang: Lang = 'es'): Promise<void> {
+  const bytes = await mwxToXlsx(await file.arrayBuffer(), log, lang)
   const blob = new Blob([bytes as BlobPart], { type: XLSX_MIME })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -78,22 +85,23 @@ export async function convertMwxFile(file: File, log: MwxLog): Promise<void> {
   a.download = xlsxName(file.name)
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 2000)
-  log(`  ✓ Guardado como: ${a.download}`, 'success')
+  log(fill(translate(lang, 'mwx.log.saved'), { name: a.download }), 'success')
 }
 
 /** convertMwxFiles: procesa en orden, registra errores por archivo y devuelve cuántos salieron bien. */
-export async function convertMwxFiles(files: File[], log: MwxLog): Promise<number> {
+export async function convertMwxFiles(files: File[], log: MwxLog, lang: Lang = 'es'): Promise<number> {
+  const tr = (key: CapaKey, vars: Record<string, string | number>) => fill(translate(lang, key), vars)
   let ok = 0
-  log(`📂 Iniciando conversión de ${files.length} archivo(s)...`, 'info')
+  log(tr('mwx.log.start', { n: files.length }), 'info')
   for (const file of files) {
     try {
-      log(`🔄 Procesando: ${file.name}`, 'info')
-      await convertMwxFile(file, log)
+      log(tr('mwx.log.processing', { file: file.name }), 'info')
+      await convertMwxFile(file, log, lang)
       ok++
     } catch (error) {
-      log(`❌ Error en ${file.name}: ${error instanceof Error ? error.message : String(error)}`, 'error')
+      log(tr('mwx.log.error', { file: file.name, msg: error instanceof Error ? error.message : String(error) }), 'error')
     }
   }
-  log(`✅ Conversión completada: ${ok}/${files.length} exitosos`, 'success')
+  log(tr('mwx.log.done', { ok, n: files.length }), 'success')
   return ok
 }

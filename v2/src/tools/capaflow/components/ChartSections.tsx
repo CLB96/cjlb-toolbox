@@ -37,12 +37,12 @@ export function Section({ panel, title, children }: SectionProps) {
 export function ChartSections({ r }: { r: AnalysisResult }) {
   const { t, lang } = useCapaT()
   const env = useDrawEnv()
-  const run = buildRunChart(r, 'screen')
+  const run = buildRunChart(r)
   return (
     <>
       <Section panel="run" title={t('results.runChartTitle')}>
         <CanvasChart className="cf-canvas" height={200} label={t('results.runChartTitle')} deps={[r, env]} draw={(c) => drawRunChart(c, r, env)} />
-        <p className="cf-note" data-testid="cf-run-note">{runChartNote(run.runs ?? 0, run.expectedRuns ?? 0, lang)}</p>
+        <p className="cf-note" data-testid="cf-run-note">{runChartNote(run.runs, run.expectedRuns, lang)}</p>
       </Section>
       <Section panel="qq" title={t('results.qqTitle')}>
         <CanvasChart className="cf-canvas" height={200} label={t('results.qqTitle')} deps={[r, env]} draw={(c) => drawQQ(c, r, env)} />

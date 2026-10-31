@@ -17,11 +17,11 @@ function deviationColor(t2: number, isDark: boolean): string {
     : `rgba(${Math.round(220)},${Math.round(56 - 18 * u)},${Math.round(38 - 12 * u)},0.85)`
 }
 
-/** Probabilidad normal con X = observado, Y = teórico (drawQQPlot, original 4957-5102). */
+/** Probabilidad normal con X = teórico, Y = observado (igual que el PNG) (drawQQPlot, original 4957-5102). */
 export function drawQQ(canvas: HTMLCanvasElement, r: AnalysisResult, env: DrawEnv): HitTest | null {
   const ctx = prepareCanvas(canvas, 200, 700)
   if (!ctx) return null
-  const { isDark, lang } = env
+  const { isDark } = env
   const W = canvas.width
   const H = canvas.height
   const m = buildQQ(r)
@@ -61,9 +61,9 @@ export function drawQQ(canvas: HTMLCanvasElement, r: AnalysisResult, env: DrawEn
   ctx.setLineDash([])
 
   pts.forEach((p) => {
-    const x = toX(p.obs)
-    const y0 = toY(p.th - bandHalf)
-    const y1 = toY(p.th + bandHalf)
+    const x = toX(p.th)
+    const y0 = toY(p.obs - bandHalf)
+    const y1 = toY(p.obs + bandHalf)
     if (x >= pad.l && x <= pad.l + pW) {
       ctx.fillStyle = isDark ? 'rgba(74,222,128,0.06)' : 'rgba(22,163,74,0.05)'
       ctx.fillRect(x - 1, Math.min(y0, y1), 2, Math.abs(y1 - y0))
@@ -71,9 +71,9 @@ export function drawQQ(canvas: HTMLCanvasElement, r: AnalysisResult, env: DrawEn
   })
 
   pts.forEach((p) => {
-    const x = toX(p.obs)
-    const y = toY(p.th)
-    const dev = Math.abs(y - toY(p.obs))
+    const x = toX(p.th)
+    const y = toY(p.obs)
+    const dev = Math.abs(y - toY(p.th))
     const t2 = Math.min(dev / (pH * 0.25), 1)
     const col = deviationColor(t2, isDark)
     if (x < pad.l - 4 || x > pad.l + pW + 4 || y < pad.t - 4 || y > pad.t + pH + 4) return
@@ -99,22 +99,21 @@ export function drawQQ(canvas: HTMLCanvasElement, r: AnalysisResult, env: DrawEn
   ctx.save()
   ctx.translate(14, pad.t + pH / 2)
   ctx.rotate(-Math.PI / 2)
-  ctx.fillStyle = isDark ? 'rgba(74,222,128,0.7)' : 'rgba(22,163,74,0.7)'
-  ctx.font = '10px DM Mono,monospace'
-  ctx.textAlign = 'center'
-  ctx.fillText(lang === 'es' ? 'Cuantiles Teóricos' : 'Theoretical Quantiles', 0, 0)
-  ctx.restore()
   ctx.fillStyle = isDark ? 'rgba(251,191,36,0.7)' : 'rgba(180,83,9,0.7)'
   ctx.font = '10px DM Mono,monospace'
   ctx.textAlign = 'center'
-  ctx.fillText(lang === 'es' ? 'Datos Obs.' : 'Observed', pad.l + pW / 2, H - 8)
+  ctx.fillText(env.tr('qq.observed'), 0, 0)
+  ctx.restore()
+  ctx.fillStyle = isDark ? 'rgba(74,222,128,0.7)' : 'rgba(22,163,74,0.7)'
+  ctx.font = '10px DM Mono,monospace'
+  ctx.textAlign = 'center'
+  ctx.fillText(env.tr('qq.theoretical'), pad.l + pW / 2, H - 8)
 
-  // Tooltip: el original lo deja en español en ambos idiomas.
   return (mx, my) => {
-    const hit = nearest(pts, (p) => toX(p.obs), (p) => toY(p.th), mx, my)
+    const hit = nearest(pts, (p) => toX(p.th), (p) => toY(p.obs), mx, my)
     if (!hit) return null
     const { obs, th } = hit.item
     const percentile = (((hit.index + 0.5) / N) * 100).toFixed(1)
-    return `Punto #${hit.index + 1} (${percentile}%)\nObservado: ${obs.toFixed(4)}\nTeórico: ${th.toFixed(4)}\nDesviación: ${(th - obs).toFixed(4)}`
+    return `${env.tr('qq.point')} #${hit.index + 1} (${percentile}%)\n${env.tr('qq.observedTip')}: ${obs.toFixed(4)}\n${env.tr('qq.theoreticalTip')}: ${th.toFixed(4)}\n${env.tr('qq.deviation')}: ${(th - obs).toFixed(4)}`
   }
 }

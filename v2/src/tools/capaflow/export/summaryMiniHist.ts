@@ -27,14 +27,15 @@ export function summaryDrawMiniHist(
   c.font = '700 11px "Space Grotesk", Inter, sans-serif'; c.fillStyle = cpkCol
   c.textAlign = 'left'; c.fillText(`#${posNum}`, bx + 6, by + 21)
 
-  // Nombre truncado. Quirk original: la comparación usa el texto de respaldo en español, así que en EN sin nombre añade "…".
+  // Nombre truncado. Los puntos suspensivos solo se añaden si el nombre se recortó (B8).
   const maxNameW = bw - 90
-  let displayName = r.pointName || (env.lang === 'es' ? `Punto ${posNum}` : `Point ${posNum}`)
+  const fullName = r.pointName || (env.lang === 'es' ? `Punto ${posNum}` : `Point ${posNum}`)
+  let displayName = fullName
   c.font = '600 10px Inter, sans-serif'; c.fillStyle = P.textSub
   while (c.measureText(displayName).width > maxNameW && displayName.length > 3) {
     displayName = displayName.slice(0, -1)
   }
-  if (displayName !== (r.pointName || `Punto ${posNum}`)) displayName += '…'
+  if (displayName !== fullName) displayName += '…'
   c.textAlign = 'left'; c.fillText(displayName, bx + 26, by + 21)
 
   c.font = '700 10px "Space Grotesk", Inter, sans-serif'; c.fillStyle = cpkCol
@@ -42,7 +43,7 @@ export function summaryDrawMiniHist(
 
   if (!r.data || r.data.length < 2) {
     c.font = '400 11px Inter, sans-serif'; c.fillStyle = P.textDim
-    c.textAlign = 'center'; c.fillText('Sin datos', bx + bw / 2, by + bh / 2)
+    c.textAlign = 'center'; c.fillText(env.t('v2.noData'), bx + bw / 2, by + bh / 2)
     return
   }
 

@@ -1,48 +1,56 @@
 import { label } from './labels'
-import { median, quartile, stddev } from './stats'
+import { quartile } from './stats'
 import type { AnalysisResult, Lang } from './types'
 
 export interface RunChartModel {
   data: number[]
-  startIndex: number
   N: number
   med: number
   yMin: number
   yMax: number
-  /** Only for the on-screen variant. */
-  runs: number | null
-  expectedRuns: number | null
+  /** Observed runs among the points off the median (points equal to the median are skipped). */
+  runs: number
+  /** Points above / below the median. */
+  n1: number
+  n2: number
+  /** Standard runs test: 1 + 2 n1 n2 / (n1 + n2). */
+  expectedRuns: number
+  /** Variance of the number of runs: 2 n1 n2 (2 n1 n2 - n1 - n2) / ((n1 + n2)^2 (n1 + n2 - 1)). */
+  runsVariance: number
 }
 
-/** On-screen: last 25 points with their own median. PNG: all data with the full-data median. */
-export function buildRunChart(r: AnalysisResult, mode: 'screen' | 'png'): RunChartModel {
-  if (mode === 'png') {
-    const ext = r.sOverall * 0.5
-    return { data: r.data, startIndex: 0, N: r.data.length, med: r.med, yMin: r.minV - ext, yMax: r.maxV + ext, runs: null, expectedRuns: null }
-  }
-  const maxPoints = 25
-  const data = r.data.slice(-maxPoints)
-  const startIndex = r.data.length - data.length
-  const N = data.length
-  const med = median(data)
-  let runs = 1
-  let currentSide = data[0] > med ? 1 : data[0] < med ? -1 : 0
-  for (let i = 1; i < N; i++) {
-    const side = data[i] > med ? 1 : data[i] < med ? -1 : 0
-    if (side !== 0 && side !== currentSide) {
+/** Standard (Wald-Wolfowitz) runs test around the median. */
+export function runsTest(data: number[], med: number): Pick<RunChartModel, 'runs' | 'n1' | 'n2' | 'expectedRuns' | 'runsVariance'> {
+  let n1 = 0
+  let n2 = 0
+  let runs = 0
+  let side = 0
+  for (const v of data) {
+    const s = v > med ? 1 : v < med ? -1 : 0
+    if (s === 0) continue
+    if (s === 1) n1++
+    else n2++
+    if (s !== side) {
       runs++
-      currentSide = side
+      side = s
     }
   }
-  const expectedRuns = Math.round((2 * N - 1) / 3)
-  const ext = stddev(data, true) * 0.5
-  return { data, startIndex, N, med, runs, expectedRuns, yMin: Math.min(...data) - ext, yMax: Math.max(...data) + ext }
+  const m = n1 + n2
+  const expectedRuns = m > 0 ? 1 + (2 * n1 * n2) / m : 0
+  const runsVariance = m > 1 ? (2 * n1 * n2 * (2 * n1 * n2 - m)) / (m * m * (m - 1)) : 0
+  return { runs, n1, n2, expectedRuns, runsVariance }
+}
+
+/** All data with the full-data median, for the screen and the PNG alike (A12). */
+export function buildRunChart(r: AnalysisResult): RunChartModel {
+  const ext = r.sOverall * 0.5
+  return { data: r.data, N: r.data.length, med: r.med, yMin: r.minV - ext, yMax: r.maxV + ext, ...runsTest(r.data, r.med) }
 }
 
 export function runChartNote(runs: number, expectedRuns: number, lang: Lang): string {
   const es = lang === 'es'
-  return `${label(lang, 'rc.runCount')}: ${runs} | ${label(lang, 'rc.expected')}: ~${expectedRuns} | ` +
-    (es ? 'Variación aleatoria esperada si los datos son independientes (aprox. (2n-1)/3).' : 'Random variation expected when data is independent (approx. (2n-1)/3).')
+  return `${label(lang, 'rc.runCount')}: ${runs} | ${label(lang, 'rc.expected')}: ~${expectedRuns.toFixed(1)} | ` +
+    (es ? 'Variación aleatoria esperada si los datos son independientes (prueba de rachas: 1 + 2·n₁·n₂/(n₁+n₂)).' : 'Random variation expected when data is independent (runs test: 1 + 2·n₁·n₂/(n₁+n₂)).')
 }
 
 /** Beasley-Springer-Moro approximation of the inverse normal CDF. */
@@ -72,11 +80,16 @@ export interface QQModel {
   xPad: number
   yPad: number
   se: number
-  /** 1.36 * se, the half-width of the fixed "confidence" band (the confidence field is not used). */
+  /** k * se, the half-width of the band; k = 1.36 at 95 % confidence and follows the confidence field. */
   bandHalf: number
 }
 
-/** Screen orientation: X = observed, Y = theoretical. */
+/** Band coefficient for a significance level; 1.36 exactly at alpha = 0.05. */
+export function qqBandK(alpha: number): number {
+  return alpha === 0.05 ? 1.36 : 1.36 * Math.sqrt(Math.log(2 / alpha) / Math.log(40))
+}
+
+/** Orientation shared by screen and PNG: X = theoretical, Y = observed. */
 export function buildQQ(r: AnalysisResult): QQModel {
   const sorted = [...r.data].sort((a, b) => a - b)
   const N = sorted.length
@@ -85,14 +98,14 @@ export function buildQQ(r: AnalysisResult): QQModel {
   const pts = sorted.map((v, i) => ({ obs: v, th: mu + sigma * probit((i + 0.5) / N) }))
   const obsVals = pts.map((p) => p.obs)
   const thVals = pts.map((p) => p.th)
-  const xMin = Math.min(...obsVals)
-  const xMax = Math.max(...obsVals)
-  const yMin = Math.min(...thVals)
-  const yMax = Math.max(...thVals)
+  const xMin = Math.min(...thVals)
+  const xMax = Math.max(...thVals)
+  const yMin = Math.min(...obsVals)
+  const yMax = Math.max(...obsVals)
   const xPad = (xMax - xMin) * 0.08 || 0.01
   const yPad = (yMax - yMin) * 0.08 || 0.01
   const se = sigma * Math.sqrt((Math.PI / 2) / N)
-  return { pts, xMin, xMax, yMin, yMax, xPad, yPad, se, bandHalf: 1.36 * se }
+  return { pts, xMin, xMax, yMin, yMax, xPad, yPad, se, bandHalf: qqBandK(r.alpha ?? 0.05) * se }
 }
 
 export interface BoxPlotModel {

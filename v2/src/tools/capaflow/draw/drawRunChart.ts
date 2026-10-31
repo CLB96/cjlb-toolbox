@@ -3,14 +3,14 @@ import { nearest, prepareCanvas, type DrawEnv, type HitTest, type Pad } from './
 
 const PAD: Pad = { t: 30, r: 28, b: 32, l: 52 }
 
-/** Gráfica de corrida: últimos 25 puntos con su propia mediana (drawRunChart, original 4829-4955). */
+/** Gráfica de corrida: todos los datos con la mediana global (drawRunChart, original 4829-4955). */
 export function drawRunChart(canvas: HTMLCanvasElement, r: AnalysisResult, env: DrawEnv): HitTest | null {
   const ctx = prepareCanvas(canvas, 200, 700)
   if (!ctx) return null
   const { isDark } = env
   const W = canvas.width
   const H = canvas.height
-  const { data, startIndex, N, med, yMin, yMax } = buildRunChart(r, 'screen')
+  const { data, N, med, yMin, yMax } = buildRunChart(r)
   const pad = PAD
   const pW = W - pad.l - pad.r
   const pH = H - pad.t - pad.b
@@ -78,13 +78,13 @@ export function drawRunChart(canvas: HTMLCanvasElement, r: AnalysisResult, env: 
   ctx.fillStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(30,60,120,0.35)'
   ctx.textAlign = 'center'
   const step = Math.max(1, Math.ceil(N / 12))
-  for (let i = 0; i < N; i += step) ctx.fillText(String(startIndex + i + 1), toX(i), H - 5)
+  for (let i = 0; i < N; i += step) ctx.fillText(String(i + 1), toX(i), H - 5)
 
   return (mx, my) => {
     const idxHit = nearest(data.map((v, i) => ({ v, i })), (p) => toX(p.i), (p) => toY(p.v), mx, my)
     if (!idxHit) return null
     const { v, i } = idxHit.item
     const status = v >= med ? env.tr('tooltip.aboveMedian') : env.tr('tooltip.belowMedian')
-    return `${env.tr('tooltip.observation')} #${startIndex + i + 1}\n${env.tr('tooltip.value')}: ${v.toFixed(4)}\n${env.tr('tooltip.median')}: ${med.toFixed(4)}\nΔ: ${(v - med).toFixed(4)}\n${status}`
+    return `${env.tr('tooltip.observation')} #${i + 1}\n${env.tr('tooltip.value')}: ${v.toFixed(4)}\n${env.tr('tooltip.median')}: ${med.toFixed(4)}\nΔ: ${(v - med).toFixed(4)}\n${status}`
   }
 }

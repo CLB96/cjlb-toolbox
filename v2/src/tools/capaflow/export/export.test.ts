@@ -97,9 +97,9 @@ describe('Resumen comparativo', () => {
     expect(await buildSummaryPages({ ...data, points: [] }, es)).toEqual([])
   })
 
-  it('conserva el quirk del nombre: en inglés un punto sin nombre lleva "…"', async () => {
+  it('B8: en inglés un punto sin nombre no lleva puntos suspensivos', async () => {
     await buildSummaryPages({ points: [point(0)], markers: {}, photo: null, projectName: '' }, en)
-    expect(texts(made.find((m) => m.width === 2400)!)).toContain('Point 1…')
+    expect(texts(made.find((m) => m.width === 2400)!)).toContain('Point 1')
   })
 })
 
@@ -116,8 +116,9 @@ describe('Descargar Proyecto (ZIP)', () => {
 
   it('el ZIP trae un PNG por análisis más el resumen, dentro de la carpeta', async () => {
     const data: ProjectExportData = { points: [point(0, 'Eje A/1'), point(1, '')], markers: {}, photo: null, projectName: 'Mi Proyecto' }
-    const { blob, folderName } = await buildProjectZip(data, es)
+    const { blob, folderName, failed } = await buildProjectZip(data, es)
     expect(folderName).toBe('Mi Proyecto')
+    expect(failed).toEqual([]) // C7: lista de archivos que fallaron
     const zip = await JSZip.loadAsync(await readBlob(blob))
     const names = Object.keys(zip.files).filter((n) => !zip.files[n]!.dir).sort()
     expect(names).toEqual(['Mi Proyecto/00_Resumen_Comparativo.png', 'Mi Proyecto/01_Eje A_1.png', 'Mi Proyecto/02_Analisis_2.png'])
@@ -187,6 +188,17 @@ describe('Conversor MWX/MWP/MPX', () => {
     expect(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]!]!, { header: 1, blankrows: true })).toEqual([['Largo', 'Corto'], [1.5, 'a'], [2.5, 'b'], [3.5, '']])
     expect(log.mock.calls.map((c) => c[0])).toEqual(['  └─ Encontradas 2 columna(s) de datos', '  └─ Total de 3 filas de datos', '  ⚠ Archivo contiene gráficas/análisis no convertibles'])
     expect(xlsxName('Datos.MPX')).toBe('Datos.xlsx')
+  })
+
+  it('C8: con más de una hoja convierte la primera y avisa de las omitidas', async () => {
+    const zip = new JSZip()
+    zip.file('sheets/s1/sheet.json', JSON.stringify({ Data: { Columns: [col('A', [1, 2])] } }))
+    zip.file('sheets/s2/sheet.json', JSON.stringify({ Data: { Columns: [col('B', [3])] } }))
+    const log = vi.fn()
+    await mwxToXlsx(await zip.generateAsync({ type: 'arraybuffer' }), log, 'en')
+    const warn = log.mock.calls.find((c) => c[1] === 'warning')!
+    expect(warn[0]).toContain('2 sheets')
+    expect(warn[0]).toContain('sheets/s2/sheet.json')
   })
 
   it('errores del original: sin sheet.json y sin columnas', async () => {

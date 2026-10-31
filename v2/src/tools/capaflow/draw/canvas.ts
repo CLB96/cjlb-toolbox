@@ -4,7 +4,7 @@ export interface DrawEnv {
   isDark: boolean
   lang: Lang
   /** Traductor de los textos de tooltip (claves tooltip.*). */
-  tr: (key: 'tooltip.binRange' | 'tooltip.freq' | 'tooltip.aboveMedian' | 'tooltip.belowMedian' | 'tooltip.observation' | 'tooltip.value' | 'tooltip.median' | 'cc.ooc' | 'cc.inControl') => string
+  tr: (key: 'tooltip.binRange' | 'tooltip.freq' | 'tooltip.aboveMedian' | 'tooltip.belowMedian' | 'tooltip.observation' | 'tooltip.value' | 'tooltip.median' | 'cc.ooc' | 'cc.inControl' | 'qq.point' | 'qq.observedTip' | 'qq.theoreticalTip' | 'qq.deviation' | 'qq.observed' | 'qq.theoretical') => string
 }
 
 /** Devuelve el texto del tooltip para una posición del canvas, o null si no hay nada bajo el puntero. */

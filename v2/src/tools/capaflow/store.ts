@@ -3,6 +3,7 @@ import {
   runAnalysis,
   SAMPLE_INPUT,
   type AnalysisErrorCode,
+  type AnalysisWarning,
   type AnalysisInput,
   type AnalysisResult,
   type CCTypeChoice,
@@ -10,7 +11,7 @@ import {
 
 export const MARKER_SIZE_DEFAULT = 36
 
-/** Campos del formulario: los del original (`lsl`, `usl`, ...) más "Confianza (%)", que el original nunca usa. */
+/** Campos del formulario: los del original (`lsl`, `usl`, ...) más "Confianza (%)", que fija el nivel de significancia (alfa = 1 - confianza/100). */
 export interface CapaForm extends AnalysisInput {
   confidence: string
 }
@@ -49,7 +50,7 @@ export interface CapaState {
   projectName: string
 }
 
-export type CalculateResult = { ok: true } | { ok: false; error: AnalysisErrorCode }
+export type CalculateResult = { ok: true; warnings: AnalysisWarning[] } | { ok: false; error: AnalysisErrorCode }
 
 export interface CapaActions {
   setField(key: keyof CapaForm, value: string): void
@@ -107,7 +108,7 @@ export const createCapaStore = (): CapaApi =>
         const point: CapaPoint = { id: s.counter, result: outcome.result, ccType: 'auto', at: Date.now() }
         return { points: [...s.points, point], activeId: point.id, counter: s.counter + 1 }
       })
-      return { ok: true }
+      return { ok: true, warnings: outcome.warnings }
     },
 
     selectPoint: (id) => set((s) => (s.points.some((p) => p.id === id) ? { activeId: id } : s)),

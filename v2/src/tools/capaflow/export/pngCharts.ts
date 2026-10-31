@@ -11,7 +11,7 @@ export function pngRunChart(c: C, cardX: number, cardY: number, cardW: number, c
   const PAD_L = 70, PAD_R = 28, PAD_T = HEADER_OFFSET + 12, PAD_B = 52
   const pW = cardW - PAD_L - PAD_R, pH = cardH - PAD_T - PAD_B
   const ox = cardX + PAD_L, oy = cardY + PAD_T
-  const { data, N, med, yMin, yMax } = buildRunChart(r, 'png')
+  const { data, N, med, yMin, yMax, runs, expectedRuns } = buildRunChart(r)
   const toX = (i: number) => ox + (i / (N - 1)) * pW
   const toY = (v: number) => oy + pH - ((v - yMin) / (yMax - yMin)) * pH
   const medY = toY(med)
@@ -44,12 +44,9 @@ export function pngRunChart(c: C, cardX: number, cardY: number, cardW: number, c
   const stepX = Math.max(1, Math.ceil(N / 14))
   for (let i = 0; i < N; i += stepX) c.fillText(String(i + 1), toX(i), oy + pH + 28)
 
-  let runs = 1
-  let cSide = data[0]! > med ? 1 : data[0]! < med ? -1 : 0
-  for (let i = 1; i < N; i++) { const s = data[i]! > med ? 1 : data[i]! < med ? -1 : 0; if (s !== 0 && s !== cSide) { runs++; cSide = s } }
   const es = lang === 'es'
   c.font = '500 15px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-  c.fillText(`${es ? 'Rachas' : 'Runs'}: ${runs}  |  ${es ? 'Esperado' : 'Expected'}: ~${Math.round((2 * N - 1) / 3)}  |  n=${N}`, ox, oy + pH + 46)
+  c.fillText(`${es ? 'Rachas' : 'Runs'}: ${runs}  |  ${es ? 'Esperado' : 'Expected'}: ~${expectedRuns.toFixed(1)}  |  n=${N}`, ox, oy + pH + 46)
 }
 
 export function pngQQPlot(c: C, cardX: number, cardY: number, cardW: number, cardH: number, r: AnalysisResult, P: ExportPalette, env: ExportEnv): void {
@@ -58,12 +55,8 @@ export function pngQQPlot(c: C, cardX: number, cardY: number, cardW: number, car
   const PAD_L = 72, PAD_R = 28, PAD_T = HEADER_OFFSET + 12, PAD_B = 52
   const pW = cardW - PAD_L - PAD_R, pH = cardH - PAD_T - PAD_B
   const ox = cardX + PAD_L, oy = cardY + PAD_T
-  const { pts, se } = buildQQ(r)
-  const thVals = pts.map((p) => p.th), obsVals = pts.map((p) => p.obs)
-  // En el PNG el eje X es el teórico y el Y el observado (al revés que en pantalla).
-  const xMin = Math.min(...thVals), xMax = Math.max(...thVals)
-  const yMin = Math.min(...obsVals), yMax = Math.max(...obsVals)
-  const xPad = (xMax - xMin) * 0.08 || 0.01, yPad = (yMax - yMin) * 0.08 || 0.01
+  // Mismo criterio que en pantalla: X teórico, Y observado.
+  const { pts, bandHalf, xMin, xMax, yMin, yMax, xPad, yPad } = buildQQ(r)
   const toX2 = (v: number) => ox + ((v - (xMin - xPad)) / ((xMax + xPad) - (xMin - xPad))) * pW
   const toY2 = (v: number) => oy + pH - ((v - (yMin - yPad)) / ((yMax + yPad) - (yMin - yPad))) * pH
 
@@ -74,7 +67,7 @@ export function pngQQPlot(c: C, cardX: number, cardY: number, cardW: number, car
 
   c.fillStyle = isDark ? 'rgba(89,201,127,0.07)' : 'rgba(47,158,87,0.06)'
   pts.forEach((p) => {
-    const x = toX2(p.th), y0 = toY2(p.obs - 1.36 * se), y1 = toY2(p.obs + 1.36 * se)
+    const x = toX2(p.th), y0 = toY2(p.obs - bandHalf), y1 = toY2(p.obs + bandHalf)
     if (x >= ox && x <= ox + pW) c.fillRect(x - 1, Math.min(y0, y1), 2, Math.abs(y1 - y0))
   })
 
@@ -102,7 +95,7 @@ export function pngQQPlot(c: C, cardX: number, cardY: number, cardW: number, car
   for (let g = 0; g <= 4; g++) { const v = xMin - xPad + (g / 4) * (xMax + xPad - (xMin - xPad)); c.fillText(v.toFixed(2), toX2(v), oy + pH + 26) }
 
   c.font = '500 15px Inter, sans-serif'; c.fillStyle = P.textSub; c.textAlign = 'left'
-  const normOk = r.adTest.p >= 0.05
+  const normOk = r.isNormal
   c.fillText(`Anderson-Darling p=${r.adTest.p.toFixed(4)} · ${normOk ? 'Normal ✓' : (env.lang === 'es' ? 'No Normal ⚠' : 'Non-Normal ⚠')}`, ox, oy + pH + 46)
 }
 

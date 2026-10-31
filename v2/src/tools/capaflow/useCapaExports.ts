@@ -8,7 +8,7 @@ import { fontsReady, makeExportEnv, type ProjectExportData } from './export/expo
 import { downloadReadingGuide } from './export/guide/drawGuide'
 import { downloadPlanPng } from './export/planPng'
 import { downloadProjectZip } from './export/projectZip'
-import { useCapaT } from './i18n'
+import { fill, useCapaT } from './i18n'
 import { selectActive } from './store'
 
 const errorText = (e: unknown): string => 'Error: ' + (e instanceof Error ? e.message : String(e))
@@ -64,7 +64,7 @@ export function useCapaExports() {
   const summary = async () => {
     const data = projectData()
     if (data.points.length === 0) {
-      toast('info', 'No hay análisis para resumir')
+      toast('info', t('v2.noSummary'))
       return
     }
     setSummaryBusy(true)
@@ -84,8 +84,9 @@ export function useCapaExports() {
     setZipLabel(es ? '⏳ Generando PNGs…' : '⏳ Generating PNGs…')
     toast('info', es ? 'Generando proyecto ZIP…' : 'Generating project ZIP…')
     try {
-      const folderName = await downloadProjectZip(data, env, setZipLabel)
-      toast('ok', es ? `✓ Proyecto "${folderName}" descargado` : `✓ Project "${folderName}" downloaded`)
+      const { folderName, failed } = await downloadProjectZip(data, env, setZipLabel)
+      if (failed.length > 0) toast('warn', fill(t('v2.zipFailed'), { files: failed.join(', ') }))
+      else toast('ok', es ? `✓ Proyecto "${folderName}" descargado` : `✓ Project "${folderName}" downloaded`)
     } catch (e) {
       toast('error', errorText(e))
     } finally {

@@ -19,7 +19,7 @@ function Rows({ rows }: { rows: [string, string][] }) {
 
 /** Estadísticas del proceso y Todos los Índices (original 3967-4045). */
 export function StatsCards({ r }: { r: AnalysisResult }) {
-  const { t } = useCapaT()
+  const { t, lang } = useCapaT()
   const stats: [string, string][] = [
     [t('stats.n'), String(r.N)],
     [t('stats.mean'), fmt(r.xBar, 4)],
@@ -51,16 +51,16 @@ export function StatsCards({ r }: { r: AnalysisResult }) {
           {t('results.indicesTitle')}
         </h2>
         <div className="cf-group">{t('results.capacity')}</div>
-        <Rows rows={[['Cp', fmt(r.Cp)], ['Cpk', fmt(r.Cpk)], ['Cpu', fmt(r.Cpu)], ['Cpl', fmt(r.Cpl)], [t('idx.cpmLabel'), fmt(r.Cpm)], [t('idx.cmkLabel'), fmt(r.Cmk)]]} />
+        <Rows rows={[['Cp', fmt(r.Cp)], ['Cpk', fmt(r.Cpk)], ['Cpu', fmt(r.Cpu)], ['Cpl', fmt(r.Cpl)], [t('idx.cpmLabel'), fmt(r.Cpm)]]} />
         <div className="cf-group">{t('results.performance')}</div>
         <Rows rows={[['Pp', fmt(r.Pp)], ['Ppk', fmt(r.Ppk)], ['Ppu', fmt(r.Ppu)], ['Ppl', fmt(r.Ppl)]]} />
         <div className="cf-ppm">
           <span>{t('results.ppmCpk')}</span>
-          <strong style={{ color: cpkColor }} data-testid="cf-ppm-cpk">{fmtN(r.ppm)}</strong>
+          <strong style={{ color: cpkColor }} data-testid="cf-ppm-cpk">{fmtN(r.ppm, lang)}</strong>
         </div>
         <div className="cf-ppm">
           <span>{t('results.ppmPpk')}</span>
-          <strong style={{ color: ppkColor }} data-testid="cf-ppm-ppk">{fmtN(r.ppmOverall)}</strong>
+          <strong style={{ color: ppkColor }} data-testid="cf-ppm-ppk">{fmtN(r.ppmOverall, lang)}</strong>
         </div>
       </GlassPanel>
     </div>

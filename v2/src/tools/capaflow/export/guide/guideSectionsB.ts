@@ -82,8 +82,8 @@ export function guideRunQqBox(g: Guide, Y0: number): number {
   Y += Math.max(rcH, rcEnd - Y) + VGAP
 
   Y += callout('📊', es ? '¿Cuántas rachas son "normales"?' : 'How many runs are "normal"?',
-    es ? 'Para n datos, el número esperado de rachas aleatorias es aproximadamente (2n−1)/3. Si hay muy pocas rachas (tendencias largas), el proceso puede tener drift. Si hay demasiadas, puede haber sobre-ajuste o alternancia sistemática.'
-      : 'For n data points, the expected number of random runs is approximately (2n−1)/3. Too few runs (long trends) may indicate process drift. Too many may indicate over-adjustment or systematic alternation.',
+    es ? 'Con n₁ puntos sobre la mediana y n₂ bajo ella, el número esperado de rachas aleatorias es 1 + 2·n₁·n₂/(n₁+n₂) (≈ n/2 + 1). Si hay muy pocas rachas (tendencias largas), el proceso puede tener drift. Si hay demasiadas, puede haber sobre-ajuste o alternancia sistemática.'
+      : 'With n₁ points above the median and n₂ below it, the expected number of random runs is 1 + 2·n₁·n₂/(n₁+n₂) (≈ n/2 + 1). Too few runs (long trends) may indicate process drift. Too many may indicate over-adjustment or systematic alternation.',
     PAD, Y, W - PAD * 2, P.purple, isDark ? 'rgba(167,139,250,0.08)' : 'rgba(124,58,237,0.06)', isDark ? 'rgba(167,139,250,0.25)' : 'rgba(124,58,237,0.22)')
 
   sectionTitle(es ? '⑨ PROBABILIDAD NORMAL (Q-Q PLOT)' : '⑨ NORMAL PROBABILITY PLOT (Q-Q)',

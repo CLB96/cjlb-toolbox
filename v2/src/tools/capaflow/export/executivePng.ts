@@ -57,7 +57,6 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
     { label: 'Cpu', val: fmt(r.Cpu), color: cpkColorOf(P, r.Cpu) },
     { label: 'Cpl', val: fmt(r.Cpl), color: cpkColorOf(P, r.Cpl) },
     { label: 'Cpm (Taguchi)', val: fmt(r.Cpm), color: P.accent2 },
-    { label: 'Cmk (Machine)', val: fmt(r.Cmk), color: cpkColorOf(P, r.Cmk) },
   ]
   const perfRows: Row[] = [
     { label: 'Pp', val: fmt(r.Pp), color: cpkColorOf(P, r.Pp) },
@@ -174,10 +173,10 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   const sigVal = r.sigLvl !== null ? fmt(r.sigLvl, 2) + 'σ' : '—'
   label(sigVal, sigmaLabelX + sigLabelW + 2, sigmaBarInnerY + 20, '700 21px "Space Grotesk", Inter, sans-serif', cpkColorOf(P, r.Cpk), 'left')
   const ppmRX = W - PAD - CARD_PAD_X
-  label(t('png.ppmCpk') + ':  ' + fmtN(r.ppm), ppmRX, sigmaBarInnerY + 18, '500 17px Inter, sans-serif', P.textSub, 'right')
-  label(t('png.ppmPpk') + ':  ' + fmtN(r.ppmOverall), ppmRX, sigmaBarInnerY + 40, '500 17px Inter, sans-serif', P.textSub, 'right')
+  label(t('png.ppmCpk') + ':  ' + fmtN(r.ppm, lang), ppmRX, sigmaBarInnerY + 18, '500 17px Inter, sans-serif', P.textSub, 'right')
+  label(t('png.ppmPpk') + ':  ' + fmtN(r.ppmOverall, lang), ppmRX, sigmaBarInnerY + 40, '500 17px Inter, sans-serif', P.textSub, 'right')
   c.font = '400 15px Inter, sans-serif'; c.textAlign = 'center'; c.fillStyle = P.textDim
-  const ppmLabelW = c.measureText(t('png.ppmCpk') + ':  ' + fmtN(r.ppm)).width + 30
+  const ppmLabelW = c.measureText(t('png.ppmCpk') + ':  ' + fmtN(r.ppm, lang)).width + 30
   const barXS = sigmaLabelX + sigLabelW + 80
   const barXE = ppmRX - ppmLabelW - 20
   const barTW = barXE - barXS
@@ -224,7 +223,7 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
   sY += SECTION_HEADER_H + 4
   sY = drawTable(statsRows.map((row) => ({ ...row, color: P.accent })), PAD + COL2 + GAP, sY, COL2)
 
-  const normOk = r.adTest.p >= 0.05
+  const normOk = r.isNormal
   const npColor = normOk ? P.green : P.yellow
   const npBg = normOk ? P.greenBg : P.yellowBg
   const npBd = normOk ? P.greenBorder : P.yellowBorder

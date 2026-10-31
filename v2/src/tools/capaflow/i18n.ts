@@ -52,7 +52,6 @@ const es = {
   'stats.usl': 'USL',
   'stats.target': 'Target',
   'idx.cpmLabel': 'Cpm (Taguchi)',
-  'idx.cmkLabel': 'Cmk (Máquina)',
   'gauge.sigmaLevel': 'Nivel σ',
   'tip.cpk': 'Capacidad real considerando centrado. Meta ≥ 1.33',
   'tip.cp': 'Capacidad potencial. Solo requiere ambos límites.',
@@ -154,6 +153,30 @@ const es = {
   'v2.pending': 'Disponible en la siguiente fase',
   'v2.badImage': 'No se pudo cargar la imagen.',
   'v2.notImage': 'Selecciona un archivo de imagen.',
+  'qq.point': 'Punto',
+  'qq.observedTip': 'Observado',
+  'qq.theoreticalTip': 'Teórico',
+  'qq.deviation': 'Desviación',
+  'qq.observed': 'Datos Obs.',
+  'qq.theoretical': 'Cuantiles Teóricos',
+  'v2.dataCount': '{n} datos · {time}',
+  'v2.remove': 'Eliminar',
+  'v2.processing': '⏳ Procesando...',
+  'v2.noSummary': 'No hay análisis para resumir',
+  'v2.noData': 'Sin datos',
+  'v2.onlyMwx': '⚠ Solo archivos .MWX, .MWP o .MPX son permitidos',
+  'v2.zipFailed': 'ZIP descargado, pero fallaron: {files}',
+  'mwx.log.start': '📂 Iniciando conversión de {n} archivo(s)...',
+  'mwx.log.processing': '🔄 Procesando: {file}',
+  'mwx.log.error': '❌ Error en {file}: {msg}',
+  'mwx.log.done': '✅ Conversión completada: {ok}/{n} exitosos',
+  'mwx.log.saved': '  ✓ Guardado como: {name}',
+  'mwx.log.columns': '  └─ Encontradas {n} columna(s) de datos',
+  'mwx.log.rows': '  └─ Total de {n} filas de datos',
+  'mwx.log.unconvertible': '  ⚠ Archivo contiene gráficas/análisis no convertibles',
+  'mwx.log.sheets': '  ⚠ El archivo tiene {n} hojas; se convirtió solo la primera ({first}). Omitidas: {others}',
+  'mwx.err.noSheet': 'No se encontró sheet.json en el archivo (verifica que sea un MWX/MWP/MPX válido)',
+  'mwx.err.noColumns': 'No se encontraron columnas de datos',
 } as const
 
 export type CapaKey = keyof typeof es
@@ -205,7 +228,6 @@ const en: Record<CapaKey, string> = {
   'stats.usl': 'USL',
   'stats.target': 'Target',
   'idx.cpmLabel': 'Cpm (Taguchi)',
-  'idx.cmkLabel': 'Cmk (Machine)',
   'gauge.sigmaLevel': 'σ Level',
   'tip.cpk': 'Real capability considering centering. Target ≥ 1.33',
   'tip.cp': 'Potential capability. Requires both spec limits.',
@@ -306,6 +328,30 @@ const en: Record<CapaKey, string> = {
   'v2.pending': 'Available in the next phase',
   'v2.badImage': 'The image could not be loaded.',
   'v2.notImage': 'Select an image file.',
+  'qq.point': 'Point',
+  'qq.observedTip': 'Observed',
+  'qq.theoreticalTip': 'Theoretical',
+  'qq.deviation': 'Deviation',
+  'qq.observed': 'Observed',
+  'qq.theoretical': 'Theoretical Quantiles',
+  'v2.dataCount': '{n} data points · {time}',
+  'v2.remove': 'Remove',
+  'v2.processing': '⏳ Processing...',
+  'v2.noSummary': 'No analyses to summarize',
+  'v2.noData': 'No data',
+  'v2.onlyMwx': '⚠ Only .MWX, .MWP or .MPX files are allowed',
+  'v2.zipFailed': 'ZIP downloaded, but these failed: {files}',
+  'mwx.log.start': '📂 Starting conversion of {n} file(s)...',
+  'mwx.log.processing': '🔄 Processing: {file}',
+  'mwx.log.error': '❌ Error in {file}: {msg}',
+  'mwx.log.done': '✅ Conversion completed: {ok}/{n} successful',
+  'mwx.log.saved': '  ✓ Saved as: {name}',
+  'mwx.log.columns': '  └─ Found {n} data column(s)',
+  'mwx.log.rows': '  └─ Total of {n} data rows',
+  'mwx.log.unconvertible': '  ⚠ File contains charts/analyses that cannot be converted',
+  'mwx.log.sheets': '  ⚠ The file has {n} sheets; only the first one ({first}) was converted. Skipped: {others}',
+  'mwx.err.noSheet': 'sheet.json not found in the file (check that it is a valid MWX/MWP/MPX)',
+  'mwx.err.noColumns': 'No data columns found',
 }
 
 const DICT: Record<Lang, Record<CapaKey, string>> = { es, en }
@@ -317,8 +363,7 @@ export type CapaT = (key: CapaKey) => string
 export const INLINE = {
   pointTitle: (lang: Lang, idx: number) => (lang === 'es' ? `Punto de Medición ${idx + 1}` : `Measurement Point ${idx + 1}`),
   pointShort: (lang: Lang, pos: number) => (lang === 'es' ? `Punto ${pos}` : `Point ${pos}`),
-  dataCount: (n: number, time: string) => `${n} datos · ${time}`,
-  deleteAnalysis: { es: 'Eliminar análisis', en: 'Delete analysis' },
+    deleteAnalysis: { es: 'Eliminar análisis', en: 'Delete analysis' },
   dragTo: { es: 'Arrastra al plano:', en: 'Drag onto photo:' },
   placed: { es: 'Colocados — click para quitar:', en: 'Placed — click to remove:' },
   remove: { es: 'Quitar', en: 'Remove' },
@@ -327,6 +372,10 @@ export const INLINE = {
     sigmaLabels: ['1σ', '2σ', '3σ', '4σ', '5σ', '6σ'],
   },
 } as const
+
+/** Sustituye {nombre} en un texto del diccionario. */
+export const fill = (text: string, vars: Record<string, string | number>): string =>
+  text.replace(/\{(\w+)\}/g, (_m, k: string) => String(vars[k] ?? ''))
 
 /** Traductor de CapaFlow con el idioma del toolbox. */
 export function useCapaT(): { t: CapaT; lang: Lang } {

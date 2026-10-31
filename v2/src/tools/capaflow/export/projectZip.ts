@@ -16,14 +16,15 @@ export const zipEntryName = (pos: number, pointName: string, es: boolean): strin
 export const summaryEntryName = (index: number, total: number): string =>
   total > 1 ? `00_Resumen_Comparativo_Pag${index + 1}.png` : '00_Resumen_Comparativo.png'
 
-/** Construye el ZIP (sin descargarlo). Un PNG por análisis y el resumen; los fallos por análisis se tragan, como en el original. */
-export async function buildProjectZip(data: ProjectExportData, env: ExportEnv, onProgress?: (text: string) => void): Promise<{ blob: Blob; folderName: string }> {
+/** Construye el ZIP (sin descargarlo). Un PNG por análisis y el resumen; los archivos que fallen se listan en `failed` (C7). */
+export async function buildProjectZip(data: ProjectExportData, env: ExportEnv, onProgress?: (text: string) => void): Promise<{ blob: Blob; folderName: string; failed: string[] }> {
   const es = env.lang === 'es'
   const folderName = zipFolderName(data.projectName)
   await fontsReady()
   const { default: JSZip } = await import('jszip')
   const zip = new JSZip()
   const folder = zip.folder(folderName)!
+  const failed: string[] = []
 
   for (let pos = 0; pos < data.points.length; pos++) {
     const p = data.points[pos]!
@@ -32,8 +33,10 @@ export async function buildProjectZip(data: ProjectExportData, env: ExportEnv, o
         try {
           const dataURL = drawExecutivePng(p.result, p.ccType, env)
           if (dataURL) folder.file(zipEntryName(pos, p.result.pointName, es), dataUrlToBase64(dataURL), { base64: true })
+          else failed.push(zipEntryName(pos, p.result.pointName, es))
         } catch (e) {
           console.error('PNG error idx', p.id, e)
+          failed.push(zipEntryName(pos, p.result.pointName, es))
         }
         resolve()
       }, 0)
@@ -47,17 +50,18 @@ export async function buildProjectZip(data: ProjectExportData, env: ExportEnv, o
     urls.forEach((url, i) => folder.file(summaryEntryName(i, urls.length), dataUrlToBase64(url), { base64: true }))
   } catch (e) {
     console.error('Summary error', e)
+    failed.push(summaryEntryName(0, 1))
   }
 
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
-  return { blob, folderName }
+  return { blob, folderName, failed }
 }
 
-/** Genera y descarga `${carpeta}.zip`; devuelve el nombre de la carpeta (mensaje de éxito siempre, aunque falten archivos). */
-export async function downloadProjectZip(data: ProjectExportData, env: ExportEnv, onProgress?: (text: string) => void): Promise<string> {
-  const { blob, folderName } = await buildProjectZip(data, env, onProgress)
+/** Genera y descarga `${carpeta}.zip`; devuelve el nombre de la carpeta y los archivos que no se pudieron generar. */
+export async function downloadProjectZip(data: ProjectExportData, env: ExportEnv, onProgress?: (text: string) => void): Promise<{ folderName: string; failed: string[] }> {
+  const { blob, folderName, failed } = await buildProjectZip(data, env, onProgress)
   const url = URL.createObjectURL(blob)
   triggerDownload(url, `${folderName}.zip`)
   setTimeout(() => URL.revokeObjectURL(url), 2000)
-  return folderName
+  return { folderName, failed }
 }

@@ -60,16 +60,16 @@ export function weViolations(pts: number[], cl: number, sigma: number): number[]
     const w = [pts[i], pts[i - 1], pts[i - 2]]
     const abv = w.filter((v) => v > cl + 2 * sigma).length
     const blw = w.filter((v) => v < cl - 2 * sigma).length
-    if (abv >= 2 || blw >= 2) {
+    // Rule 2 marks the current point only when it is itself beyond 2 sigma on that side (A9).
+    if (abv >= 2 && pts[i] > cl + 2 * sigma) {
       viol.add(i)
-      if (abv >= 2) {
-        if (pts[i - 1] > cl + 2 * sigma) viol.add(i - 1)
-        if (pts[i - 2] > cl + 2 * sigma) viol.add(i - 2)
-      }
-      if (blw >= 2) {
-        if (pts[i - 1] < cl - 2 * sigma) viol.add(i - 1)
-        if (pts[i - 2] < cl - 2 * sigma) viol.add(i - 2)
-      }
+      if (pts[i - 1] > cl + 2 * sigma) viol.add(i - 1)
+      if (pts[i - 2] > cl + 2 * sigma) viol.add(i - 2)
+    }
+    if (blw >= 2 && pts[i] < cl - 2 * sigma) {
+      viol.add(i)
+      if (pts[i - 1] < cl - 2 * sigma) viol.add(i - 1)
+      if (pts[i - 2] < cl - 2 * sigma) viol.add(i - 2)
     }
   }
   for (let i = 5; i < n; i++) {

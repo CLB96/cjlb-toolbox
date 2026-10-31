@@ -1,6 +1,16 @@
-/** Splits on whitespace, comma and semicolon; keeps whatever parseFloat accepts (legacy behavior). */
+/**
+ * Splits on whitespace, comma and semicolon; keeps whatever parseFloat accepts (permissive parser, owner rule:
+ * "12abc" reads as 12 and the comma is always a separator). Only Infinity tokens are rejected (A4): they are
+ * counted in `infinite` and left out of `values`.
+ */
+export function parseDataTokens(raw: string): { values: number[]; infinite: number } {
+  const all = raw.split(/[\s,;\n\t]+/).map((v) => parseFloat(v.trim())).filter((v) => !isNaN(v))
+  const values = all.filter((v) => Number.isFinite(v))
+  return { values, infinite: all.length - values.length }
+}
+
 export function parseData(raw: string): number[] {
-  return raw.split(/[\s,;\n\t]+/).map((v) => parseFloat(v.trim())).filter((v) => !isNaN(v))
+  return parseDataTokens(raw).values
 }
 
 export function mean(arr: number[]): number {

@@ -29,7 +29,7 @@ export function drawControl(canvas: HTMLCanvasElement, s: CCSeries, env: DrawEnv
   if (validPts.length < 2) return null
   const vals = validPts.map((p) => p.v)
 
-  const allVals = [...vals, ucl, lcl > 0 ? lcl : 0]
+  const allVals = [...vals, ucl, lcl]
   let yMin = Math.min(...allVals)
   let yMax = Math.max(...allVals)
   const yPad = (yMax - yMin) * 0.15 || Math.abs(cl) * 0.1 || 0.01

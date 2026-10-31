@@ -21,7 +21,7 @@ describe('capaflow store', () => {
   })
 
   it('calcular con los datos de ejemplo da Cpk 1.629, Cp 1.668 y Ppk 1.596', () => {
-    expect(calc()).toEqual({ ok: true })
+    expect(calc()).toEqual({ ok: true, warnings: [] })
     const p = selectActive(api.getState())!
     expect([p.result.Cpk, p.result.Cp, p.result.Ppk].map((v) => v!.toFixed(3))).toEqual(['1.629', '1.668', '1.596'])
     expect(p.ccType).toBe('auto')

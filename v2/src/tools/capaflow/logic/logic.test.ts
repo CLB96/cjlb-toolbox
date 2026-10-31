@@ -28,7 +28,6 @@ describe('sample data ground truth (as displayed by the original)', () => {
     ['Cpu', r.Cpu, '1.629', 3],
     ['Cpl', r.Cpl, '1.707', 3],
     ['Cpm', r.Cpm, '1.623', 3],
-    ['Cmk', r.Cmk, '1.629', 3],
     ['Pp', r.Pp, '1.634', 3],
     ['Ppk', r.Ppk, '1.596', 3],
     ['Ppu', r.Ppu, '1.596', 3],
@@ -45,7 +44,9 @@ describe('sample data ground truth (as displayed by the original)', () => {
   })
   it('PPM, n and parsed length', () => {
     expect(Math.round(r.ppm as number)).toBe(1)
-    expect(Math.round(r.ppmOverall as number)).toBe(2)
+    // A1: colas superior e inferior reales (antes se contaba dos veces la cola cercana).
+    expect(r.ppm as number).toBeCloseTo(0.665, 3)
+    expect(r.ppmOverall as number).toBeCloseTo(1.108, 3)
     expect(r.N).toBe(125)
     expect(parseData(SAMPLE_DATA)).toHaveLength(125)
   })
@@ -65,20 +66,20 @@ describe('behaviors worth pinning', () => {
     expect([r.Cp, r.Pp, r.Cpm, r.Cpl]).toEqual([null, null, null, null])
     expect(r.Cpk).toBe(r.Cpu)
   })
-  it('Cmk is an alias of Cpk', () => {
-    const r = sample()
-    expect(r.Cmk).toBe(r.Cpk)
+  it('Cmk no existe (A6)', () => {
+    expect('Cmk' in sample()).toBe(false)
   })
   it('subgroup falls back to 1 when empty or zero', () => {
     expect(sample({ subgroupSize: '' }).subgroupSize).toBe(1)
     expect(sample({ subgroupSize: '0' }).subgroupSize).toBe(1)
   })
-  it('chart models: 125 points give 12 bins, 25-point run window, 5 subgroup X-bar/R', () => {
+  it('chart models: 125 points give 12 bins, all-data run chart, 5 subgroup X-bar/R', () => {
     const r = sample()
     expect(buildHistogram(r).bins).toBe(12)
     expect(buildHistogram(r).curve).toHaveLength(181)
-    const rc = buildRunChart(r, 'screen')
-    expect([rc.N, rc.startIndex]).toEqual([25, 100])
+    const rc = buildRunChart(r)
+    expect(rc.N).toBe(125) // A12: todos los datos y la mediana global
+    expect(rc.med).toBe(r.med)
     expect(buildBoxPlot(r).outliers).toContain(73.967)
     const cc = buildControlChartScreen(r, 'auto', 'es')
     expect(cc.chartType).toBe('xr')

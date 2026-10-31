@@ -2,7 +2,7 @@ import { Button } from '../../../ui/Button'
 import { RichText } from '../../../ui/RichText'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { useCapa, useCapaApi } from '../CapaflowStoreProvider'
-import { INLINE, useCapaT } from '../i18n'
+import { fill, INLINE, useCapaT } from '../i18n'
 import { selectActive } from '../store'
 import { ChartSections } from './ChartSections'
 import { ControlCharts } from './ControlCharts'
@@ -32,13 +32,13 @@ export function Results({ disabled, onExportPlan }: { disabled: boolean; onExpor
   }
   const r = point.result
   const title = r.pointName || INLINE.pointTitle(lang, point.id)
-  const time = new Date(point.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const time = new Date(point.at).toLocaleTimeString(lang === 'es' ? 'es-MX' : 'en-US', { hour: '2-digit', minute: '2-digit' })
 
   return (
     <div className="cf-right" data-testid="cf-results">
       <div className="cf-block-head">
         <h2 className="cf-block-title">⬡ {title}</h2>
-        <span className="cf-muted">{INLINE.dataCount(r.N, time)}</span>
+        <span className="cf-muted">{fill(t('v2.dataCount'), { n: r.N, time })}</span>
         <Button variant="ghost" disabled={disabled} title={INLINE.deleteAnalysis[lang]} aria-label={INLINE.deleteAnalysis[lang]} onClick={() => api.getState().deletePoint(point.id)}>
           ✕
         </Button>

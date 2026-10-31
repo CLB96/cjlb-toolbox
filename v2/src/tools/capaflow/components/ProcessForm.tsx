@@ -4,7 +4,7 @@ import { GlassPanel } from '../../../ui/GlassPanel'
 import { toast } from '../../../ui/toastStore'
 import { useCapa, useCapaApi } from '../CapaflowStoreProvider'
 import { useCapaT, type CapaKey } from '../i18n'
-import { analysisErrorMessage } from '../logic'
+import { analysisErrorMessage, analysisWarningMessage } from '../logic'
 import type { CapaForm } from '../store'
 
 interface FieldProps {
@@ -55,6 +55,7 @@ export const ProcessForm = forwardRef<HTMLInputElement, { disabled: boolean }>(f
   const onCalculate = () => {
     const out = api.getState().calculate()
     if (!out.ok) toast('error', analysisErrorMessage(out.error, lang))
+    else out.warnings.forEach((w) => toast('warn', analysisWarningMessage(w, lang)))
   }
 
   return (

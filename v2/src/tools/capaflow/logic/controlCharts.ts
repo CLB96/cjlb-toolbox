@@ -84,7 +84,7 @@ function ccNote(type: CCType, n: number, lang: Lang): string {
     .replace('%.3f', f[1].toFixed(3)).replace('%.3f', f[2].toFixed(3))
 }
 
-/** On-screen builder: bottom-chart rules use sigma clamped to >= 1e-10. */
+/** On-screen builder: bottom-chart rules use sigma clamped to >= 1e-10 (same safeguard as the export, A10). */
 export function buildControlChartScreen(r: AnalysisResult, choice: CCTypeChoice | undefined, lang: Lang): ScreenControlChart {
   const n = r.subgroupSize || 1
   const chartType = !choice || choice === 'auto' ? autoCCType(n) : choice
@@ -92,17 +92,17 @@ export function buildControlChartScreen(r: AnalysisResult, choice: CCTypeChoice 
   return { ...withViolations(c, Math.max(c.botSigma, 1e-10)), chartType, noteText: ccNote(chartType, n, lang) }
 }
 
-/** Executive-PNG builder: bottom-chart rules use sigma, or CL/3 (or 0.001) when sigma is not positive. */
+/** Executive-PNG builder: same bottom-chart sigma safeguard as the screen (clamped to >= 1e-10). */
 export function buildControlChartExport(r: AnalysisResult, n: number, chartType: CCType, lang: Lang): ControlChart {
   const c = core(r, n, chartType, lang)
-  return withViolations(c, c.botSigma > 0 ? c.botSigma : c.botCL / 3 || 0.001)
+  return withViolations(c, Math.max(c.botSigma, 1e-10))
 }
 
 /** Vertical extent used to draw one chart; null when fewer than two valid points. */
 export function controlChartYExtent(pts: (number | null)[], cl: number, ucl: number, lcl: number) {
   const vals = pts.filter((v) => v !== null) as number[]
   if (vals.length < 2) return null
-  const allVals = [...vals, ucl, lcl > 0 ? lcl : 0]
+  const allVals = [...vals, ucl, lcl]
   let yMin = Math.min(...allVals)
   let yMax = Math.max(...allVals)
   const yPad = (yMax - yMin) * 0.15 || Math.abs(cl) * 0.1 || 0.01

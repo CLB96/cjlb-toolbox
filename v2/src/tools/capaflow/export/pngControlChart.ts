@@ -32,7 +32,7 @@ export function pngCCChart(c: CanvasRenderingContext2D, cardX: number, cardY: nu
 
   const safeUCL = isFinite(ucl) ? ucl : cl * 2
   const safeLCL = isFinite(lcl) ? lcl : 0
-  const allV = [...vals, safeUCL, safeLCL > 0 ? safeLCL : 0]
+  const allV = [...vals, safeUCL, safeLCL]
   let yMin = Math.min(...allV), yMax = Math.max(...allV)
   const yPad = (yMax - yMin) * 0.18 || Math.abs(cl) * 0.1 || 0.001
   yMin -= yPad; yMax += yPad

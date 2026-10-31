@@ -20,12 +20,9 @@ export function colorForCpk(v: number): string {
   return 'var(--accent-red)'
 }
 
-/** Sigma-bar hover text: fixed Spanish labels at sigma 5 / 4 / 3 (original behavior). */
-export function sigmaTooltipClass(sigmaValue: number): string {
-  if (sigmaValue >= 5) return 'World Class'
-  if (sigmaValue >= 4) return 'Capaz'
-  if (sigmaValue >= 3) return 'Marginal'
-  return 'No Capaz'
+/** Sigma-bar hover text: the Cpk classification (sigma / 3) in the current language (A15). */
+export function sigmaTooltipClass(sigmaValue: number, lang: Lang): string {
+  return classifyCpk(sigmaValue / 3, lang).label
 }
 
 /** Symbolic color used by the comparative summary table. */

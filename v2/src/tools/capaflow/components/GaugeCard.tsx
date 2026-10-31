@@ -45,7 +45,7 @@ export function GaugeCard({ r }: { r: AnalysisResult }) {
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect()
               const sigma = ((e.clientX - rect.left) / rect.width) * 6
-              setTip({ text: `${sigma.toFixed(2)}σ\n${sigmaTooltipClass(sigma)}`, x: e.clientX, y: e.clientY })
+              setTip({ text: `${sigma.toFixed(2)}σ\n${sigmaTooltipClass(sigma, lang)}`, x: e.clientX, y: e.clientY })
             }}
             onMouseLeave={() => setTip(null)}
           >

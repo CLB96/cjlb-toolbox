@@ -1,6 +1,6 @@
-# CapaFlow: mejoras propuestas (no aplicadas)
+# CapaFlow: mejoras propuestas (aplicadas el 2026-10-30)
 
-Origen: inventario §10 (`capaflow-inventory/`, hallazgos 1-29) y revisión del código al portar la lógica. **Nada de esto está corregido**: la v2 reproduce el comportamiento original byte a byte y los tests diferenciales lo fijan. El dueño decide cuáles aplicar; cada una se haría como cambio aparte con su test.
+Origen: inventario §10 (`capaflow-inventory/`, hallazgos 1-29) y revisión del código al portar la lógica. Las tablas describen el comportamiento original; el estado de cada punto está en la sección "Estado de aplicación" al final. Los tests diferenciales conservan la comparación con el original salvo donde el cambio es intencional (ahí afirman el comportamiento nuevo).
 
 > **Actualización 2026-10-30 (petición del dueño):** las cuatro exportaciones PNG (Resumen Ejecutivo, Guía de Lectura, Resumen comparativo y Plano) ya usan el diseño Nebulosa del toolbox en lugar de la apariencia del original; el contenido (datos, textos, secciones, nombres de archivo) no cambia. De paso, los marcadores del Plano PNG ya salen con su color real (antes `var(--...)` se leía como negro). La nota C6 (grano aleatorio) queda resuelta: el fondo Nebulosa no usa ruido.
 
@@ -56,3 +56,41 @@ Referencias `Lxxxx` = líneas de `capaflow/index.html`. "Valores" = efecto sobre
 ## Rechazado en el inventario
 
 Anchos de columna del resumen suman 804 (correcto); no es un defecto.
+
+## Estado de aplicación (petición del dueño: "Aplica las mejoras de capaflow")
+
+Con los datos de ejemplo (LSL 73.95, USL 74.05, objetivo 74, subgrupo 5, confianza 95) Cp 1.668, Cpk 1.629, Pp 1.634, Ppk 1.596 y media 74.0012 no cambian. PPM (A1): Cpk 0.665 (antes 1) y Ppk 1.108 (antes 2); en pantalla se muestran redondeados (1 y 1).
+
+| # | Estado | Nota |
+|---|---|---|
+| A1 | Aplicada | PPM = Φ(-3·Cpu) + Φ(-3·Cpl) (y lo mismo con Ppu/Ppl); con un solo límite no cambia. |
+| A2 | Aplicada | USL <= LSL: aviso de error y no se calcula. |
+| A3 | Aplicada | Subgrupo limitado a 1-25 y a <= datos; se ajusta y se avisa. |
+| A4 | Aplicada | `Infinity` en datos o límites se rechaza; datos sin variación (σ = 0) dan aviso "sin variación" y no se calcula. |
+| A5 | Aplicada (parcial por decisión) | Se mantiene el parser permisivo ("12abc" = 12, la coma siempre separa); solo se añade el rechazo de `Infinity`. |
+| A6 | Aplicada | Cmk eliminado de pantalla, PNG y resultado. |
+| A7 | Aplicada | Resuelta por A3. |
+| A8 | Aplicada | alfa = (100 - confianza) / 100 para la conclusión de normalidad y la banda Q-Q (k = 1.36 exacto con 95). Confianza fuera de (0, 100): aviso y se usa 95. |
+| A9 | Aplicada | Regla 2 marca el punto actual solo si supera 2σ del mismo lado. |
+| A10 | Aplicada | Misma salvaguarda (σ >= 1e-10) en pantalla y PNG. |
+| A11 | Aplicada | Prueba de rachas estándar: esperado 1 + 2·n₁·n₂/(n₁+n₂), varianza calculada; los puntos sobre la mediana no cuentan. |
+| A12 | Aplicada | Corridas con todos los datos y mediana global, en pantalla y PNG. |
+| A13 | Aplicada | Q-Q: X teórico, Y observado, en pantalla y PNG (modelo único). |
+| A14 | Aplicada | Un LCL negativo entra en la extensión vertical (pantalla y PNG). |
+| A15 | Aplicada | Tooltip sigma usa `classifyCpk` (σ/3) e i18n; en 5σ exacto da "Capaz" (Cpk 1.667 < 1.67). |
+| B1 | Confirmada | Sin claves duplicadas en los diccionarios de la v2 (TypeScript lo impediría). |
+| B2 | No aplica | La v2 no tiene compuerta de contraseña. |
+| B3 | Aplicada | Q-Q, "datos", conversor MWX (registro y errores), "Sin datos", avisos y ZIP pasan a los diccionarios ES/EN. |
+| B4 / B5 | Confirmadas | La interfaz se renderiza desde el estado con `useCapaT`/`useDrawEnv`, y los canvas dependen de idioma y tema: se redibujan al cambiar. |
+| B6 | Aplicada | `fmtN` y las horas usan locale fijo por idioma (es-MX / en-US). |
+| B7 | No aplica | `<html lang>` lo actualiza el shell de la app (`useI18n`), no CapaFlow. |
+| B8 | Aplicada | Mini-histograma: los puntos suspensivos solo se añaden si el nombre se recortó. |
+| C1 | Confirmada | React escapa nombres de punto y de archivo; no hay inserción de HTML crudo con datos del usuario. |
+| C2 | Confirmada | El botón de colapsar tiene un único manejador. |
+| C3 | Hecha antes | Colores resueltos antes de pintar en canvas. |
+| C4 | Aplicada | El tooltip del medidor cubre todo el arco (ángulo normalizado). |
+| C5 | No aplica | La carga de logo no se portó. |
+| C6 | Hecha antes | Fondo Nebulosa sin ruido aleatorio. |
+| C7 | Aplicada | El ZIP lista los archivos que fallaron y avisa con una advertencia en vez de éxito. |
+| C8 | Aplicada | Si el .mwx trae más de una hoja se convierte la primera y el registro avisa de las omitidas. |
+| C9 | No aplica | No se porta. |

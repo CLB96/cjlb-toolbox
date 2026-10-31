@@ -11,7 +11,7 @@ import { drawRunChart } from './drawRunChart'
 const env = (isDark = true): DrawEnv => ({
   isDark,
   lang: 'es',
-  tr: (k) => ({ 'tooltip.binRange': 'Rango:', 'tooltip.freq': 'Frecuencia:', 'tooltip.aboveMedian': 'arriba', 'tooltip.belowMedian': 'abajo', 'tooltip.observation': 'Observación', 'tooltip.value': 'Valor', 'tooltip.median': 'Mediana', 'cc.ooc': 'Fuera de control', 'cc.inControl': 'Bajo control' })[k],
+  tr: (k) => ({ 'tooltip.binRange': 'Rango:', 'tooltip.freq': 'Frecuencia:', 'tooltip.aboveMedian': 'arriba', 'tooltip.belowMedian': 'abajo', 'tooltip.observation': 'Observación', 'tooltip.value': 'Valor', 'tooltip.median': 'Mediana', 'cc.ooc': 'Fuera de control', 'cc.inControl': 'Bajo control', 'qq.point': 'Punto', 'qq.observedTip': 'Observado', 'qq.theoreticalTip': 'Teórico', 'qq.deviation': 'Desviación', 'qq.observed': 'Datos Obs.', 'qq.theoretical': 'Cuantiles Teóricos' })[k]!,
 })
 
 function sample(over: Partial<typeof SAMPLE_INPUT> = {}): AnalysisResult {
@@ -27,8 +27,11 @@ describe('dibujos de canvas (misma geometría que el original)', () => {
     const hit = drawGauge(canvas, 1.629, '#abcdef', 'es')!
     expect(rec.sets.filter((s) => s.prop === 'strokeStyle').map((s) => s.value)).toContain('#abcdef')
     expect(rec.count('arc')).toBe(1 + 4 + 1) // pista, 4 zonas y punto central
-    // R = 123.2, centro (140, 140). Como en el original, solo la mitad izquierda del arco da tooltip.
+    // R = 123.2, centro (140, 140). C4: el tooltip cubre todo el arco, también el cuadrante superior derecho.
     expect(hit(40, 120)).toBe('Cpk: 0.126\nNo Capaz')
+    expect(hit(240, 120)).toMatch(/^Cpk: 1\.8\d\d\nWorld Class$/)
+    expect(hit(140, 20)).toBe('Cpk: 1.000\nMarginal')
+    expect(hit(140, 150)).toBeNull() // mitad inferior
     expect(hit(140, 140)).toBeNull()
   })
 
@@ -69,13 +72,13 @@ describe('dibujos de canvas (misma geometría que el original)', () => {
     expect(rec.count('beginPath')).toBe(0)
   })
 
-  it('corrida: dibuja los últimos 25 puntos y el tooltip numera desde el índice global', () => {
+  it('corrida: dibuja todos los datos (A12) y el tooltip numera desde 1', () => {
     const r = sample()
     const { canvas, rec } = fakeCanvas(600, 200)
     const hit = drawRunChart(canvas, r, env())!
-    expect(rec.calls.filter((c) => c.name === 'arc' && c.args[2] === 3.5)).toHaveLength(25)
-    const first = hit(52, 100) // cerca del primer punto visible (X = pad.l)
-    expect(first === null || first.startsWith(`Observación #${r.data.length - 24}`)).toBe(true)
+    expect(rec.calls.filter((c) => c.name === 'arc' && c.args[2] === 3.5)).toHaveLength(r.data.length)
+    const first = hit(52, 100) // cerca del primer punto (X = pad.l)
+    expect(first === null || /^Observación #\d+/.test(first)).toBe(true)
   })
 
   it('Q-Q: etiquetas de ejes por idioma y tooltip en español', () => {
