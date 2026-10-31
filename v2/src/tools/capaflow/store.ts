@@ -45,6 +45,8 @@ export interface CapaState {
   markerSize: number
   photoFit: boolean
   panels: Record<PanelKey, boolean>
+  /** Campo "Nombre del proyecto" (folderNameInput del original): cabecera del resumen y carpeta del ZIP. */
+  projectName: string
 }
 
 export type CalculateResult = { ok: true } | { ok: false; error: AnalysisErrorCode }
@@ -63,6 +65,7 @@ export interface CapaActions {
   setMarkerSize(size: number): void
   setPhotoFit(fit: boolean): void
   setPanel(panel: PanelKey, open: boolean): void
+  setProjectName(name: string): void
 }
 
 export type CapaStore = CapaState & CapaActions
@@ -81,6 +84,7 @@ export const initialData = (): CapaState => ({
   markerSize: MARKER_SIZE_DEFAULT,
   photoFit: true,
   panels: { run: false, qq: false, box: false, photo: false },
+  projectName: '',
 })
 
 /** Dropped marker position: the original clamps the drop to 3..97 %. */
@@ -144,6 +148,7 @@ export const createCapaStore = (): CapaApi =>
     setMarkerSize: (markerSize) => set({ markerSize }),
     setPhotoFit: (photoFit) => set({ photoFit }),
     setPanel: (panel, open) => set((s) => ({ panels: { ...s.panels, [panel]: open } })),
+    setProjectName: (projectName) => set({ projectName }),
   }))
 
 export function snapshotOf(s: CapaState): CapaState {
@@ -158,6 +163,7 @@ export function snapshotOf(s: CapaState): CapaState {
     markerSize: s.markerSize,
     photoFit: s.photoFit,
     panels: s.panels,
+    projectName: s.projectName,
   }
 }
 

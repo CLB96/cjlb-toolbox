@@ -7,17 +7,18 @@ import { INLINE, useCapaT } from '../i18n'
 interface Props {
   disabled: boolean
   onNewPoint: () => void
-  /** Fase 2b: Generar Resumen comparativo y ZIP del proyecto. */
   onSummary: () => void
   onZip: () => void
+  summaryBusy?: boolean
+  /** Texto de avance del ZIP mientras se genera (null = en reposo). */
+  zipLabel?: string | null
 }
 
 /** Barra del proyecto: los puntos como pestañas (reemplazan el carrusel ← → del original). */
-export function ProjectBar({ disabled, onNewPoint, onSummary, onZip }: Props) {
+export function ProjectBar({ disabled, onNewPoint, onSummary, onZip, summaryBusy = false, zipLabel = null }: Props) {
   const { t, lang } = useCapaT()
   const api = useCapaApi()
-  const { points, activeId } = useCapa(useShallow((s) => ({ points: s.points, activeId: s.activeId })))
-  const pending = t('v2.pending')
+  const { points, activeId, projectName } = useCapa(useShallow((s) => ({ points: s.points, activeId: s.activeId, projectName: s.projectName })))
   return (
     <GlassPanel className="cf-project">
       <span className="cf-sub">{t('folder.title')}</span>
@@ -39,8 +40,20 @@ export function ProjectBar({ disabled, onNewPoint, onSummary, onZip }: Props) {
         </button>
       </div>
       <div className="cf-head__actions">
-        <Button variant="ghost" title={pending} onClick={onSummary}>{t('summary.genBtn')}</Button>
-        <Button variant="ghost" title={pending} onClick={onZip}>{t('folder.downloadZip')}</Button>
+        <input
+          className="cf-input cf-project__name"
+          value={projectName}
+          placeholder={t('folder.namePlaceholder')}
+          aria-label={t('folder.namePlaceholder')}
+          disabled={disabled}
+          onChange={(e) => api.getState().setProjectName(e.target.value)}
+        />
+        <Button variant="ghost" onClick={onSummary} disabled={disabled || summaryBusy || points.length === 0}>
+          {summaryBusy ? t('summary.generating') : t('summary.genBtn')}
+        </Button>
+        <Button variant="ghost" onClick={onZip} disabled={disabled || zipLabel !== null || points.length === 0}>
+          {zipLabel ?? t('folder.downloadZip')}
+        </Button>
       </div>
     </GlassPanel>
   )
