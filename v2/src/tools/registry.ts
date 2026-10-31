@@ -8,6 +8,7 @@ const loadPlaceholder = () => import('./Placeholder')
 const LOADERS: Partial<Record<ToolId, ToolDef['load']>> = {
   gapcheck: () => import('./gapcheck/GapcheckTool'),
   bondline: () => import('./bondline/BondlineTool'),
+  gantt: () => import('./gantt/GanttTool'),
 }
 
 export const TOOLS: ToolDef[] = data.tools
