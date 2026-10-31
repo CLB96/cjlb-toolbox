@@ -1,7 +1,7 @@
 // Resumen Ejecutivo PNG (generateExecutivePNG / _drawPNG del original): 1600 px de ancho, alto calculado.
 import { autoCCType, buildControlChartExport, buildInterpretationPlain, classifyCpk, fmtN, type AnalysisResult, type CCTypeChoice } from '../logic'
 import { cpkColorOf, exportPalette, fmt, localDate, newCanvas, stamp, triggerDownload, type ExportEnv, type ExportPalette } from './exportEnv'
-import { drawBrandMark, paintNebulaBackground } from './nebulaKit'
+import { drawBrandLogo, paintNebulaBackground } from './nebulaKit'
 import { pngBoxPlot, pngGauge, pngHistogram, pngQQPlot, pngRunChart } from './pngCharts'
 import { pngCCChart } from './pngControlChart'
 
@@ -128,9 +128,9 @@ export function drawExecutivePng(r: AnalysisResult, ccType: CCTypeChoice, env: E
 
   // HEADER
   hline(0, W, H_HEADER, P.border, 1.5)
-  drawBrandMark(c, PAD, 18, 56)
-  label('CapaFlow', PAD + 68, 58, '800 36px "Space Grotesk", Inter, sans-serif', P.text, 'left')
-  label(t('png.subtitle'), PAD + 68, 82, '400 19px Inter, sans-serif', P.textSub, 'left')
+  const logoW = drawBrandLogo(c, PAD, 14, 80, isDark)
+  label('CapaFlow', PAD + logoW + 14, 58, '800 36px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+  label(t('png.subtitle'), PAD + logoW + 14, 82, '400 19px Inter, sans-serif', P.textSub, 'left')
   const dateStr = localDate(lang)
   label(t('png.generatedBy'), W - PAD, 46, '400 17px Inter, sans-serif', P.textDim, 'right')
   label(dateStr, W - PAD, 72, '600 19px Inter, sans-serif', P.textSub, 'right')

@@ -1,6 +1,6 @@
 // Guía de Lectura, primera mitad: encabezado, introducción y secciones 1 a 5 (textos literales del original).
 import { guideCCChart, guideHistogram } from './guideCharts'
-import { drawBrandMark } from '../nebulaKit'
+import { drawBrandLogo } from '../nebulaKit'
 import { wrapText, type Guide } from './guideKit'
 
 export function guideHeader(g: Guide): number {
@@ -10,9 +10,9 @@ export function guideHeader(g: Guide): number {
   c.fillStyle = hg; c.fillRect(0, 0, W, 120)
   hl(0, W, 120, P.border, 1.5)
 
-  drawBrandMark(c, PAD, 20, 60)
-  txt('CapaFlow', PAD + 76, 54, '800 38px "Space Grotesk", Inter, sans-serif', P.text, 'left')
-  txt(es ? 'Análisis de Capacidad de Proceso · Six Sigma' : 'Process Capability Analysis · Six Sigma', PAD + 76, 80, '400 19px Inter, sans-serif', P.textSub, 'left')
+  const logoW = drawBrandLogo(c, PAD, 14, 92, isDark)
+  txt('CapaFlow', PAD + logoW + 16, 54, '800 38px "Space Grotesk", Inter, sans-serif', P.text, 'left')
+  txt(es ? 'Análisis de Capacidad de Proceso · Six Sigma' : 'Process Capability Analysis · Six Sigma', PAD + logoW + 16, 80, '400 19px Inter, sans-serif', P.textSub, 'left')
 
   const guideTitle = es ? 'GUÍA RÁPIDA DE LECTURA' : 'QUICK READING GUIDE'
   txt(guideTitle, W - PAD, 52, '800 28px "Space Grotesk", Inter, sans-serif', P.accent, 'right')

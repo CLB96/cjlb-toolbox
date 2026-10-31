@@ -110,7 +110,7 @@ export function pngBoxPlot(c: C, cardX: number, cardY: number, cardW: number, ca
   const { isDark } = env
   const HEADER_OFFSET = 52
   const { Q1, Q2, Q3, outliers, minWhisker, maxWhisker, xMin, xMax } = buildBoxPlot(r)
-  const pad = { t: HEADER_OFFSET + 15, r: 180, b: 35, l: 120 }
+  const pad = { t: HEADER_OFFSET + 15, r: 290, b: 35, l: 120 }
   const gap = 15
   const sectionH = (cardH - pad.t - pad.b - gap * 2) / 3
   const plotW = cardW - pad.l - pad.r
@@ -143,7 +143,11 @@ export function pngBoxPlot(c: C, cardX: number, cardY: number, cardW: number, ca
       const stats: [string, string][] = statsType === 'overall'
         ? [['StDev', star(r.sOverall, 4)], ['Pp', star(r.Pp, 2)], ['Ppk', star(r.Ppk, 2)], ['Cpm', star(r.Cpm, 2)], ['PPM', star(r.ppmOverall, 2, '0.00')]]
         : [['StDev', star(r.sWithin, 4)], ['Cp', star(r.Cp, 2)], ['Cpk', star(r.Cpk, 2)], ['PPM', star(r.ppm, 2, '0.00')]]
-      stats.forEach(([k, v], i) => { c.fillText(k, statsX, yTop + 20 + i * 20); c.fillText(v, statsX + 70, yTop + 20 + i * 20) })
+      // dos columnas de hasta 3 filas: caben en el alto de cada sección sin encimarse con la siguiente
+      stats.forEach(([k, v], i) => {
+        const sx = statsX + Math.floor(i / 3) * 140, sy = yTop + 22 + (i % 3) * 20
+        c.fillText(k, sx, sy); c.fillText(v, sx + 62, sy)
+      })
     }
   }
 

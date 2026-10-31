@@ -31,3 +31,38 @@ export function drawBrandMark(c: Ctx, x: number, y: number, size: number): void 
   c.fillStyle = '#ffffff'; c.textAlign = 'center'
   c.fillText('C', x + size / 2, y + size * 0.74)
 }
+
+const LOGO_TIMEOUT_MS = 400
+const logos: Record<'dark' | 'light', HTMLImageElement | null> = { dark: null, light: null }
+let logosLoading: Promise<void> | null = null
+
+function loadLogo(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const timer = setTimeout(() => resolve(null), LOGO_TIMEOUT_MS)
+    img.onload = () => { clearTimeout(timer); resolve(img.naturalWidth > 0 ? img : null) }
+    img.onerror = () => { clearTimeout(timer); resolve(null) }
+    img.src = src
+  })
+}
+
+/** Precarga (una sola vez) el logo real del toolbox, el mismo que usa la barra superior. Si falla, se usa la baldosa. */
+export function preloadBrandLogos(): Promise<void> {
+  logosLoading ??= Promise.all([
+    loadLogo(`${import.meta.env.BASE_URL}logo-dark.png`),
+    loadLogo(`${import.meta.env.BASE_URL}logo-light.png`),
+  ]).then(([dark, light]) => { logos.dark = dark; logos.light = light })
+  return logosLoading
+}
+
+/** Dibuja el logo (oscuro sobre exportación oscura, claro sobre clara) con altura `h`; devuelve el ancho ocupado. */
+export function drawBrandLogo(c: Ctx, x: number, y: number, h: number, isDark: boolean): number {
+  const img = logos[isDark ? 'dark' : 'light']
+  if (!img || img.naturalHeight === 0) {
+    drawBrandMark(c, x, y + (h - h * 0.74) / 2, h * 0.74)
+    return h * 0.74
+  }
+  const w = (img.naturalWidth / img.naturalHeight) * h
+  c.drawImage(img, x, y, w, h)
+  return w
+}

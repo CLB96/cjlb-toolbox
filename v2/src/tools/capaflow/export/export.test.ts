@@ -68,6 +68,16 @@ describe('Diseño Nebulosa', () => {
   })
 })
 
+describe('Logo y caja del resumen ejecutivo', () => {
+  it('sin logo cargado usa la baldosa "C" de respaldo y la caja escribe las estadísticas en columnas', () => {
+    drawExecutivePng(point(0).result, 'auto', es)
+    const main = made.find((m) => m.width === 1600)!
+    const all = texts(main)
+    expect(all).toContain('C')
+    expect(all).toEqual(expect.arrayContaining(['StDev', 'Pp', 'Ppk', 'Cpm', 'PPM', 'Cp', 'Cpk']))
+  })
+})
+
 describe('Resumen comparativo', () => {
   it('reparte en páginas equilibradas de máximo 24 análisis', () => {
     expect(splitPages(Array.from({ length: 24 }, (_, i) => i)).map((p) => p.length)).toEqual([24])

@@ -1,6 +1,6 @@
 // Resumen comparativo (generateComparativeSummary): una o más páginas PNG de 2400x1440.
 import { exportPalette, fontsReady, loadImage, localDate, newCanvas, triggerDownload, type ExportEnv, type ProjectExportData } from './exportEnv'
-import { drawBrandMark, paintNebulaBackground } from './nebulaKit'
+import { drawBrandLogo, paintNebulaBackground } from './nebulaKit'
 import { summaryDrawMiniHist } from './summaryMiniHist'
 import { summaryDrawPhoto, summaryDrawTable } from './summaryParts'
 
@@ -60,12 +60,12 @@ export async function buildSummaryPages(data: ProjectExportData, env: ExportEnv)
     c.beginPath(); c.moveTo(0, HEADER_H); c.lineTo(W, HEADER_H)
     c.strokeStyle = P.border; c.lineWidth = 1.5; c.stroke()
 
-    drawBrandMark(c, PAD, 10, 48)
+    const logoW = drawBrandLogo(c, PAD, 4, 60, isDark)
 
     c.font = '700 26px "Space Grotesk", Inter, sans-serif'; c.fillStyle = P.text
-    c.textAlign = 'left'; c.fillText('CapaFlow', PAD + 62, 38)
+    c.textAlign = 'left'; c.fillText('CapaFlow', PAD + logoW + 12, 38)
     c.font = '400 13px Inter, sans-serif'; c.fillStyle = P.textSub
-    c.fillText(t('summary.subtitle'), PAD + 62, 57)
+    c.fillText(t('summary.subtitle'), PAD + logoW + 12, 57)
 
     c.textAlign = 'right'
     c.font = '500 13px Inter, sans-serif'; c.fillStyle = P.textDim

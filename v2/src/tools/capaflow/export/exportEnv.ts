@@ -3,7 +3,7 @@
 import { translate, type CapaKey } from '../i18n'
 import type { Lang } from '../logic'
 import type { CapaPoint, PhotoMarker } from '../store'
-import { NEBULA_FONT_SPECS } from './nebulaKit'
+import { NEBULA_FONT_SPECS, preloadBrandLogos } from './nebulaKit'
 
 export interface ExportEnv {
   lang: Lang
@@ -107,8 +107,9 @@ export function newCanvas(width: number, height: number): { cv: HTMLCanvasElemen
   return { cv, c }
 }
 
-/** Receta anti-regresión: Space Grotesk/Inter deben estar listas antes de medir y dibujar texto. */
+/** Receta anti-regresión: el logo y Space Grotesk/Inter deben estar listos antes de medir y dibujar texto. */
 export async function fontsReady(): Promise<void> {
+  await preloadBrandLogos()
   try {
     if (document.fonts?.load) await Promise.all(NEBULA_FONT_SPECS.map((f) => document.fonts.load(f).catch(() => [])))
     await document.fonts?.ready
