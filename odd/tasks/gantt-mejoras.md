@@ -16,12 +16,13 @@ Branch: claude/elegant-almeida-6a8612 · Delivery: work-unit commits, owner appr
 - S11 (B6) "Habilitar táctil." (bar move/resize)
 
 ## Tasks
-- T1 S2,S3,S4 inline
-- T2 S1 inline
-- T3 S7,S9 inline
-- T4 S5,S8 inline
-- T5 S6,S10 inline
-- T6 S11 inline
+- T1 S2,S3,S4 inline · done · 1f70d6d
+- T2 S1 inline · done · fb1617e
+- T3 S7,S9 inline · done · c3330a5
+- T4 S5,S8 inline · done · d783e23
+- T5 S6,S10 inline · done · d0a04da
+- T6 S11 inline · done · 41f6f88
 
 ## Log
 - L1 (2026-10-30) "Implementa las mejoras."
+- L2 (2026-10-30) Done: all 6 tasks committed with RED→GREEN tests. Full suite 389 passed / 11 skipped; `npm run build` OK. Browser check blocked: the shared Firestore emulator (another worktree's, port 8080) answers REST but the SDK listen channel stalls ("No se pudo comprobar tu acceso"). Not pushed to v2.
