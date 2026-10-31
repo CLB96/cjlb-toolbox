@@ -66,7 +66,10 @@ describe.each(NAMES)('fixture %s', (name) => {
           const L = createLegacy({ tasks: stored, today: TODAY, lang, filter, sort })
           const v = viewOf(stored, { filter, sort, lang })
           expect(ids(v.filtered), `${lang}/${filter}/${sort}`).toEqual(ids(L.filteredTasks()))
-          expect(ids(v.list), `${lang}/${filter}/${sort}`).toEqual(L.legacyHeader().ids)
+          // Mejora A2: el original siempre ordenaba las raíces por inicio; solo coincide con "startAsc"
+          if (sort === 'startAsc') expect(ids(v.list), `${lang}/${filter}`).toEqual(L.legacyHeader().ids)
+          const roots = v.list.filter((t) => !t.parentId || !v.filtered.some((f) => f.id === t.parentId))
+          expect(ids(roots), `${lang}/${filter}/${sort}`).toEqual(ids(v.filtered.filter((t) => roots.includes(t))))
         }
   })
 
@@ -260,5 +263,15 @@ describe('fechas', () => {
     const v = viewOf([])
     expect(v.range.start.getTime()).toBe(addDays(TODAY, -7).getTime())
     expect(v.range.end.getTime()).toBe(addDays(TODAY, 14).getTime())
+  })
+})
+
+describe('orden elegido (mejora A2)', () => {
+  it('las raíces siguen el orden elegido y las hijas conservan su orden manual', () => {
+    const stored = FIXTURES.tree!
+    const byName = viewOf(stored, { sort: 'name' }).list.filter((t) => !t.parentId).map((t) => t.name)
+    expect(byName).toEqual(['alfa independiente', 'Proyecto línea 3', 'Zeta independiente'])
+    const kids = viewOf(stored, { sort: 'endDesc' }).list.filter((t) => t.parentId === 1).map((t) => t.id)
+    expect(kids).toEqual(stored.filter((t) => t.parentId === 1).map((t) => t.id))
   })
 })

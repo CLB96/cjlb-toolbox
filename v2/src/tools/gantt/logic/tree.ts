@@ -137,13 +137,10 @@ export function getParentOptions(tasks: Task[], excludeId: number | null = null)
 }
 
 export function buildTreeList(tasks: Task[], filtered: Task[], collapsedIds: ReadonlySet<number>): Task[] {
-  // Raíces: tareas en filtered que no tienen padre visible en filtered
+  // Raíces: tareas en filtered sin padre visible, en el orden elegido (mejora A2: el original
+  // las ordenaba siempre por inicio efectivo). Las hijas conservan su orden manual.
   const filteredIds = new Set(filtered.map((t) => t.id))
   const roots = filtered.filter((t) => !t.parentId || !filteredIds.has(t.parentId))
-  roots.sort(
-    (a, b) =>
-      getEffectiveDates(tasks, a).start.getTime() - getEffectiveDates(tasks, b).start.getTime() || a.id - b.id,
-  )
   const result: Task[] = []
   function walk(t: Task) {
     result.push(t)
