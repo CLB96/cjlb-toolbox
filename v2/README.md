@@ -1,6 +1,6 @@
 # CJLB Toolbox v2
 
-Aplicación React + Vite + TypeScript con Firebase (Auth + Firestore). Esta carpeta (`v2/`) convive con la versión actual del sitio y se despliega como un proyecto Vercel aparte.
+Aplicación React + Vite + TypeScript con Firebase (Auth + Firestore). Esta carpeta (`v2/`) se despliega en el proyecto Vercel `pte-toolbox`.
 
 ## Antes de publicar
 

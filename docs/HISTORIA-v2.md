@@ -6,7 +6,7 @@ Del 29 al 31 de octubre de 2026 se rehízo el toolbox: de cinco páginas HTML su
 - **Stack:** Vite + React + TypeScript + Zustand, con Firebase (Auth + Firestore) para el login, la lista de usuarios permitidos, las solicitudes de acceso y el registro de uso (pestaña Uso, solo admin).
 - **Diseño:** glassmorphism "Nebulosa" con tema de día y de noche.
 - **Guardado:** automático cada minuto, con historial y "Volver donde lo dejaste" (IndexedDB, por usuario).
-- **Publicación:** la rama `v2` se publica en pte-toolbox.vercel.app. `main` y el sitio viejo siguen intactos hasta reemplazarlos.
+- **Publicación:** la rama `v2` se publica en pte-toolbox.vercel.app. Los sitios anteriores se pausaron en Vercel el 2026-11-02 y `main` conserva su código.
 
 ## Cómo se portó cada herramienta
 1. Se hizo un inventario técnico del HTML original (los de Gantt y CapaFlow los generó ChatGPT para ahorrar tokens).
@@ -28,6 +28,6 @@ Del 29 al 31 de octubre de 2026 se rehízo el toolbox: de cinco páginas HTML su
 | Bondline | Portado y publicado; mejoras aplicadas (incluidas 8, 9, 10, 12, 18) |
 | Gantt | Portado y publicado (hasta 5 Gantts por usuario, sin JSONBin); mejoras aplicadas |
 | CapaFlow | Portado y publicado; PNG en diseño Nebulosa; mejoras aplicadas (PPM por cola, sin Cmk, confianza conectada, etc.) |
-| VectoriZr | **Pendiente.** Se copiará el código de `../Digitalizacion` y hará falta `'wasm-unsafe-eval'` en la CSP por OpenCV |
+| VectoriZr | Portado y publicado |
 
-Los planes, inventarios, mockups y documentos de mejoras que se usaron en el camino se borraron el 2026-10-31. Siguen en el historial de git (commits anteriores a esa fecha) por si se necesitan.
+Los planes, inventarios, mockups y documentos de mejoras que se usaron en el camino se borraron el 2026-10-31 y el 2026-11-02, junto con las páginas del sitio anterior. Siguen en el historial de git (commits anteriores a esa fecha) por si se necesitan.
