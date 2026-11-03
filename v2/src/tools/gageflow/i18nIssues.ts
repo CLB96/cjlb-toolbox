@@ -83,9 +83,9 @@ const AVISOS: Record<Lang, Record<AvisoDiseno['campo'], string>> = {
   },
 }
 
-const ETIQUETAS: Record<Lang, { fila: string; filas: string }> = {
-  es: { fila: 'fila {n}: ', filas: '{n} filas' },
-  en: { fila: 'row {n}: ', filas: '{n} rows' },
+const ETIQUETAS: Record<Lang, { fila: string; unaFila: string; filas: string }> = {
+  es: { fila: 'fila {n}: ', unaFila: '1 fila', filas: '{n} filas' },
+  en: { fila: 'row {n}: ', unaFila: '1 row', filas: '{n} rows' },
 }
 
 /** Hasta cinco huecos a la vista; si hay más, se indica con puntos suspensivos. */
@@ -118,5 +118,5 @@ export function prefijoFila(fila: number, lang: Lang): string {
 }
 
 export function totalFilas(total: number, lang: Lang): string {
-  return rellenar(ETIQUETAS[lang].filas, { n: total })
+  return total === 1 ? ETIQUETAS[lang].unaFila : rellenar(ETIQUETAS[lang].filas, { n: total })
 }

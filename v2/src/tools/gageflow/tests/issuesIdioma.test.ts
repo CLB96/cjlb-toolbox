@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { issueTexto, avisoTexto, MENSAJES_ISSUE } from '../i18nIssues'
+import { issueTexto, avisoTexto, totalFilas, MENSAJES_ISSUE } from '../i18nIssues'
 import { parseGrid, type Cell } from '../logic/parse'
 import { compararDiseno, type EstudioNormalizado } from '../logic/estudioForm'
 
@@ -64,6 +64,11 @@ describe('avisos del lector en cada idioma', () => {
     const dos = filas(5, ['Ana', 'Luis'], [1, 4])
     expect(textos(uno, 'es').join()).toContain('Los ensayos deben ir de 1 a 3; falta 2.')
     expect(textos(dos, 'es').join()).toContain('Los ensayos deben ir de 1 a 4; faltan 2, 3.')
+  })
+
+  it('cuenta las filas con su singular', () => {
+    expect([totalFilas(1, 'es'), totalFilas(90, 'es')]).toEqual(['1 fila', '90 filas'])
+    expect([totalFilas(1, 'en'), totalFilas(90, 'en')]).toEqual(['1 row', '90 rows'])
   })
 
   it('la hoja vacía dice que está vacía', () => {
