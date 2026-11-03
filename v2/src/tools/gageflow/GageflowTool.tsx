@@ -39,6 +39,7 @@ function Cuerpo({ toolId }: { toolId: ToolProps['toolId'] }) {
   const lecturas = useGageflow((s) => s.lecturas)
   const diseno = useGageflow((s) => s.diseno)
   const issues = useGageflow((s) => s.issues)
+  const formularioOk = useGageflow((s) => s.validacion.ok)
 
   // Cualquier cambio del usuario entra en el autosave.
   useEffect(() => {
@@ -61,6 +62,8 @@ function Cuerpo({ toolId }: { toolId: ToolProps['toolId'] }) {
   }
 
   const paso = resultado ? 3 : archivo ? 2 : 1
+  // Archivo correcto y formulario incompleto: se completa aquí y el estudio se calcula solo.
+  const faltaFormulario = !formularioOk && diseno !== null && issues.every((i) => i.severidad !== 'error')
 
   return (
     <div className="gf-root">
@@ -90,6 +93,7 @@ function Cuerpo({ toolId }: { toolId: ToolProps['toolId'] }) {
         </div>
       )}
 
+      {archivo && !resultado && faltaFormulario && <SetupForm />}
       {archivo && !resultado && <Review onCambiar={() => api.getState().limpiarArchivo()} />}
       {archivo && resultado && <Results />}
 

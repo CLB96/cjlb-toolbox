@@ -37,11 +37,17 @@ export function Results() {
   const diseno = useGageflow((s) => s.diseno)
   const lecturas = useGageflow((s) => s.lecturas)
   const estudio = useGageflow((s) => s.estudio)
+  const normalizado = useGageflow((s) => s.validacion.estudio)
 
   if (!resultado || !resultado.ok || !diseno) {
     return (
       <GlassPanel className="gf-panel">
-        <p className="gf-n">{t('revisionSub')}</p>
+        <p className="gf-n">
+          {resultado?.errores.includes('sinVariacion') ? t('sinVariacionTexto') : t('revisionSub')}
+        </p>
+        <div className="gf-acciones">
+          <Button variant="ghost" onClick={() => api.getState().limpiarArchivo()}>{t('nuevoEstudio')}</Button>
+        </div>
       </GlassPanel>
     )
   }
@@ -56,10 +62,10 @@ export function Results() {
   const detalleV = resultado.veredicto === 'aceptable' ? t('vAceptableTexto')
     : resultado.veredicto === 'condicional' ? t('vCondicionalTexto') : t('vNoAceptableTexto')
 
-  const lsl = Number(estudio.lsl.replace(',', '.'))
-  const usl = Number(estudio.usl.replace(',', '.'))
-  const nominal = Number(estudio.nominal.replace(',', '.'))
-  const especificacion = Number.isFinite(lsl) && Number.isFinite(usl)
+  const lsl = normalizado?.lsl ?? null
+  const usl = normalizado?.usl ?? null
+  const nominal = normalizado?.nominal ?? null
+  const especificacion = lsl !== null && usl !== null
     ? `${t('tolerancia')} ${lsl} – ${usl}`
     : '—'
 
@@ -68,7 +74,7 @@ export function Results() {
     caracteristica: estudio.caracteristica,
     especificacion,
     lang,
-    nominal: Number.isFinite(nominal) ? nominal : undefined,
+    nominal: nominal ?? undefined,
   })
 
   const descargar = async (que: 'png' | 'pdf' | 'xlsx') => {
@@ -202,7 +208,7 @@ export function Results() {
                 {diseno.operadores.map((op, j) => {
                   const valores = matriz.map((fila) => fila[j]).flat()
                   const media = valores.reduce((a, b) => a + b, 0) / valores.length
-                  const sesgo = Number.isFinite(nominal) ? (media - nominal) * 1000 : null
+                  const sesgo = nominal !== null ? (media - nominal) * 1000 : null
                   return (
                     <tr key={op}>
                       <td>{op}</td>
