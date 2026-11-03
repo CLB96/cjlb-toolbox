@@ -68,6 +68,19 @@
       "holdLabelEn": "In Development"
     },
     {
+      "id": "gageflow",
+      "icon": "🔬",
+      "nameEs": "GageFlow",
+      "nameEn": "GageFlow",
+      "descEs": "Estudio Gage R&R: repetibilidad, reproducibilidad y capacidad del sistema de medición.",
+      "descEn": "Gage R&R study: measurement system repeatability, reproducibility and capability.",
+      "badge": null,
+      "url": "/gageflow/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
       "id": "future",
       "icon": "🔧",
       "nameEs": "Herramienta Futura",

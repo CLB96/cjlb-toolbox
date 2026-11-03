@@ -34,7 +34,7 @@ beforeEach(() => {
   store.markFreshStart.mockResolvedValue(undefined)
 })
 
-test('sin snapshots: saludo, 5 tarjetas y sin sección de reanudar', async () => {
+test('sin snapshots: saludo, 6 tarjetas y sin sección de reanudar', async () => {
   render(
     <SessionProvider session={session}>
       <HomePage />
@@ -42,7 +42,7 @@ test('sin snapshots: saludo, 5 tarjetas y sin sección de reanudar', async () =>
   )
   expect(screen.getByRole('heading', { level: 1, name: 'Hola, Ana Pérez' })).toBeInTheDocument()
   await waitFor(() => expect(store.latestPerTool).toHaveBeenCalledWith('local'))
-  expect(screen.getAllByTestId('tool-card')).toHaveLength(5)
+  expect(screen.getAllByTestId('tool-card')).toHaveLength(6)
   expect(screen.queryByText('¿Volver donde lo dejaste?')).toBeNull()
 })
 
