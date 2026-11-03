@@ -5,6 +5,17 @@ import { dibujarPng, altoPng } from './exportPng'
 import { descargarBlob, nombreArchivo } from './descargar'
 
 const W = 1600
+const CALIDAD_JPEG = 0.92
+const ANCHO_PAGINA = 210
+const ANCHO_UTIL = 190
+const ALTO_UTIL = 277
+
+/** Tamaño de la lámina en la página (mm): cabe entera y conserva su proporción. */
+export function ajustarLamina(ancho: number, alto: number): { x: number; ancho: number; alto: number } {
+  const escala = Math.min(ANCHO_UTIL / ancho, ALTO_UTIL / alto)
+  const final = ancho * escala
+  return { x: (ANCHO_PAGINA - final) / 2, ancho: final, alto: alto * escala }
+}
 
 /** Dibuja el PNG en un canvas y devuelve su dataURL. */
 function laminaDataUrl(m: ModeloPng): { url: string; ancho: number; alto: number } {
@@ -15,7 +26,7 @@ function laminaDataUrl(m: ModeloPng): { url: string; ancho: number; alto: number
   const c = canvas.getContext('2d')
   if (!c) throw new Error('sin canvas 2d')
   dibujarPng(c, m)
-  return { url: canvas.toDataURL('image/png'), ancho: W, alto }
+  return { url: canvas.toDataURL('image/jpeg', CALIDAD_JPEG), ancho: W, alto }
 }
 
 export function construirPdf(m: ModeloPng, pieza: string): jsPDF {
@@ -23,9 +34,8 @@ export function construirPdf(m: ModeloPng, pieza: string): jsPDF {
   const { url, ancho, alto } = laminaDataUrl(m)
 
   // Página 1: la lámina completa, ajustada al ancho útil.
-  const util = 190
-  const h = (alto / ancho) * util
-  doc.addImage(url, 'PNG', 10, 10, util, Math.min(h, 277))
+  const lamina = ajustarLamina(ancho, alto)
+  doc.addImage(url, 'JPEG', lamina.x, 10, lamina.ancho, lamina.alto)
 
   // Página 2: ANOVA en texto, por si se imprime en blanco y negro.
   doc.addPage()

@@ -5,7 +5,7 @@
  * estado serializable, acciones síncronas y un adaptador para `usePersistentTool`.
  */
 import { createStore, type StoreApi } from 'zustand/vanilla'
-import { aMatriz, parseGrid, type Diseno, type Grid, type Issue, type Reading } from './logic/parse'
+import { aMatriz, parseGrid, type Diseno, type Grid, type Issue, type ParseResult, type Reading, type Resumen } from './logic/parse'
 import { calcularEstudio } from './logic/estudio'
 import type { EstudioResultado } from './logic/types'
 import {
@@ -16,6 +16,9 @@ import {
 export interface Archivo {
   nombre: string
   hoja: string
+  filas: number
+  layout: ParseResult['layout']
+  resumen: Resumen
 }
 
 export interface GageflowData {
@@ -112,7 +115,7 @@ export function crearGageflowStore(): GageflowApi {
         const parsed = parseGrid(grid, { confirmarAncho: opciones?.confirmarAncho })
         const validacion = validarEstudio(get().estudio)
         set({
-          archivo: { nombre, hoja },
+          archivo: { nombre, hoja, filas: parsed.filas, layout: parsed.layout, resumen: parsed.resumen },
           lecturas: parsed.ok ? parsed.lecturas : [],
           diseno: parsed.ok ? parsed.diseno : null,
           issues: parsed.issues,

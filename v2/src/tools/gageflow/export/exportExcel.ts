@@ -1,7 +1,7 @@
 /** Excel del estudio: datos, resumen, ANOVA y componentes. */
 import ExcelJS from 'exceljs'
 import type { EstudioResultado } from '../logic/types'
-import type { Diseno, Reading } from '../logic/parse'
+import { aMatriz, type Diseno, type Reading } from '../logic/parse'
 import { TEXTOS } from '../i18n'
 import { descargarBlob, nombreArchivo } from './descargar'
 
@@ -39,14 +39,14 @@ export async function construirLibro(
     { header: 'Ensayo', width: 10 }, { header: 'Valor', width: 12 },
   ]
   pintarCabecera(datos.getRow(1))
-  const orden = new Map(lecturas.map((l) => [`${l.pieza}|${l.operador}|${l.ensayo}`, l.valor]))
-  for (const pieza of diseno.piezas) {
-    for (const operador of diseno.operadores) {
-      for (const ensayo of diseno.ensayos) {
-        datos.addRow([pieza, operador, ensayo, orden.get(`${pieza}|${operador}|${ensayo}`) ?? null])
-      }
-    }
-  }
+  const matriz = aMatriz(lecturas, diseno)
+  diseno.piezas.forEach((pieza, i) => {
+    diseno.operadores.forEach((operador, j) => {
+      diseno.ensayos.forEach((ensayo, k) => {
+        datos.addRow([pieza, operador, ensayo, matriz[i][j][k]])
+      })
+    })
+  })
 
   const resumen = wb.addWorksheet('Resumen')
   resumen.columns = [{ width: 30 }, { width: 28 }]

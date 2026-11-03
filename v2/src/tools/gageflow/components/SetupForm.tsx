@@ -72,22 +72,9 @@ export function SetupForm() {
         <span className="gf-t">{t('seccionSpec')}</span>
         <span className="gf-n">{t('seccionSpecNota')}</span>
       </div>
-      <div className="gf-grid2">
+      <div className="gf-grid3">
         <Campo id="gf-nom" etiqueta={t('nominal')} valor={estudio.nominal} tipo="number"
           onChange={(v) => api.getState().setCampo('nominal', v)} error={errorDe('nominal')} />
-        <label className="gf-campo" htmlFor="gf-met">
-          <span className="gf-campo__l">{t('metodo')}</span>
-          <select
-            id="gf-met"
-            className="gf-input"
-            value={estudio.metodo}
-            onChange={(e) => api.getState().setCampo('metodo', e.target.value as typeof estudio.metodo)}
-          >
-            <option value="anova">{t('metodoAnova')}</option>
-            <option value="xbarR">{t('metodoXbar')}</option>
-            <option value="ambos">{t('metodoAmbos')}</option>
-          </select>
-        </label>
         <Campo id="gf-lsl" etiqueta={t('lsl')} valor={estudio.lsl} tipo="number"
           onChange={(v) => api.getState().setCampo('lsl', v)} error={errorDe('lsl')} />
         <Campo id="gf-usl" etiqueta={t('usl')} valor={estudio.usl} tipo="number"

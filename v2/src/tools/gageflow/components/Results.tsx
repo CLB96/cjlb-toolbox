@@ -5,7 +5,9 @@ import { Button } from '../../../ui/Button'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { toast } from '../../../ui/toastStore'
 import { useI18n } from '../../../i18n/useI18n'
+import { AvisosArchivo } from './AvisosArchivo'
 import { ComponentesChart, InteraccionChart } from './charts'
+import { textoSesgo } from '../logic/unidades'
 import { construirModeloPng } from '../export/pngModel'
 import { exportarPng } from '../export/exportPng'
 import { exportarPdf } from '../export/exportPdf'
@@ -53,6 +55,7 @@ export function Results() {
   }
 
   const matriz = aMatriz(lecturas, diseno) as number[][][]
+  const unidad = normalizado?.unidad ?? estudio.unidad
   const conTol = resultado.pctGrrTolerancia !== null
   const grr = resultado.pctGrrTolerancia ?? resultado.pctGrrVariacion
   const colorV = resultado.veredicto === 'aceptable' ? COLOR.ok
@@ -75,6 +78,7 @@ export function Results() {
     especificacion,
     lang,
     nominal: nominal ?? undefined,
+    unidad,
   })
 
   const descargar = async (que: 'png' | 'pdf' | 'xlsx') => {
@@ -87,7 +91,7 @@ export function Results() {
         })
       }
     } catch {
-      toast('error', t('revisionSub'))
+      toast('error', t('errorExportar'))
     }
   }
 
@@ -109,6 +113,7 @@ export function Results() {
 
   return (
     <>
+      <AvisosArchivo />
       <div className="gf-top">
         <GlassPanel className="gf-verdict">
           <span className="gf-anillo" style={{ background: `conic-gradient(${colorV} ${Math.min(99, grr)}%, var(--track) 0)` }}>
@@ -121,12 +126,12 @@ export function Results() {
         </GlassPanel>
         <GlassPanel className="gf-panel">
           <div className="gf-cab"><span className="gf-t">{t('metodoTitulo')}</span>
-            <span className="gf-n">AIAG MSA 4ª ed.</span></div>
+            <span className="gf-n">{t('metodoNorma')}</span></div>
           <dl className="gf-mini">
             <div><dt>{t('modelo')}</dt><dd>{t('modeloAnova')}</dd></div>
-            <div><dt>GRR</dt><dd>{num(c.grr.seis, 4)} mm (6σ)</dd></div>
-            <div><dt>{t('variacionTotal')}</dt><dd>{num(c.total.seis, 4)} mm</dd></div>
-            <div><dt>{t('tolerancia')}</dt><dd>{resultado.anchoTolerancia ? `${num(resultado.anchoTolerancia, 2)} mm` : '—'}</dd></div>
+            <div><dt>GRR</dt><dd>{num(c.grr.seis, 4)} {unidad} (6σ)</dd></div>
+            <div><dt>{t('variacionTotal')}</dt><dd>{num(c.total.seis, 4)} {unidad}</dd></div>
+            <div><dt>{t('tolerancia')}</dt><dd>{resultado.anchoTolerancia ? `${num(resultado.anchoTolerancia, 2)} ${unidad}` : '—'}</dd></div>
           </dl>
         </GlassPanel>
       </div>
@@ -134,9 +139,9 @@ export function Results() {
       <div className="gf-kpis">
         <Kpi etiqueta={t('kpiGrr')} valor={conTol ? pct(grr) : '—'} nota={t('limite')} color={colorV} ancho={grr} />
         <Kpi etiqueta={t('kpiNdc')} valor={String(resultado.ndc)} nota={t('minimo')} color={COLOR.ok} ancho={resultado.ndc * 10} />
-        <Kpi etiqueta={t('kpiEv')} valor={`${num(c.ev.seis)} mm`}
+        <Kpi etiqueta={t('kpiEv')} valor={`${num(c.ev.seis)} ${unidad}`}
           nota={t('deTolerancia', { pct: pct(c.ev.pctTolerancia ?? 0) })} color="#8fb4ff" ancho={c.ev.pctTolerancia ?? 0} />
-        <Kpi etiqueta={t('kpiAv')} valor={`${num(c.av.seis)} mm`}
+        <Kpi etiqueta={t('kpiAv')} valor={`${num(c.av.seis)} ${unidad}`}
           nota={t('deTolerancia', { pct: pct(c.av.pctTolerancia ?? 0) })} color="#d16bff" ancho={c.av.pctTolerancia ?? 0} />
       </div>
 
@@ -146,7 +151,7 @@ export function Results() {
             <span className="gf-n">{resultado.anchoTolerancia
               ? t('frenteTolerancia', { ancho: num(resultado.anchoTolerancia, 2) })
               : t('sinLimites')}</span></div>
-          <ComponentesChart componentes={c} />
+          <ComponentesChart componentes={c} unidad={unidad} />
         </GlassPanel>
         <GlassPanel className="gf-panel">
           <div className="gf-cab"><span className="gf-t">{t('interaccion')}</span>
@@ -160,7 +165,7 @@ export function Results() {
           <GlassPanel className="gf-panel">
             <div className="gf-cab"><span className="gf-t">{t('anova')}</span>
               <span className="gf-n">{xbar && conTol
-                ? t('comprobacion', { grr: num(6 * xbar.grr), pct: pct(xbar.pctTolerancia ?? 0) })
+                ? t('comprobacion', { grr: num(6 * xbar.grr), unidad, pct: pct(xbar.pctTolerancia ?? 0) })
                 : ''}</span></div>
             <table className="gf-tabla">
               <thead>
@@ -208,12 +213,12 @@ export function Results() {
                 {diseno.operadores.map((op, j) => {
                   const valores = matriz.map((fila) => fila[j]).flat()
                   const media = valores.reduce((a, b) => a + b, 0) / valores.length
-                  const sesgo = nominal !== null ? (media - nominal) * 1000 : null
+                  const sesgo = nominal !== null ? media - nominal : null
                   return (
                     <tr key={op}>
                       <td>{op}</td>
                       <td className="gf-num">{media.toFixed(4)}</td>
-                      <td className="gf-num">{sesgo === null ? '—' : `${sesgo >= 0 ? '+' : ''}${sesgo.toFixed(1)} µm`}</td>
+                      <td className="gf-num">{sesgo === null ? '—' : textoSesgo(sesgo, unidad)}</td>
                     </tr>
                   )
                 })}

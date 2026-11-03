@@ -16,7 +16,7 @@ export type IssueClave =
   | 'valorVacio' | 'valorVacioResto' | 'valorNoNumerico' | 'celdaNoNumerica' | 'duplicado'
   | 'maximoLecturas' | 'maximoPiezas' | 'maximoOperadores'
   | 'pocasLecturas' | 'minimoPiezas' | 'piezasRecomendadas' | 'minimoOperadores' | 'minimoEnsayos'
-  | 'ensayosIncompletosUno' | 'ensayosIncompletosVarios' | 'desbalanceado' | 'anchoSinConfirmar'
+  | 'ensayosIncompletosUno' | 'ensayosIncompletosVarios' | 'desbalanceadoUno' | 'desbalanceado' | 'anchoSinConfirmar'
 
 export type CampoColumna = 'pieza' | 'operador' | 'ensayo' | 'valor'
 

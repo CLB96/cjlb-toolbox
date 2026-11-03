@@ -33,7 +33,7 @@ export function Dropzone({ onArchivo, deshabilitado = false }: Props) {
       const libro = read(await file.arrayBuffer(), { type: 'array' })
       const hoja = elegirHoja(libro)
       if (!hoja || !libro.Sheets[hoja]) {
-        toast('error', t('revisionSub'))
+        toast('error', t('errorLeerArchivo'))
         return
       }
       const grid = utils.sheet_to_json<Cell[]>(libro.Sheets[hoja], {
@@ -41,7 +41,7 @@ export function Dropzone({ onArchivo, deshabilitado = false }: Props) {
       })
       onArchivo(grid, file.name, hoja)
     } catch {
-      toast('error', t('revisionSub'))
+      toast('error', t('errorLeerArchivo'))
     }
   }
 

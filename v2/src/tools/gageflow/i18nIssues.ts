@@ -29,6 +29,7 @@ const es: Mensajes = {
   minimoEnsayos: 'Se necesitan al menos 2 ensayos por operador y pieza.',
   ensayosIncompletosUno: 'Los ensayos deben ir de 1 a {ultimo}; falta {huecos}.',
   ensayosIncompletosVarios: 'Los ensayos deben ir de 1 a {ultimo}; faltan {huecos}.',
+  desbalanceadoUno: 'Falta {faltantes} lectura ({huecos}).',
   desbalanceado: 'Faltan {faltantes} lecturas ({huecos}).',
   anchoSinConfirmar: 'Detecté una hoja AIAG con {operadores} operadores y {ensayos} ensayos. Confirma para convertirla.',
 }
@@ -57,6 +58,7 @@ const en: Mensajes = {
   minimoEnsayos: 'At least 2 trials per operator and part are needed.',
   ensayosIncompletosUno: 'Trials must run from 1 to {ultimo}; {huecos} is missing.',
   ensayosIncompletosVarios: 'Trials must run from 1 to {ultimo}; {huecos} are missing.',
+  desbalanceadoUno: '{faltantes} reading is missing ({huecos}).',
   desbalanceado: '{faltantes} readings are missing ({huecos}).',
   anchoSinConfirmar: 'An AIAG sheet with {operadores} operators and {ensayos} trials was detected. Confirm to convert it.',
 }

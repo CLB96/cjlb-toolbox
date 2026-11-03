@@ -6,7 +6,6 @@
  * normalizan en `validarEstudio`.
  */
 
-export type Metodo = 'anova' | 'xbarR' | 'ambos'
 export type Confianza = 90 | 95 | 99
 
 export interface EstudioForm {
@@ -17,7 +16,6 @@ export interface EstudioForm {
   lsl: string
   usl: string
   resolucion: string
-  metodo: Metodo
   confianza: Confianza
   piezas: number
   operadores: string[]
@@ -32,7 +30,6 @@ export interface EstudioNormalizado {
   lsl: number | null
   usl: number | null
   resolucion: number | null
-  metodo: Metodo
   confianza: Confianza
   piezas: string[]
   operadores: string[]
@@ -41,7 +38,7 @@ export interface EstudioNormalizado {
 
 export type CampoEstudio =
   | 'pieza' | 'caracteristica' | 'unidad' | 'nominal' | 'lsl' | 'usl'
-  | 'resolucion' | 'metodo' | 'confianza' | 'piezas' | 'operadores' | 'ensayos'
+  | 'resolucion' | 'confianza' | 'piezas' | 'operadores' | 'ensayos'
 
 export type CodigoForm =
   | 'requerido' | 'muyLargo' | 'noNumerico' | 'fueraDeRango'
@@ -76,7 +73,6 @@ export const ESTUDIO_INICIAL: EstudioForm = {
   lsl: '',
   usl: '',
   resolucion: '0.001',
-  metodo: 'anova',
   confianza: 95,
   piezas: 10,
   operadores: ['Operador 1', 'Operador 2', 'Operador 3'],
@@ -173,7 +169,7 @@ export function validarEstudio(form: EstudioForm): ValidacionForm {
     ok: true, errores: [], avisos,
     estudio: {
       pieza, caracteristica, unidad, nominal, lsl, usl, resolucion,
-      metodo: form.metodo, confianza: form.confianza,
+      confianza: form.confianza,
       piezas, operadores, ensayos: form.ensayos,
     },
   }

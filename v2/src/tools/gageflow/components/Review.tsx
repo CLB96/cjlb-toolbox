@@ -15,7 +15,6 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
   const issues = useGageflow((s) => s.issues)
   const avisos = useGageflow((s) => s.avisos)
   const diseno = useGageflow((s) => s.diseno)
-  const lecturas = useGageflow((s) => s.lecturas)
   const estudio = useGageflow((s) => s.estudio)
 
   const errores = issues.filter((i) => i.severidad === 'error')
@@ -40,7 +39,7 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
         <div>
           <div className="gf-filebar__n">{archivo?.nombre ?? '—'}</div>
           <div className="gf-n">
-            {archivo ? `«${archivo.hoja}» · ${totalFilas(lecturas.length + errores.length, lang)}` : ''}
+            {archivo ? `«${archivo.hoja}» · ${totalFilas(archivo.filas, lang)}` : ''}
           </div>
         </div>
         <span className="gf-spacer" />
@@ -49,11 +48,11 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
 
       <GlassPanel className={`gf-panel gf-verdict gf-verdict--${listo ? 'ok' : 'warn'}`}>
         <span className={`gf-pill gf-pill--${listo ? 'ok' : 'warn'}`}>
-          {listo ? t('calcular') : `${errores.length} ${t('errores')}`}
+          {listo ? t('faltanDatos') : `${errores.length} ${t('errores')}`}
         </span>
         <div>
-          <div className="gf-verdict__t">{listo ? t('resultadosTitulo') : t('revisionTitulo')}</div>
-          <div className="gf-n">{t('revisionSub')}</div>
+          <div className="gf-verdict__t">{listo ? t('faltanDatosTitulo') : t('revisionTitulo')}</div>
+          <div className="gf-n">{listo ? t('faltanDatosSub') : t('revisionSub')}</div>
         </div>
       </GlassPanel>
 
@@ -88,11 +87,11 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
           <GlassPanel className="gf-panel">
             <div className="gf-cab"><span className="gf-t">{t('resumen')}</span></div>
             <dl className="gf-mini">
-              <div><dt>{t('formato')}</dt><dd>{t('formatoLargo')}</dd></div>
-              <div><dt>{t('lecturasConValor')}</dt><dd>{lecturas.length}</dd></div>
-              <div><dt>{t('piezas')}</dt><dd>{diseno?.piezas.length ?? 0}</dd></div>
-              <div><dt>{t('operadores')}</dt><dd>{diseno?.operadores.length ?? 0}</dd></div>
-              <div><dt>{t('ensayos')}</dt><dd>{diseno?.ensayos.length ?? 0}</dd></div>
+              <div><dt>{t('formato')}</dt><dd>{archivo?.layout === 'wide' ? t('formatoAiag') : t('formatoLargo')}</dd></div>
+              <div><dt>{t('lecturasConValor')}</dt><dd>{archivo?.resumen.lecturas ?? 0}</dd></div>
+              <div><dt>{t('piezas')}</dt><dd>{archivo?.resumen.piezas ?? 0}</dd></div>
+              <div><dt>{t('operadores')}</dt><dd>{archivo?.resumen.operadores.length ?? 0}</dd></div>
+              <div><dt>{t('ensayos')}</dt><dd>{archivo?.resumen.ensayos ?? 0}</dd></div>
               <div><dt>{t('balanceado')}</dt><dd>{listo ? t('si') : t('no')}</dd></div>
             </dl>
           </GlassPanel>

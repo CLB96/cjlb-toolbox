@@ -33,7 +33,7 @@ function useChart(config: ChartConfiguration | null) {
   return ref
 }
 
-export function ComponentesChart({ componentes }: { componentes: Componentes }) {
+export function ComponentesChart({ componentes, unidad }: { componentes: Componentes; unidad: string }) {
   const t = useGageflowT()
   const filas: [string, number, number][] = [
     [t('compEv'), componentes.ev.pctTolerancia ?? componentes.ev.pctContribucion, componentes.ev.seis],
@@ -64,7 +64,7 @@ export function ComponentesChart({ componentes }: { componentes: Componentes }) 
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (c) => `${c.parsed.x.toFixed(1)} % · ${filas[c.dataIndex][2].toFixed(3)} mm`,
+            label: (c) => `${c.parsed.x.toFixed(1)} % · ${filas[c.dataIndex][2].toFixed(3)} ${unidad}`,
           },
         },
       },

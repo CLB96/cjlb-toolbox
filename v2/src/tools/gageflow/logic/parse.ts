@@ -37,6 +37,8 @@ export interface ParseResult {
   lecturas: Reading[]
   issues: Issue[]
   resumen: Resumen
+  /** Filas con datos, sin contar encabezados. */
+  filas: number
   /** Diseño resuelto y ordenado, aunque todavía no haya valores. */
   diseno: Diseno
   /** Solo en 'wide': lo que se convertiría, para el diálogo de confirmación. */
@@ -223,6 +225,7 @@ function parseAncho(filas: Cell[][], issues: Issue[]): Reading[] {
 }
 
 export function parseGrid(grid: Grid, opts: ParseOptions = {}): ParseResult {
+  const contar = (desde: number, filas: Cell[][]) => filas.slice(desde).filter((f) => !filaVacia(f)).length
   const max = opts.maxLecturas ?? 5000
   const filas = recortar(grid)
   const issues: Issue[] = []
@@ -231,7 +234,7 @@ export function parseGrid(grid: Grid, opts: ParseOptions = {}): ParseResult {
   if (filas.length === 0) {
     return {
       ok: false, layout: 'desconocido', lecturas: [], issues: [{ fila: null, codigo: 'SIN_DATOS', severidad: 'error', clave: 'sinDatos' }],
-      resumen: resumenVacio, diseno: disenoVacio(),
+      resumen: resumenVacio, filas: 0, diseno: disenoVacio(),
     }
   }
 
@@ -244,7 +247,7 @@ export function parseGrid(grid: Grid, opts: ParseOptions = {}): ParseResult {
     const resumen: Resumen = bloqueado || out.lecturas.length === 0
       ? { piezas: diseno.piezas.length, operadores: diseno.operadores, ensayos: diseno.ensayos.length, lecturas: 0, faltantes: out.vacios }
       : validarDiseno(out.lecturas, diseno, issues)
-    return { ok: issues.every((i) => i.severidad !== 'error'), layout: 'long', lecturas: out.lecturas, issues, resumen, diseno }
+    return { ok: issues.every((i) => i.severidad !== 'error'), layout: 'long', lecturas: out.lecturas, issues, resumen, filas: contar(enc.indice + 1, filas), diseno }
   }
 
   const ancho = detectarAncho(filas)
@@ -255,7 +258,7 @@ export function parseGrid(grid: Grid, opts: ParseOptions = {}): ParseResult {
       return {
         ok: false, layout: 'wide', lecturas: [],
         issues: [{ fila: 1, codigo: 'ANCHO_SIN_CONFIRMAR', severidad: 'error', clave: 'anchoSinConfirmar', vars: { operadores: operadores.length, ensayos } }],
-        resumen: resumenVacio, diseno: disenoVacio(), ancho: { operadores: operadores.sort(compararNatural), ensayos },
+        resumen: resumenVacio, filas: contar(2, filas), diseno: disenoVacio(), ancho: { operadores: operadores.sort(compararNatural), ensayos },
       }
     }
     const lecturas = parseAncho(filas, issues)
@@ -263,11 +266,11 @@ export function parseGrid(grid: Grid, opts: ParseOptions = {}): ParseResult {
     const resumen = lecturas.length
       ? validarDiseno(lecturas, diseno, issues)
       : { piezas: 0, operadores: diseno.operadores, ensayos: diseno.ensayos.length, lecturas: 0, faltantes: 0 }
-    return { ok: issues.every((i) => i.severidad !== 'error'), layout: 'wide', lecturas, issues, resumen, diseno }
+    return { ok: issues.every((i) => i.severidad !== 'error'), layout: 'wide', lecturas, issues, resumen, filas: contar(2, filas), diseno }
   }
 
   return {
-    ok: false, layout: 'desconocido', lecturas: [], resumen: resumenVacio, diseno: disenoVacio(),
+    ok: false, layout: 'desconocido', lecturas: [], resumen: resumenVacio, filas: contar(0, filas), diseno: disenoVacio(),
     issues: [{ fila: null, codigo: 'SIN_ENCABEZADO', severidad: 'error', clave: 'sinEncabezado' }],
   }
 }

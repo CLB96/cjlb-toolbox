@@ -48,7 +48,7 @@ describe('avisos del lector en cada idioma', () => {
 
   it('lista los huecos del diseño en el idioma activo', () => {
     const grid = filas(5).filter((f) => !(f[0] === '2' && f[1] === 'Luis' && f[2] === 2))
-    expect(textos(grid, 'es')[0]).toBe('Faltan 1 lecturas (2 / Luis / ensayo 2).')
+    expect(textos(grid, 'es')[0]).toBe('Falta 1 lectura (2 / Luis / ensayo 2).')
     expect(textos(grid, 'en')[0]).toContain('2 / Luis / trial 2')
   })
 

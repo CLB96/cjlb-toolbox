@@ -23,6 +23,7 @@
 .gf-spacer { flex: 1; }
 
 .gf-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.gf-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
 .gf-campo { display: flex; flex-direction: column; gap: 5px; }
 .gf-campo--ancho { grid-column: 1 / -1; margin-top: 12px; }
 .gf-campo__l { font-size: 10.5px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .5px; }

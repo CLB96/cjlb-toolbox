@@ -5,6 +5,7 @@
 import type { EstudioResultado } from '../logic/types'
 import type { Diseno } from '../logic/parse'
 import { TEXTOS } from '../i18n'
+import { textoSesgo } from '../logic/unidades'
 
 export interface OpcionesPng {
   pieza: string
@@ -12,6 +13,7 @@ export interface OpcionesPng {
   especificacion: string
   lang: 'es' | 'en'
   nominal?: number
+  unidad?: string
   fecha?: Date
 }
 
@@ -62,6 +64,7 @@ export function construirModeloPng(
   const grr = resultado.pctGrrTolerancia ?? resultado.pctGrrVariacion
   const conTol = resultado.pctGrrTolerancia !== null
   const c = resultado.componentes
+  const unidad = opciones.unidad ?? 'mm'
 
   const veredictoTexto = {
     aceptable: d.vAceptable,
@@ -78,8 +81,8 @@ export function construirModeloPng(
   const kpis = [
     { etiqueta: d.kpiGrr, valor: conTol ? pct(grr) : '—', nota: d.limite, color: colorVeredicto(resultado.veredicto) },
     { etiqueta: d.kpiNdc, valor: String(resultado.ndc), nota: d.minimo, color: COLOR.ok },
-    { etiqueta: d.kpiEv, valor: `${num(c.ev.seis)} mm`, nota: pct(c.ev.pctTolerancia ?? 0), color: COLOR.info },
-    { etiqueta: d.kpiAv, valor: `${num(c.av.seis)} mm`, nota: pct(c.av.pctTolerancia ?? 0), color: COLOR.acento },
+    { etiqueta: d.kpiEv, valor: `${num(c.ev.seis)} ${unidad}`, nota: pct(c.ev.pctTolerancia ?? 0), color: COLOR.info },
+    { etiqueta: d.kpiAv, valor: `${num(c.av.seis)} ${unidad}`, nota: pct(c.av.pctTolerancia ?? 0), color: COLOR.acento },
   ]
 
   const componentes = [
@@ -91,7 +94,7 @@ export function construirModeloPng(
   ].map(({ etiqueta, comp, color }) => ({
     etiqueta,
     color,
-    mm: `${num(comp.seis)} mm`,
+    mm: `${num(comp.seis)} ${unidad}`,
     pct: comp.pctTolerancia ?? comp.pctContribucion,
     texto: pct(comp.pctTolerancia ?? comp.pctContribucion),
   }))
@@ -112,11 +115,11 @@ export function construirModeloPng(
   const operadores = diseno.operadores.map((op, j) => {
     const valores = matriz.map((fila) => fila[j]).flat()
     const media = valores.reduce((a, b) => a + b, 0) / valores.length
-    const sesgo = opciones.nominal === undefined ? null : (media - opciones.nominal) * 1000
+    const sesgo = opciones.nominal === undefined ? null : media - opciones.nominal
     return {
       nombre: op,
       media: media.toFixed(4),
-      sesgo: sesgo === null ? '—' : `${sesgo >= 0 ? '+' : ''}${sesgo.toFixed(1)} µm`,
+      sesgo: sesgo === null ? '—' : textoSesgo(sesgo, unidad),
     }
   })
 

@@ -45,13 +45,14 @@ export function validarDiseno(lecturas: Reading[], diseno: Diseno, issues: Issue
       vars: { ultimo: ensayos[ensayos.length - 1], huecos: huecosEnsayo.join(', ') },
     })
   }
-  if (faltantes > 0 && issues.every((i) => i.codigo !== 'VALOR_VACIO')) {
+  // Una celda vacía o que no es número ya tiene su propio error: no se cuenta dos veces.
+  if (faltantes > 0 && issues.every((i) => i.codigo !== 'VALOR_VACIO' && i.codigo !== 'VALOR_NO_NUMERICO')) {
     const huecos: FilaDiseno[] = []
     for (const pieza of piezas) for (const operador of operadores) for (const ensayo of ensayos) {
       if (!presentes.has(claveLectura(pieza, operador, ensayo))) huecos.push({ pieza, operador, ensayo })
     }
     issues.push({
-      fila: null, codigo: 'DESBALANCEADO', severidad: 'error', clave: 'desbalanceado',
+      fila: null, codigo: 'DESBALANCEADO', severidad: 'error', clave: faltantes === 1 ? 'desbalanceadoUno' : 'desbalanceado',
       vars: { faltantes }, huecos: huecos.slice(0, 6),
     })
   }
