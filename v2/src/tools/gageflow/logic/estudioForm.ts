@@ -179,19 +179,20 @@ export function validarEstudio(form: EstudioForm): ValidacionForm {
   }
 }
 
+export interface AvisoDiseno {
+  campo: 'piezas' | 'operadores' | 'ensayos'
+  archivo: number
+  formulario: number
+}
+
 /** Avisos cuando el archivo trae un diseño distinto al del formulario. */
 export function compararDiseno(estudio: EstudioNormalizado, real: {
   piezas: number; operadores: readonly string[]; ensayos: number
-}): string[] {
-  const salida: string[] = []
-  if (real.piezas !== estudio.piezas.length) {
-    salida.push(`El archivo tiene ${real.piezas} piezas y el formulario ${estudio.piezas.length}.`)
-  }
-  if (real.operadores.length !== estudio.operadores.length) {
-    salida.push(`El archivo tiene ${real.operadores.length} operadores y el formulario ${estudio.operadores.length}.`)
-  }
-  if (real.ensayos !== estudio.ensayos) {
-    salida.push(`El archivo tiene ${real.ensayos} ensayos y el formulario ${estudio.ensayos}.`)
-  }
-  return salida
+}): AvisoDiseno[] {
+  const comparados: AvisoDiseno[] = [
+    { campo: 'piezas', archivo: real.piezas, formulario: estudio.piezas.length },
+    { campo: 'operadores', archivo: real.operadores.length, formulario: estudio.operadores.length },
+    { campo: 'ensayos', archivo: real.ensayos, formulario: estudio.ensayos },
+  ]
+  return comparados.filter((a) => a.archivo !== a.formulario)
 }

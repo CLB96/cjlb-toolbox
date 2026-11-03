@@ -1,5 +1,7 @@
 import { useGageflow, useGageflowApi } from '../GageflowStoreProvider'
-import { issueTexto, useGageflowT } from '../i18n'
+import { useGageflowT } from '../i18n'
+import { avisoTexto, issueTexto, prefijoFila, totalFilas } from '../i18nIssues'
+import { useI18n } from '../../../i18n/useI18n'
 import { Button } from '../../../ui/Button'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { generarPlantilla } from '../export/generarPlantilla'
@@ -8,6 +10,7 @@ import { descargarBlob, nombreArchivo } from '../export/descargar'
 export function Review({ onCambiar }: { onCambiar: () => void }) {
   const api = useGageflowApi()
   const t = useGageflowT()
+  const { lang } = useI18n()
   const archivo = useGageflow((s) => s.archivo)
   const issues = useGageflow((s) => s.issues)
   const avisos = useGageflow((s) => s.avisos)
@@ -37,7 +40,7 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
         <div>
           <div className="gf-filebar__n">{archivo?.nombre ?? '—'}</div>
           <div className="gf-n">
-            {archivo ? `«${archivo.hoja}» · ${lecturas.length + errores.length} filas` : ''}
+            {archivo ? `«${archivo.hoja}» · ${totalFilas(lecturas.length + errores.length, lang)}` : ''}
           </div>
         </div>
         <span className="gf-spacer" />
@@ -65,17 +68,17 @@ export function Review({ onCambiar }: { onCambiar: () => void }) {
             {errores.slice(0, 10).map((i, k) => (
               <li key={`e-${k}`} className="gf-issue gf-issue--mal">
                 <b aria-hidden="true">✖</b>
-                <span>{i.fila ? `fila ${i.fila}: ` : ''}{issueTexto(i, t)}</span>
+                <span>{i.fila ? prefijoFila(i.fila, lang) : ''}{issueTexto(i, lang)}</span>
               </li>
             ))}
             {avisosParser.map((i, k) => (
               <li key={`a-${k}`} className="gf-issue gf-issue--avi">
-                <b aria-hidden="true">!</b><span>{issueTexto(i, t)}</span>
+                <b aria-hidden="true">!</b><span>{issueTexto(i, lang)}</span>
               </li>
             ))}
             {avisos.map((a, k) => (
               <li key={`d-${k}`} className="gf-issue gf-issue--avi">
-                <b aria-hidden="true">!</b><span>{a}</span>
+                <b aria-hidden="true">!</b><span>{avisoTexto(a, lang)}</span>
               </li>
             ))}
           </ul>

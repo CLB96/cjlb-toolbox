@@ -10,7 +10,7 @@ import { calcularEstudio } from './logic/estudio'
 import type { EstudioResultado } from './logic/types'
 import {
   ESTUDIO_INICIAL, compararDiseno, validarEstudio,
-  type EstudioForm, type ValidacionForm,
+  type AvisoDiseno, type EstudioForm, type ValidacionForm,
 } from './logic/estudioForm'
 
 export interface Archivo {
@@ -26,7 +26,7 @@ export interface GageflowData {
   issues: Issue[]
   validacion: ValidacionForm
   resultado: EstudioResultado | null
-  avisos: string[]
+  avisos: AvisoDiseno[]
   /** Hoja AIAG detectada que espera confirmación del usuario. */
   anchoPendiente: { operadores: string[]; ensayos: number } | null
 }
@@ -145,14 +145,17 @@ export interface GageflowSnapshot {
   archivo: Archivo | null
   lecturas: Reading[]
   diseno: Diseno | null
+  issues: Issue[]
 }
 
 /** Adaptador para `usePersistentTool`. */
 export function crearAdaptadorGageflow(api: GageflowApi) {
   return {
     getSnapshot: (): GageflowSnapshot => {
-      const { estudio, archivo, lecturas, diseno } = api.getState()
-      return { estudio, archivo, lecturas, diseno }
+      const { estudio, archivo, lecturas, diseno, issues, anchoPendiente } = api.getState()
+      // Una hoja AIAG sin confirmar no se guarda: su contenido solo está en memoria.
+      if (anchoPendiente) return { estudio, archivo: null, lecturas: [], diseno: null, issues: [] }
+      return { estudio, archivo, lecturas, diseno, issues }
     },
     restore: (snap: GageflowSnapshot) => {
       const estudio = snap.estudio ?? ESTUDIO_INICIAL
@@ -162,9 +165,10 @@ export function crearAdaptadorGageflow(api: GageflowApi) {
         lecturas: snap.lecturas ?? [],
         diseno: snap.diseno ?? null,
         validacion: validarEstudio(estudio),
-        issues: [],
+        issues: snap.issues ?? [],
         resultado: null,
         avisos: [],
+        anchoPendiente: null,
       })
       api.getState().recalcular()
     },

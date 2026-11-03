@@ -38,11 +38,12 @@ function Cuerpo({ toolId }: { toolId: ToolProps['toolId'] }) {
   const estudio = useGageflow((s) => s.estudio)
   const lecturas = useGageflow((s) => s.lecturas)
   const diseno = useGageflow((s) => s.diseno)
+  const issues = useGageflow((s) => s.issues)
 
   // Cualquier cambio del usuario entra en el autosave.
   useEffect(() => {
     if (restored) markDirty()
-  }, [restored, estudio, lecturas, diseno, markDirty])
+  }, [restored, estudio, archivo, lecturas, diseno, issues, markDirty])
 
   const onArchivo = (grid: Cell[][], nombre: string, hoja: string) => {
     gridRef.current = { grid, nombre, hoja }

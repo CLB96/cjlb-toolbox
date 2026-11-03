@@ -3,7 +3,6 @@
  * cálculo nunca devuelve frases.
  */
 import { useI18n } from '../../i18n/useI18n'
-import type { Issue } from './logic/parse'
 
 const es = {
   titulo: 'Gage R&R',
@@ -367,17 +366,4 @@ export function useGageflowT(): (key: GageflowKey, vars?: Vars) => string {
 
 export function errorFormTexto(codigo: string): GageflowKey {
   return ERROR_FORM[codigo] ?? 'errRequerido'
-}
-
-/**
- * Texto de un problema del parser. Los mensajes con datos variables se muestran
- * tal cual (ya vienen redactados en español); el resto se traduce por código.
- */
-const ISSUE_ESTATICO: Record<string, GageflowKey> = {
-  SIN_DATOS: 'revisionSub',
-}
-
-export function issueTexto(issue: Issue, t: (k: GageflowKey) => string): string {
-  const clave = ISSUE_ESTATICO[issue.codigo]
-  return clave ? t(clave) : issue.mensaje
 }
