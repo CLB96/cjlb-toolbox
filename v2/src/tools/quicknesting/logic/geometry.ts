@@ -239,12 +239,9 @@ export function contains(outer: Poly, inner: Poly): boolean {
 
 /** Polígono simple: al menos tres vértices distintos y sin cruces ni toques entre bordes. */
 export function isValidRing(pts: readonly Pt[]): boolean {
-  const ring = pts.filter((p, i) => i === 0 || p[0] !== pts[i - 1][0] || p[1] !== pts[i - 1][1])
-  if (ring.length > 1) {
-    const a = ring[0]
-    const b = ring[ring.length - 1]
-    if (a[0] === b[0] && a[1] === b[1]) ring.pop()
-  }
+  const same = (a: Pt, b: Pt) => Math.hypot(a[0] - b[0], a[1] - b[1]) <= TOUCH
+  const ring = pts.filter((p, i) => i === 0 || !same(p, pts[i - 1]))
+  if (ring.length > 1 && same(ring[0], ring[ring.length - 1])) ring.pop()
   const n = ring.length
   if (n < 3 || !pts.every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]))) return false
   const edges = ring.map((p, i) => ({ i, p, q: ring[(i + 1) % n], box: segBounds(p, ring[(i + 1) % n]) }))
