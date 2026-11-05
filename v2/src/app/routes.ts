@@ -1,7 +1,7 @@
-export type ToolId = 'gantt' | 'gapcheck' | 'bondline' | 'capaflow' | 'vectorizr' | 'gageflow'
+export type ToolId = 'gantt' | 'gapcheck' | 'bondline' | 'capaflow' | 'vectorizr' | 'gageflow' | 'quicknesting'
 export type Route = 'home' | 'usage' | ToolId
 
-export const TOOL_IDS: readonly ToolId[] = ['gantt', 'gapcheck', 'bondline', 'capaflow', 'vectorizr', 'gageflow']
+export const TOOL_IDS: readonly ToolId[] = ['gantt', 'gapcheck', 'bondline', 'capaflow', 'vectorizr', 'gageflow', 'quicknesting']
 
 const ROUTES: readonly Route[] = ['home', 'usage', ...TOOL_IDS]
 

@@ -3,7 +3,7 @@
 Toda la aplicación está en `v2/` (React, Vite, TypeScript, Zustand, Firebase). Es lo único que hay que leer para modificarla.
 
 ## Dónde está cada cosa
-- `v2/src/tools/<gantt|gapcheck|bondline|capaflow|vectorizr|gageflow>/`: cada herramienta, con su `logic/`, `components/`, `export/`, `store.ts` e `i18n.ts`.
+- `v2/src/tools/<gantt|gapcheck|bondline|capaflow|vectorizr|gageflow|quicknesting>/`: cada herramienta, con su `logic/`, `components/`, `export/`, `store.ts` e `i18n.ts`.
 - `v2/src/app`, `home`, `ui`, `theme`, `i18n`: estructura, inicio, interfaz, tema e idiomas.
 - `v2/src/auth`, `access`, `usage`, `persistence`: inicio de sesión, permisos, registro de uso y guardado (IndexedDB, por usuario).
 - `v2/firestore.rules`, `v2/vercel.json`: reglas de seguridad y cabeceras.

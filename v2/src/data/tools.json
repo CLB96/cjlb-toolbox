@@ -81,6 +81,19 @@
       "holdLabelEn": "Coming Soon"
     },
     {
+      "id": "quicknesting",
+      "icon": "✂️",
+      "nameEs": "Quick Nesting",
+      "nameEn": "Quick Nesting",
+      "descEs": "Acomodo de patrones DXF en tela de rollo: ancho, largo de tendido, separación entre cortes y capas.",
+      "descEn": "Nesting of DXF patterns on roll fabric: width, spread length, cut-to-cut separation and plies.",
+      "badge": "new",
+      "url": "/quicknesting/",
+      "status": "active",
+      "holdLabelEs": "Próximamente",
+      "holdLabelEn": "Coming Soon"
+    },
+    {
       "id": "future",
       "icon": "🔧",
       "nameEs": "Herramienta Futura",

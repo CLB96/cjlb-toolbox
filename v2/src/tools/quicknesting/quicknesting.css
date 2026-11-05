@@ -1,0 +1,76 @@
+/* Quick Nesting: marco igual que GageFlow (.gf-*) y contenido según el mockup aprobado. */
+.qn-root { display: flex; flex-direction: column; gap: 14px; padding: 6px 4px 24px; }
+.qn-title { margin: 0; font-family: var(--font-display); font-size: 22px; letter-spacing: -.3px; }
+
+.qn-pasos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none;
+  color: var(--fg-muted); font-size: 11.5px; }
+.qn-pasos li + li::before { content: '›'; margin-right: 8px; }
+.qn-pasos b { color: var(--fg); }
+.qn-pasos .qn-paso--hecho b { color: var(--ok); }
+
+.qn-cols { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.qn-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 900px) { .qn-cols { grid-template-columns: 1fr; } }
+
+.qn-panel { padding: 14px 16px; }
+.qn-h { margin: 0 0 10px; font-family: var(--font-display); font-size: 16px; font-weight: 500; }
+.qn-h--sub { font-size: 14px; margin: 0; }
+.qn-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 12px 0 6px; }
+.qn-cab:first-child { margin-top: 0; }
+
+.qn-field { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.qn-field > span { font-size: 10.5px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .5px; }
+.qn-field input, .qn-field select, .qn-output {
+  padding: 8px 10px; border-radius: 9px; background: var(--glass-dense);
+  border: 1px solid var(--edge); color: var(--fg); font: inherit; width: 100%;
+}
+.qn-field input[type='number'] { text-align: right; }
+.qn-angle .qn-field select { width: 140px; }
+.qn-output { display: block; color: var(--fg-muted); }
+
+.qn-choice { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; cursor: pointer; }
+.qn-choice input { accent-color: var(--accent-1); margin-top: 3px; }
+.qn-choice small { display: block; color: var(--fg-muted); font-size: 11.5px; }
+.qn-fieldset { border: 0; padding: 0; margin: 0; }
+.qn-fieldset legend { font-weight: 500; padding: 0; }
+
+.qn-help { margin: 6px 0 0; color: var(--fg-muted); font-size: 12px; }
+.qn-warning, .qn-choice small.qn-warning { color: var(--warn); font-size: 12px; margin: 6px 0 0; }
+.qn-sep { border: 0; border-top: 1px solid var(--edge); margin: 14px 0; }
+
+.qn-extras, .qn-diagnostics { margin-top: 12px; }
+.qn-extras > summary, .qn-diagnostics > summary { cursor: pointer; color: var(--fg-muted); font-size: 12.5px; }
+.qn-diagnostics > summary { text-decoration: underline; }
+.qn-diagnostics ul { margin: 8px 0 0; padding-left: 18px; color: var(--fg-muted); font-size: 12px; }
+
+.qn-generate { width: 100%; }
+.qn-feedback { margin: 10px 0 0; color: var(--fg-muted); font-size: 12.5px; }
+.qn-feedback[data-kind='ok'] { color: var(--ok); }
+.qn-feedback[data-kind='error'] { color: var(--error); }
+
+.qn-drop { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px;
+  border: 1.5px dashed var(--edge); border-radius: 12px; }
+.qn-drop[data-dragging='true'] { border-color: var(--accent-1); background: rgba(209, 107, 255, .08); }
+.qn-drop strong { overflow-wrap: anywhere; }
+.qn-drop .qn-help { margin-top: 2px; }
+
+.qn-layer h5 { margin: 12px 0 2px; font-size: 12px; font-weight: 500; color: var(--fg-muted); }
+.qn-contour { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0;
+  border-top: 1px solid var(--edge); }
+
+.qn-plan { padding: 10px 12px; border-radius: 9px; background: var(--tab-on); margin-bottom: 10px; font-size: 13px; }
+.qn-plan p { margin: 4px 0; }
+.qn-plan [data-kind='ok'] { color: var(--ok); }
+.qn-plan [data-kind='error'] { color: var(--error); }
+
+.qn-drawing { min-height: 220px; display: grid; place-items: center; padding: 8px;
+  border-radius: 9px; border: 1px solid var(--edge); background: var(--glass-solid); }
+.qn-svg { display: block; width: 100%; max-height: 520px; }
+.qn-empty { margin: 0; padding: 20px; text-align: center; color: var(--fg-muted); font-size: 12.5px; }
+
+.qn-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--edge); }
+.qn-metrics b { display: block; font: 700 22px var(--font-display); }
+.qn-metrics span { color: var(--fg-muted); font-size: 12px; }
+.qn-status { margin: 8px 0 0; font-size: 12.5px; }
+.qn-note { margin: 0; color: var(--fg-muted); font-size: 12px; }
