@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Nesting · mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Tokens copiados de v2/src/theme/tokens.css */
+:root, :root[data-theme='dark'] {
+  --bg: radial-gradient(ellipse at 70% 0%, #3b1a5e 0%, #160c2e 45%, #07061a 100%);
+  --fg: #efe9ff; --fg-muted: #b3a6d9;
+  --glass: rgba(255,255,255,.07); --glass-dense: rgba(255,255,255,.12); --glass-solid: #241545;
+  --edge: rgba(255,255,255,.16); --shadow: rgba(0,0,0,.35);
+  --accent-1: #d16bff; --accent-2: #6a7bff; --btn-fg: #160c2e; --btn-shadow: rgba(193,60,255,.45);
+  --tab-on: rgba(255,255,255,.12); --ok: #7cf0c4; --warn: #ffd166; --error: #ff8a9b; --info: #8fb4ff;
+  --space: #120c24;
+}
+:root[data-theme='light'] {
+  --bg: linear-gradient(160deg, #f6ecff 0%, #e4e2ff 55%, #d9ecff 100%);
+  --fg: #251a40; --fg-muted: #6d6290;
+  --glass: rgba(255,255,255,.55); --glass-dense: rgba(255,255,255,.78); --glass-solid: #f3eeff;
+  --edge: rgba(255,255,255,.9); --shadow: rgba(90,60,160,.15);
+  --accent-1: #9b3fe0; --accent-2: #4a5fe8; --btn-fg: #ffffff; --btn-shadow: rgba(155,63,224,.3);
+  --tab-on: rgba(155,63,224,.12); --ok: #0f7a56; --warn: #8a5a00; --error: #b3263e; --info: #2a4fc4;
+  --space: #eee8fa;
+}
+:root { --font-display: 'Space Grotesk', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif;
+  --radius-lg: 16px; --radius-md: 12px; --radius-sm: 8px; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); background-attachment: fixed; color: var(--fg);
+  font: 14px/1.45 var(--font-body); }
+:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Barra simulada del toolbox: idioma y tema viven aquí, no dentro de la herramienta */
+.shell { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--edge); }
+.shell b { font-family: var(--font-display); }
+.shell .sp { flex: 1; }
+.shell button, .shell select { background: var(--glass); color: var(--fg); border: 1px solid var(--edge);
+  border-radius: var(--radius-sm); padding: 4px 10px; font: inherit; cursor: pointer; }
+.note { margin: 10px 20px 0; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--info);
+  color: var(--info); font-size: 12.5px; }
+
+/* Marco de herramienta, igual que GageFlow (.gf-*) */
+.qn-root { display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 24px; max-width: 1400px; margin: 0 auto; }
+.qn-title { margin: 0; font-family: var(--font-display); font-size: 22px; letter-spacing: -.3px; }
+.qn-pasos { display: flex; align-items: center; gap: 8px; color: var(--fg-muted); font-size: 11.5px; }
+.qn-pasos b { color: var(--fg); } .qn-pasos .hecho b { color: var(--ok); }
+.qn-cols { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.qn-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 900px) { .qn-cols { grid-template-columns: 1fr; } }
+.glass { background: var(--glass); border: 1px solid var(--edge); border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px var(--shadow); backdrop-filter: blur(14px) saturate(140%); padding: 14px 16px; }
+.cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 500; }
+h4 { margin: 12px 0 4px; font-size: 12px; color: var(--fg-muted); font-weight: 500; }
+.muted { color: var(--fg-muted); font-size: 12px; }
+label.campo { display: block; margin: 10px 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--fg-muted); }
+input[type=number], select.in { width: 100%; margin-top: 4px; padding: 8px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--edge); background: var(--glass-dense); color: var(--fg); font: inherit; }
+input[type=number] { text-align: right; }
+.fila { display: flex; align-items: center; gap: 8px; margin: 8px 0; cursor: pointer; }
+input[type=radio], input[type=checkbox] { accent-color: var(--accent-1); }
+hr { border: 0; border-top: 1px solid var(--edge); margin: 14px 0; }
+details > summary { cursor: pointer; color: var(--fg-muted); font-size: 12.5px; }
+details.diag > summary { text-decoration: underline; }
+.btn { border: 0; border-radius: var(--radius-sm); padding: 10px 14px; font: 500 14px var(--font-body); cursor: pointer; }
+.btn--primary { width: 100%; color: var(--btn-fg); background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  box-shadow: 0 6px 20px var(--btn-shadow); }
+.btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--edge); padding: 4px 10px; font-size: 12px; }
+.drop { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px;
+  border: 1px dashed var(--edge); border-radius: var(--radius-sm); }
+.contorno { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--edge); }
+.contorno .info { flex: 1; } .contorno small { display: block; color: var(--fg-muted); }
+.aviso { color: var(--warn); font-size: 12px; }
+.plan { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--tab-on); margin-bottom: 10px; font-size: 13px; }
+.plan p { margin: 4px 0; } .ok { color: var(--ok); }
+.dibujo { background: var(--space); border-radius: var(--radius-sm); border: 1px solid var(--edge); padding: 8px; }
+.dibujo svg { display: block; width: 100%; height: 420px; }
+.metricas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.metricas b { display: block; font: 700 22px var(--font-display); }
+.pie { color: var(--fg-muted); font-size: 12px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <b>CJLB Toolbox</b><span class="muted">› Quick Nesting</span><span class="sp"></span>
+  <select aria-label="Idioma"><option>ES</option><option>EN</option></select>
+  <button id="tema" aria-label="Cambiar tema claro / oscuro">☾</button>
+</div>
+<p class="note">Mockup con datos de ejemplo. La barra de arriba representa la del toolbox: el idioma y el tema se cambian ahí, por eso la herramienta ya no tiene sus propios controles ni la insignia «Procesamiento local».</p>
+
+<main class="qn-root">
+  <header><h2 class="qn-title">Quick Nesting</h2></header>
+  <div class="qn-pasos">
+    <span class="hecho"><b>1</b> Configurar</span><span aria-hidden="true">›</span>
+    <span class="hecho"><b>2</b> Cargar DXF</span><span aria-hidden="true">›</span>
+    <span class="hecho"><b>3</b> Revisar contornos</span><span aria-hidden="true">›</span>
+    <span><b>4</b> Acomodar</span>
+  </div>
+
+  <div class="qn-cols">
+    <div class="qn-col">
+      <section class="glass">
+        <div class="cab"><h3>Dimensiones del tendido</h3></div>
+        <label class="campo">Ancho de rollo · mm<input type="number" value="1450"></label>
+        <label class="campo" id="lbl-largo">Largo físico de cada capa · mm<input type="number" value="2500"></label>
+        <label class="campo">Separación entre cortes · mm<input type="number" value="5"></label>
+        <p class="muted">Distancia mínima entre las paredes de dos contornos, no entre sus centros. Se aplica en ambos modos.</p>
+        <details open>
+          <summary>Extras</summary>
+          <label class="fila"><input type="checkbox" checked> Activar margen interno del rollo</label>
+          <label class="campo">Margen por lado · mm<input type="number" value="10"></label>
+          <p class="muted">Reserva el mismo margen en los cuatro bordes del tendido. No cambia la separación entre cortes: 2000 × 2000 mm con 10 mm por lado deja 1980 × 1980 mm útiles.</p>
+        </details>
+      </section>
+
+      <section class="glass">
+        <div class="cab"><h3>Cantidad de piezas</h3></div>
+        <label class="fila"><input type="radio" name="q"> Automática · repetir hasta llenar</label>
+        <label class="fila"><input type="radio" name="q" checked> Manual · indicar cantidad</label>
+        <label class="campo">Cantidad total por patrón<input type="number" value="15"></label>
+        <label class="fila"><input type="checkbox" checked> Distribuir la cantidad total en varias capas de largo fijo</label>
+        <p class="muted">La cantidad es el total exacto de cada patrón. El largo indicado es por capa, incluidos los márgenes. Si sobra una cantidad que no completa otra capa, su acomodo parcial se corta por separado; no se redondea la producción hacia arriba.</p>
+        <hr>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-weight:500">¿Se permite rotar la pieza?</legend>
+          <label class="fila"><input type="radio" name="r"> Permitir rotación para el acomodo</label>
+          <label class="fila"><input type="radio" name="r"> Aprovechar huecos · rotación independiente</label>
+          <label class="fila"><input type="radio" name="r" checked> Mantener un ángulo fijo</label>
+          <label class="campo">Orientación absoluta
+            <select class="in" style="width:140px;display:block"><option>0°</option><option>90°</option><option>45°</option><option>180°</option><option>30°</option><option>Personalizado</option></select></label>
+          <p class="muted">Respecto al cero original, no acumulativo: 90° y después 30° deja 30°.</p>
+        </fieldset>
+        <hr>
+        <button class="btn btn--primary">Generar acomodo</button>
+        <p class="muted" role="status">Cantidad exacta completada, sin producir piezas adicionales.</p>
+      </section>
+    </div>
+
+    <div class="qn-col">
+      <section class="glass">
+        <div class="cab"><h3>Archivo y revisión de contornos</h3></div>
+        <div class="drop">
+          <div><strong>armrest-front.dxf</strong><div class="muted">DXF hasta 8 MB · permanece en este equipo</div></div>
+          <button class="btn btn--ghost">Cambiar archivo</button>
+        </div>
+        <label class="campo">Interpretación de unidades
+          <select class="in"><option>Usar declaración del DXF</option><option>Milímetros · 1 unidad = 1 mm</option><option>Centímetros · 1 unidad = 10 mm</option><option>Pulgadas · 1 unidad = 25.4 mm</option></select></label>
+        <p class="muted">Declaración: mm. Escala usada: 1 mm/unidad. Curvas aproximadas a 0.1 mm.</p>
+        <div class="cab" style="margin-top:12px"><h3 style="font-size:14px">Selecciona únicamente los contornos de corte</h3><span class="muted">1 contorno(s) seleccionado(s)</span></div>
+        <h4>CORTE</h4>
+        <div class="contorno"><input type="checkbox" checked aria-label="c1"><div class="info">c1<small>197.81 × 276.67 mm · 41,664.93 mm²</small></div><button class="btn btn--ghost">Ver</button></div>
+        <div class="contorno"><input type="checkbox" aria-label="c2"><div class="info">c2<small>793.36 × 352.99 mm · 114,889.79 mm²</small>
+          <span class="aviso">Contenido en otro contorno: podría ser un agujero o anotación. Revisa antes de seleccionar.</span></div><button class="btn btn--ghost">Ver</button></div>
+        <hr>
+        <label class="fila"><input type="checkbox" checked> Verifiqué las dimensiones físicas, la escala y que los contornos elegidos son piezas de corte, no costuras ni marcas.</label>
+        <details class="diag"><summary>Diagnóstico de importación</summary>
+          <ul class="muted"><li>review_scale_and_cut_layer · cantidad: 1</li><li>nested_contours_review · cantidad: 1</li></ul></details>
+      </section>
+
+      <section class="glass">
+        <div class="cab"><h3>Patrón y distribución</h3><span class="muted">Acomodo calculado por capa</span></div>
+        <div class="plan">
+          <b>Plan de capas</b>
+          <p>15 / 15 piezas · 2 capas (1 completas + 1 parciales) · 5.000 m de tela</p>
+          <p class="ok">Cantidad exacta completada, sin producir piezas adicionales.</p>
+          <p class="muted">Cada acomodo parcial se corta por separado. Las métricas y el dibujo corresponden a una capa del grupo seleccionado.</p>
+          <label class="campo">Acomodo que se muestra
+            <select class="in"><option>Completo · 1 capa(s) · c1</option><option>Parcial · 1 capa · corte separado · c1</option></select></label>
+        </div>
+        <div class="dibujo"><svg id="svg" role="img" aria-label="Geometría de contornos y área de tendido, en milímetros"></svg></div>
+        <div class="metricas">
+          <div><b>14</b><span class="muted">Piezas por capa</span></div>
+          <div><b>16.1 %</b><span class="muted">Aprovechamiento</span></div>
+          <div><b>3.0414 m²</b><span class="muted">Área sobrante</span></div>
+        </div>
+        <p class="muted">Separación mínima solicitada: 5 mm · tiempo: 0.41 s · faltantes: 0</p>
+        <p class="muted">Margen: 10 mm por lado · área útil: 1,430 × 2,480 mm · línea discontinua = límite interno</p>
+        <p class="muted">Cantidad exacta completada, sin producir piezas adicionales.</p>
+      </section>
+      <p class="pie">El mismo acomodo se repite en las capas superpuestas. Cantidades y aprovechamiento corresponden a una sola capa.</p>
+    </div>
+  </div>
+  <p class="pie">Revisión obligatoria antes del corte · contornos aproximados · no exporta instrucciones de máquina</p>
+</main>
+
+<script>
+// Dibujo de ejemplo: rollo 1450 × 2500 mm, margen de 10 mm y 14 piezas (c1) en Y hacia arriba, como el original.
+const W = 1450, L = 2500, M = 10, pad = 0.025 * Math.max(W, L)
+const svg = document.getElementById('svg')
+svg.setAttribute('viewBox', `${-pad} ${-pad} ${W + 2 * pad} ${L + 2 * pad}`)
+const pieza = (x, y) => {
+  const p = [[0, 0], [130, 0], [198, 120], [198, 160], [150, 250], [100, 277], [0, 277]]
+  return p.map(([a, b]) => `${x + a},${y + b}`).join(' ')
+}
+let g = ''
+for (let i = 0; i < 14; i++) {
+  const col = i % 7, fila = Math.floor(i / 7)
+  g += `<polygon points="${pieza(M + col * 203, M + fila * 282)}" fill="var(--accent-1)" fill-opacity=".15" stroke="var(--accent-1)" vector-effect="non-scaling-stroke"><title>c1</title></polygon>`
+}
+svg.innerHTML = `<rect width="${W}" height="${L}" fill="none" stroke="var(--fg-muted)" vector-effect="non-scaling-stroke"/>` +
+  `<rect x="${M}" y="${M}" width="${W - 2 * M}" height="${L - 2 * M}" fill="none" stroke="var(--warn)" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>` +
+  `<g transform="translate(0 ${L}) scale(1 -1)">${g}</g>`
+document.getElementById('tema').onclick = () => {
+  const r = document.documentElement
+  r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'
+}
+</script>
+</body>
+</html>
