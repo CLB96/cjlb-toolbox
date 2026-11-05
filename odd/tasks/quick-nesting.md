@@ -12,12 +12,12 @@ Rama: `feat/quick-nesting` (desde `v2` en d44009a). Entrega: ask-on-risk; previs
 - S7: unas 100 pruebas esenciales para la herramienta; diferenciales contra el motor Python original con resultados de referencia generados una vez.
 
 ## Tasks
-- T0 [S1,S5,S6] inline: mockup `odd/mockups/quick-nesting.html`. Pendiente de aprobación.
+- T0 [S1,S5,S6] inline: mockup `odd/mockups/quick-nesting.html`. Aprobado («Aprobado», 2026-11-05).
 - T1 [S3,S7] inline: resultados de referencia del Python original (casos deterministas, sin límite de tiempo) en `v2/legacy-fixtures/quicknesting/`. Necesita instalar ezdxf 1.3.2 y shapely 2.1.2 en un entorno temporal; pendiente de permiso.
-- T2 [S2,S3] inline: geometría base (rotar, trasladar, área, validez, contención, solape, distancia entre bordes) y pruebas.
+- T2 [S2,S3] inline: geometría base (rotar, trasladar, área, validez, contención, solape, distancia entre bordes) y pruebas. Hecho: `logic/geometry.ts`, 9 pruebas. Sin RED observado: el código se escribió antes que las pruebas.
 - T3 [S3,S7] inline: lector DXF (LINE, ARC, LWPOLYLINE con bulge, POLYLINE, SPLINE, ELLIPSE; unidades, unión de abiertos, diagnósticos, límites) contra referencias. Riesgo 2: archivo no confiable.
-- T4 [S3,S4,S7] inline: motor de acomodo en Web Worker (fijo, libre, independiente, separación, límites) contra referencias.
-- T5 [S3,S4,S7] inline: margen y planes de capas contra referencias.
+- T4 [S3,S4,S7] inline: motor de acomodo (fijo, libre, independiente, separación, límites). Hecho: `logic/engine.ts`, port línea a línea; 15 pruebas que portan test_engine.py y la matriz de 180 casos con los mismos valores esperados. El worker se hace en T6.
+- T5 [S3,S4,S7] inline: margen y planes de capas. Hecho: `logic/roll.ts`; 12 pruebas que portan test_roll_plans.py (1980 × 1980, 34/46/60 mm, 4 + 1, 1000 piezas = 250 capas).
 - T6 [S1,S5,S6] inline: interfaz React según el mockup aprobado: store, i18n, componentes, dibujo SVG, cliente del worker.
 - T7 [S1] inline: registro (`routes.ts`, `tools.json`, `registry.ts`), `CLAUDE.md`, build y suite completa.
 
@@ -25,3 +25,4 @@ Rama: `feat/quick-nesting` (desde `v2` en d44009a). Entrega: ask-on-risk; previs
 - L1 (2026-11-05): «Continúa el trabajo en curso en v2: revisa los cambios sin confirmar, dime en qué estado están y termina lo que se empezó.» Luego: «tambien acabo de agregar una carpeta llamada quick nesting para integrar a la app y que est}e lean con todo lo demas.»
 - L2: estado inicial: v2 limpio y publicado (d44009a); la carpeta `Quick-Nesting-Entrega/` está sin seguimiento y su integración no ha empezado. El explorador mapeó el patrón de herramienta (routes.ts, tools.json, registry.ts; access y usage no requieren cambios), los tokens del tema (misma paleta Nebulosa que el original), el CSP (`worker-src 'self' blob:` ya permitido) y las funciones de Shapely/ezdxf que usa el motor.
 - L3: siguiente paso: aprobación del mockup y permiso para instalar las dependencias Python en un entorno temporal (solo para generar referencias).
+- L4 (2026-11-05): «Aprobado» (mockup). Sin respuesta aún sobre instalar ezdxf y shapely. Las pruebas originales de motor y capas ya traen los valores esperados, así que T4 y T5 se verificaron con ellas. Las referencias Python (T1) quedan como comparación adicional opcional. 36/36 pruebas y `tsc` sin errores. La cuenta de líneas supera ~400; los commits se quedan en la rama y la estrategia de entrega se decide al fusionar.
