@@ -179,14 +179,18 @@ function balancedAuto(payload: NestPayload, width: number, length: number, margi
   let bestCount = 0
   let low = 1
   let limited: NestResult['status'] | null = null
-  const probes = high >= 1 ? [1] : []
-  while (probes.length || low <= high) {
+  // Crece 1, 2, 4, 8… mientras quepa y después afina por mitades: si se acaba el tiempo queda
+  // el mayor número ya comprobado. Cada prueba termina en su primer acomodo completo.
+  let growing = true
+  let next = 1
+  while (low <= high) {
     if (remaining() <= 0) {
       limited = 'time_limit'
       break
     }
-    const copies = probes.length ? probes.pop()! : Math.floor((low + high) / 2)
-    const result = pack({ ...base, quantity: copies }, { maxPieces: capacity, maxSeconds: remaining(), now }, innerLength)
+    const copies = growing ? Math.min(next, high) : Math.floor((low + high) / 2)
+    const result = pack({ ...base, quantity: copies },
+      { maxPieces: capacity, maxSeconds: remaining(), now, stopWhenComplete: true }, innerLength)
     const counts = new Map<string, number>()
     for (const p of result.placements) counts.set(p.id, (counts.get(p.id) ?? 0) + 1)
     const feasible = ids.every((k) => counts.get(k) === copies)
@@ -194,14 +198,17 @@ function balancedAuto(payload: NestPayload, width: number, length: number, margi
       best = result
       bestCount = copies
       low = copies + 1
+      next = copies * 2
     } else {
       high = copies - 1
+      growing = false
+      if (result.status === 'time_limit') {
+        limited = 'time_limit'
+        break
+      }
+      // Sin más comprobaciones en esa prueba no se sabe si cabía: se informa, pero se sigue con menos.
+      if (result.status === 'search_limit') limited = limited ?? 'search_limit'
     }
-    if (result.status === 'time_limit' || result.status === 'search_limit') {
-      limited = result.status
-      break
-    }
-    if (copies === 1 && !feasible) break
   }
   if (bestCount && bestCount === ceiling && areaBound > ceiling) limited = limited ?? 'piece_limit'
   const chosen = best ?? { ...empty, placements: [], count: 0, usedArea: 0 }

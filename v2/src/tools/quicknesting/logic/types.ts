@@ -100,4 +100,6 @@ export interface NestOptions {
   maxSeconds?: number
   /** Reloj en segundos; se inyecta en pruebas. */
   now?: () => number
+  /** Manual: terminar en el primer ensayo que coloca toda la cantidad (solo para comprobar si cabe). */
+  stopWhenComplete?: boolean
 }

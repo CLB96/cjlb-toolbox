@@ -23,3 +23,15 @@ describe('velocidad del acomodo', () => {
     expectLayout(result, 1510, 2535, 3, 10)
   }, 30000)
 })
+
+describe('misma cantidad de cada patrón con piezas complejas', () => {
+  it('con poco tiempo conserva el mayor número ya comprobado, no se queda en 1', async () => {
+    const { complexPieces } = await import('./complexPieces')
+    const result = nest({ width: 1450, length: 2500, gap: 3, mode: 'auto', rotation: 'independent', angle: 0,
+      balanced: true, pieces: complexPieces() }, { maxSeconds: 3 })
+    expect(result.balancedCopies).toBeGreaterThanOrEqual(4)
+    const ids = result.placements.map((p) => p.id)
+    expect(ids.filter((i) => i === 'c1').length).toBe(ids.filter((i) => i === 'c2').length)
+    expectLayout(result, 1450, 2500, 3)
+  }, 30000)
+})

@@ -230,7 +230,7 @@ export function pack(payload: NestPayload, opts: NestOptions = {}, fixedLength: 
       globalStop = stop
       break
     }
-    if (manual && rotation === 'fixed' && s.placed.length === quantity * sources.length) break
+    if (manual && (rotation === 'fixed' || opts.stopWhenComplete) && s.placed.length === quantity * sources.length) break
   }
   return finish(best!, { manual, stretch, width, length, gap, quantity, sources: sources.length, globalStop, start, now, capacity, maxSeconds, angles })
 }
