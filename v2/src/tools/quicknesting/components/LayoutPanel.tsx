@@ -16,6 +16,7 @@ function Preview() {
   const imported = useQn((s) => s.imported)
   const selected = useQn((s) => s.selected)
   const previewId = useQn((s) => s.previewId)
+  const revision = useQn((s) => s.revision)
   const empty = (key: QnKey) => <p className="qn-empty">{t(key)}</p>
 
   if (result) {
@@ -25,7 +26,9 @@ function Preview() {
     const length = layout?.length ?? request.length ?? NaN
     const margin = layout?.margin ?? 0
     if (!layout || !(width > 2 * margin) || !(length > 2 * margin)) return empty('status_no_fit')
-    return <Drawing pieces={layout.placements} width={width} length={Math.max(length, 1)} margin={margin} title={t('previewAria')} />
+    // La clave reinicia el zoom con cada resultado o grupo mostrado.
+    const key = `r${revision}-${'key' in layout ? layout.key : ''}`
+    return <Drawing key={key} pieces={layout.placements} width={width} length={Math.max(length, 1)} margin={margin} title={t('previewAria')} />
   }
   const contours = imported?.contours ?? []
   const pieces = previewId ? contours.filter((c) => c.id === previewId) : contours.filter((c) => selected.includes(c.id))
@@ -41,7 +44,7 @@ function Preview() {
     offset += w + Math.max(w * 0.05, 1)
     return { id: p.id, points: shifted }
   })
-  return <Drawing pieces={placed} width={Math.max(offset, 1)} length={Math.max(height, 1)} title={t('previewAria')} />
+  return <Drawing key={`p${revision}`} pieces={placed} width={Math.max(offset, 1)} length={Math.max(height, 1)} title={t('previewAria')} />
 }
 
 export function LayoutPanel() {

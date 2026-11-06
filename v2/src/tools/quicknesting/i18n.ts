@@ -107,6 +107,11 @@ const es = {
   status_time_limit: 'Resultado parcial: se alcanzó el tiempo de búsqueda.',
   status_search_limit: 'Resultado parcial: se alcanzó el límite de exploración.',
   status_partial: 'Resultado parcial: no se acomodó toda la cantidad solicitada.',
+  // Nuevos (no existían en el original): controles de zoom del dibujo.
+  zoomTools: 'Zoom del dibujo',
+  zoomIn: 'Acercar',
+  zoomOut: 'Alejar',
+  zoomReset: 'Ver todo',
 }
 
 export type QnKey = keyof typeof es
@@ -216,6 +221,10 @@ const en: Record<QnKey, string> = {
   status_time_limit: 'Partial result: search time limit reached.',
   status_search_limit: 'Partial result: exploration limit reached.',
   status_partial: 'Partial result: not all requested copies were placed.',
+  zoomTools: 'Drawing zoom',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
+  zoomReset: 'Fit to view',
 }
 
 export const DICTIONARIES: Record<'es' | 'en', Record<QnKey, string>> = { es, en }
