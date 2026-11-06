@@ -60,6 +60,7 @@ export function QuantityPanel() {
           </div>
         )}
         <p className="qn-help">{t(fixed ? 'fixedHelp' : form.rotation === 'independent' ? 'independentHelp' : 'freeHelp')}</p>
+        {automatic && form.rotation === 'independent' && <p className="qn-help">{t('autoMultiHelp')}</p>}
       </fieldset>
       <hr className="qn-sep" />
       <Button className="qn-generate" disabled={busy} onClick={() => void generate()}>{t(busy ? 'running' : 'generate')}</Button>

@@ -30,6 +30,7 @@ describe('reglas de pantalla', () => {
     expect(validateSettings({ ...ok, angle: 361 }, 1, true)).toBe('invalid_angle')
     expect(validateSettings(ok, 0, true)).toBe('select_piece')
     expect(validateSettings(ok, 2, true)).toBe('auto_one_piece')
+    expect(validateSettings({ ...ok, rotation: 'independent' }, 2, true)).toBeNull()
     expect(validateSettings(ok, 1, false)).toBe('confirm_scale')
     expect(validateSettings({ ...ok, mode: 'manual', quantity: 3, length: undefined }, 2, true)).toBeNull()
   })

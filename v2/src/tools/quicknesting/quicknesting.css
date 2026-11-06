@@ -25,6 +25,8 @@
   border: 1px solid var(--edge); color: var(--fg); font: inherit; width: 100%;
 }
 .qn-field input[type='number'] { text-align: right; }
+/* La lista desplegable nativa se pinta con fondo propio: se le da el del tema para que el texto se lea. */
+.qn-field select option { background: var(--glass-solid); color: var(--fg); }
 .qn-angle .qn-field select { width: 140px; }
 .qn-output { display: block; color: var(--fg-muted); }
 

@@ -131,7 +131,9 @@ export function pack(payload: NestPayload, opts: NestOptions = {}, fixedLength: 
     throw new InputError('invalid_mode')
   }
   if (!Array.isArray(pieces) || pieces.length < 1 || pieces.length > 16) throw new InputError('select_pieces')
-  if (mode === 'auto' && pieces.length !== 1) throw new InputError('auto_one_pattern')
+  // Varios patrones en automático solo al aprovechar huecos: el mayor llena primero y los demás
+  // ocupan los huecos (ampliación aprobada; fijo y libre siguen con un solo patrón).
+  if (mode === 'auto' && pieces.length !== 1 && rotation !== 'independent') throw new InputError('auto_one_pattern')
   const ids = new Set(pieces.filter((p) => p && typeof p.id === 'string').map((p) => p.id))
   if (ids.size !== pieces.length) throw new InputError('duplicate_piece_ids')
   const sources = pieces.map((p) => [p.id, shape(p)] as [string, Poly]).sort((a, b) => b[1].area - a[1].area)

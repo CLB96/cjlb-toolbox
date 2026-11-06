@@ -101,6 +101,27 @@ describe('Quick Nesting en el toolbox', () => {
     expect(document.querySelectorAll('svg polygon')).toHaveLength(1)
   })
 
+  it('automático con «Aprovechar huecos» acepta varios contornos y usa los dos', async () => {
+    const u = userEvent.setup()
+    render(<QuicknestingTool toolId="quicknesting" active />)
+    await loadAndConfirm(u)
+    await u.click(screen.getByRole('checkbox', { name: /c1/ }))
+    await u.click(screen.getByRole('checkbox', { name: /c2/ }))
+    await u.click(screen.getByRole('checkbox', { name: /Verifiqué las dimensiones/ }))
+    await u.click(screen.getByRole('button', { name: 'Generar acomodo' }))
+    expect(screen.getByText('En automático selecciona un solo contorno para repetir.')).toBeInTheDocument()
+    await u.click(screen.getByRole('radio', { name: 'Aprovechar huecos · rotación independiente' }))
+    expect(screen.getByText(/puedes seleccionar varios contornos/)).toBeInTheDocument()
+    for (const [label, value] of [['Ancho de rollo · mm', '100'], ['Largo de tendido · mm', '100'], ['Separación entre cortes · mm', '2']]) {
+      await u.clear(screen.getByLabelText(label))
+      await u.type(screen.getByLabelText(label), value)
+    }
+    await u.click(screen.getByRole('button', { name: 'Generar acomodo' }))
+    await screen.findByText('Acomodo calculado por capa', undefined, { timeout: 15000 })
+    const ids = [...document.querySelectorAll('svg polygon title')].map((n) => n.textContent)
+    expect(new Set(ids)).toEqual(new Set(['c1', 'c2']))
+  }, 30000)
+
   it('rechaza archivos que no son DXF', async () => {
     const u = userEvent.setup({ applyAccept: false })
     render(<QuicknestingTool toolId="quicknesting" active />)

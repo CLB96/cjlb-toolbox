@@ -47,7 +47,7 @@ export function validateSettings(s: Request, selectedCount: number, confirmed: b
   if (s.mode === 'manual' && (!Number.isSafeInteger(s.quantity) || (s.quantity ?? 0) < 1)) return 'invalid_quantity'
   if (s.rotation === 'fixed' && (!finite(s.angle) || Math.abs(s.angle) > 360)) return 'invalid_angle'
   if (!selectedCount) return 'select_piece'
-  if (s.mode === 'auto' && selectedCount !== 1) return 'auto_one_piece'
+  if (s.mode === 'auto' && selectedCount !== 1 && s.rotation !== 'independent') return 'auto_one_piece'
   if (!confirmed) return 'confirm_scale'
   return null
 }

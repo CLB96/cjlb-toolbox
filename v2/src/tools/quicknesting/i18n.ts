@@ -107,7 +107,8 @@ const es = {
   status_time_limit: 'Resultado parcial: se alcanzó el tiempo de búsqueda.',
   status_search_limit: 'Resultado parcial: se alcanzó el límite de exploración.',
   status_partial: 'Resultado parcial: no se acomodó toda la cantidad solicitada.',
-  // Nuevos (no existían en el original): controles de zoom del dibujo.
+  // Nuevos (no existían en el original): varios patrones al aprovechar huecos y zoom del dibujo.
+  autoMultiHelp: 'En automático con «Aprovechar huecos» puedes seleccionar varios contornos: primero se acomoda el más grande y los demás ocupan los huecos que quedan.',
   zoomTools: 'Zoom del dibujo',
   zoomIn: 'Acercar',
   zoomOut: 'Alejar',
@@ -221,6 +222,7 @@ const en: Record<QnKey, string> = {
   status_time_limit: 'Partial result: search time limit reached.',
   status_search_limit: 'Partial result: exploration limit reached.',
   status_partial: 'Partial result: not all requested copies were placed.',
+  autoMultiHelp: 'In automatic mode with “Fill gaps” you can select several outlines: the largest is placed first and the others fill the remaining gaps.',
   zoomTools: 'Drawing zoom',
   zoomIn: 'Zoom in',
   zoomOut: 'Zoom out',

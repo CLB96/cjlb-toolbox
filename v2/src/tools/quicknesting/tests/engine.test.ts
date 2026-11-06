@@ -91,6 +91,19 @@ describe('motor de acomodo', () => {
     expect(() => nest(job({ pieces: [big, { id: 'b', points: [[40, 0], [50, 0], [50, 10]] }] }))).toThrow('auto_one_pattern')
   })
 
+  it('automático con rotación independiente: varios patrones, el grande primero y el pequeño en los huecos', () => {
+    const big: Piece = { id: 'big', points: [[0, 0], [50, 0], [50, 50], [0, 50]] }
+    const small: Piece = { id: 'small', points: [[60, 0], [65, 0], [65, 5], [60, 5]] }
+    const result = nest(job({ width: 110, length: 110, gap: 2, rotation: 'independent', pieces: [small, big] }))
+    const count = (id: string) => result.placements.filter((p) => p.id === id).length
+    expect(count('big')).toBe(4)
+    expect(count('small')).toBeGreaterThan(0)
+    expect(result.placements[0].id).toBe('big')
+    expectLayout(result, 110, 110, 2)
+    // Fijo o libre siguen exigiendo un solo patrón, como el original.
+    expect(() => nest(job({ rotation: 'free', pieces: [small, big] }))).toThrow('auto_one_pattern')
+  })
+
   it('el tope de piezas se declara, no se informa como lleno', () => {
     const result = nest(job({ width: 1000, length: 1000, gap: 0 }), { maxPieces: 5 })
     expect(result.count).toBe(5)
