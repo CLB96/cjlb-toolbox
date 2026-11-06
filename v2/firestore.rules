@@ -81,6 +81,18 @@ service cloud.firestore {
       allow read: if isAdmin();
     }
 
+    // Insignias de las tarjetas del inicio: las ven todos, solo el admin las cambia.
+    match /toolBadges/{toolId} {
+      allow read: if isAllowed() || isAdmin();
+      allow create, update: if isAdmin()
+        && toolId.matches('^[a-z0-9_-]{1,32}$')
+        && request.resource.data.keys().hasOnly(['badge'])
+        && request.resource.data.keys().hasAll(['badge'])
+        && (request.resource.data.badge == null
+            || request.resource.data.badge in ['new', 'updated']);
+      allow delete: if false;
+    }
+
     match /logins/{id} {
       allow create: if isAllowed()
         && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'at'])

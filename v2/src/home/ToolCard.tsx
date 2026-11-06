@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { ToolDef } from '../tools/types'
 import { useI18n } from '../i18n/useI18n'
+import { CardEditor, type CardEdit } from './CardEditor'
 
-type Props = { tool: ToolDef; onOpen: (tool: ToolDef) => void }
+/** `edit` presente = modo Personalizar: la tarjeta no abre la herramienta y se puede mover. */
+type Props = { tool: ToolDef; onOpen: (tool: ToolDef) => void; edit?: CardEdit }
 
 function ToolIcon({ tool }: { tool: ToolDef }) {
   const [failed, setFailed] = useState(false)
@@ -25,7 +27,16 @@ function ToolIcon({ tool }: { tool: ToolDef }) {
   )
 }
 
-export function ToolCard({ tool, onOpen }: Props) {
+function cardClass(isHold: boolean, edit?: CardEdit): string {
+  const parts = ['glass', 'tool-card']
+  if (isHold) parts.push('tool-card--hold')
+  if (edit) parts.push('tool-card--editing')
+  if (edit?.isDragging) parts.push('tool-card--dragging')
+  if (edit?.isTarget) parts.push('tool-card--target')
+  return parts.join(' ')
+}
+
+export function ToolCard({ tool, onOpen, edit }: Props) {
   const { lang, t } = useI18n()
   const es = lang === 'es'
   const isHold = tool.status === 'hold'
@@ -33,12 +44,26 @@ export function ToolCard({ tool, onOpen }: Props) {
   const desc = es ? tool.descEs : tool.descEn
   const holdLabel = es ? tool.holdLabelEs : tool.holdLabelEn
   return (
-    <article className={`glass tool-card${isHold ? ' tool-card--hold' : ''}`} data-testid="tool-card">
+    <article
+      className={cardClass(isHold, edit)}
+      data-testid="tool-card"
+      data-tool-id={tool.id}
+      {...edit?.drag}
+    >
+      {edit && (
+        <span className="tool-card__grip" aria-hidden="true">
+          ⋮⋮
+        </span>
+      )}
       <button
         type="button"
         className="tool-card__button"
         disabled={isHold}
-        onClick={() => onOpen(tool)}
+        tabIndex={edit ? -1 : undefined}
+        aria-disabled={edit ? true : undefined}
+        onClick={() => {
+          if (!edit) onOpen(tool)
+        }}
       >
         <ToolIcon tool={tool} />
         <span className="tool-card__name">{name}</span>
@@ -52,6 +77,7 @@ export function ToolCard({ tool, onOpen }: Props) {
           {isHold && <span className="pill pill--hold">{holdLabel}</span>}
         </span>
       </button>
+      {edit && <CardEditor tool={tool} edit={edit} />}
     </article>
   )
 }

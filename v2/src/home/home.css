@@ -62,6 +62,46 @@
 .pill--new { color: var(--btn-fg); background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; }
 .pill--updated { color: var(--info); border-color: var(--info); }
 .pill--hold { color: var(--fg-muted); background: var(--glass-dense); }
+
+/* Modo Personalizar */
+.home__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.home__hint { flex: 1 1 260px; margin: 0; color: var(--fg-muted); font-size: 0.92rem; }
+.tool-card--editing { position: relative; border-style: dashed; border-color: var(--accent-2); cursor: grab; }
+.tool-card--editing:hover, .tool-card--editing:active { transform: none; box-shadow: none; }
+.tool-card--editing .tool-card__button { height: auto; cursor: grab; }
+.tool-card--dragging { opacity: 0.45; }
+.tool-card--target { outline: 2px solid var(--accent-1); outline-offset: 3px; }
+.tool-card__grip { position: absolute; top: 14px; right: 16px; color: var(--fg-muted); font-size: 1.2rem; letter-spacing: -2px; }
+.tool-card__edit { display: grid; gap: 10px; padding: 0 22px 18px; }
+.tool-card__move { display: flex; align-items: center; gap: 8px; color: var(--fg-muted); font-size: 0.85rem; }
+.tool-card__pos { flex: 1; }
+.tool-card__arrow {
+  width: 34px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--edge);
+  background: var(--glass-dense);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.tool-card__arrow:hover:not(:disabled) { border-color: var(--accent-1); }
+.tool-card__arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+.tool-card__badge-edit { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.tool-card__badge-edit legend {
+  padding: 0 0 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+}
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
+.seg__opt { position: relative; display: grid; place-items: center; padding: 6px 4px; font-size: 0.78rem; cursor: pointer; text-align: center; }
+.seg__opt + .seg__opt { border-left: 1px solid var(--edge); }
+.seg__opt input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg__opt:has(input:checked) { background: var(--tab-on); color: var(--accent-1); font-weight: 600; }
+.seg__opt:has(input:focus-visible) { outline: 2px solid var(--accent-1); outline-offset: -2px; }
+
 @media (prefers-reduced-motion: reduce) {
   .tool-card, .tool-card:hover, .tool-card:active { transition: none; transform: none; }
 }

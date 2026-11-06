@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing'
-import { Timestamp, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { Timestamp, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 
 let env: RulesTestEnvironment
 
@@ -184,5 +184,42 @@ describe('allowlist y config', () => {
     await assertFails(getDoc(doc(eve(env), 'config/app')))
     await assertFails(getDoc(doc(anon(env), 'config/app')))
     await assertFails(setDoc(doc(admin(env), 'config/app'), { adminEmail: 'x@x.com' }))
+  })
+})
+
+describe('toolBadges', () => {
+  const seedBadge = () => env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'toolBadges/gantt'), { badge: 'new' })
+  })
+  it('lectura para allowlist y admin; nadie más', async () => {
+    await seedBadge()
+    await assertSucceeds(getDocs(collection(ana(env), 'toolBadges')))
+    await assertSucceeds(getDoc(doc(admin(env), 'toolBadges/gantt')))
+    await assertFails(getDocs(collection(eve(env), 'toolBadges')))
+    await assertFails(getDoc(doc(anon(env), 'toolBadges/gantt')))
+    await assertFails(getDoc(doc(anaUnverified(env), 'toolBadges/gantt')))
+  })
+  it('el admin crea, cambia y quita la insignia (null)', async () => {
+    await assertSucceeds(setDoc(doc(admin(env), 'toolBadges/capaflow'), { badge: 'updated' }))
+    await assertSucceeds(setDoc(doc(admin(env), 'toolBadges/capaflow'), { badge: 'new' }))
+    await assertSucceeds(setDoc(doc(admin(env), 'toolBadges/capaflow'), { badge: null }))
+  })
+  it('un usuario no admin, sin verificar o sin login no escribe', async () => {
+    await seedBadge()
+    await assertFails(setDoc(doc(ana(env), 'toolBadges/gantt'), { badge: 'updated' }))
+    await assertFails(setDoc(doc(adminUnverified(env), 'toolBadges/gantt'), { badge: 'updated' }))
+    await assertFails(setDoc(doc(anon(env), 'toolBadges/gantt'), { badge: 'updated' }))
+  })
+  it('rechaza valores, campos o ids no válidos, y borrar', async () => {
+    await seedBadge()
+    await assertFails(setDoc(doc(admin(env), 'toolBadges/gantt'), { badge: 'otro' }))
+    await assertFails(setDoc(doc(admin(env), 'toolBadges/gantt'), { badge: 'new', extra: 1 }))
+    await assertFails(setDoc(doc(admin(env), 'toolBadges/gantt'), {}))
+    await assertFails(setDoc(doc(admin(env), 'toolBadges/gantt'), { badge: 5 }))
+    await assertFails(setDoc(doc(admin(env), 'toolBadges/Gantt'), { badge: 'new' }))
+    await assertFails(setDoc(doc(admin(env), `toolBadges/${'a'.repeat(33)}`), { badge: 'new' }))
+    await assertSucceeds(setDoc(doc(admin(env), 'toolBadges/tool-2'), { badge: 'new' }))
+    await assertFails(deleteDoc(doc(admin(env), 'toolBadges/gantt')))
+    await assertFails(deleteDoc(doc(ana(env), 'toolBadges/gantt')))
   })
 })

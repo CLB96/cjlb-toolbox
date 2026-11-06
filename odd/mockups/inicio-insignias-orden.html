@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inicio personalizable · mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tokens copiados de v2/src/theme/tokens.css */
+:root, :root[data-theme='dark'] {
+  --bg: radial-gradient(ellipse at 70% 0%, #3b1a5e 0%, #160c2e 45%, #07061a 100%);
+  --fg: #efe9ff; --fg-muted: #b3a6d9;
+  --glass: rgba(255,255,255,.07); --glass-dense: rgba(255,255,255,.12); --glass-solid: #241545;
+  --edge: rgba(255,255,255,.16); --shadow: rgba(0,0,0,.35);
+  --accent-1: #d16bff; --accent-2: #6a7bff; --btn-fg: #160c2e; --btn-shadow: rgba(193,60,255,.45);
+  --tab-on: rgba(255,255,255,.12); --ok: #7cf0c4; --warn: #ffd166; --info: #8fb4ff;
+}
+:root[data-theme='light'] {
+  --bg: linear-gradient(160deg, #f6ecff 0%, #e4e2ff 55%, #d9ecff 100%);
+  --fg: #251a40; --fg-muted: #6d6290;
+  --glass: rgba(255,255,255,.55); --glass-dense: rgba(255,255,255,.78); --glass-solid: #f3eeff;
+  --edge: rgba(255,255,255,.9); --shadow: rgba(90,60,160,.15);
+  --accent-1: #9b3fe0; --accent-2: #4a5fe8; --btn-fg: #ffffff; --btn-shadow: rgba(155,63,224,.3);
+  --tab-on: rgba(155,63,224,.12); --ok: #0f7a56; --warn: #8a5a00; --info: #2a4fc4;
+}
+:root { --font-display: 'Space Grotesk', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif;
+  --radius-md: 12px; --radius-sm: 8px; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); background-attachment: fixed; color: var(--fg);
+  font: 15px/1.45 var(--font-body); }
+:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+
+/* Barra simulada del toolbox */
+.shell { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--edge); }
+.shell b { font-family: var(--font-display); }
+.shell .sp { flex: 1; }
+.shell button { background: var(--glass); border: 1px solid var(--edge); border-radius: var(--radius-sm); padding: 4px 10px; cursor: pointer; }
+.demo { display: inline-flex; gap: 4px; align-items: center; padding: 3px; border: 1px dashed var(--info); border-radius: var(--radius-sm); color: var(--info); font-size: 12px; }
+.demo button[aria-pressed='true'] { background: var(--tab-on); color: var(--fg); }
+.note { margin: 10px 20px 0; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--info); color: var(--info); font-size: 12.5px; }
+
+/* Inicio, igual que v2/src/home/home.css */
+.home { display: grid; gap: 22px; padding: 24px 20px 40px; max-width: 1200px; margin: 0 auto; }
+.home__greeting { font: 700 clamp(2.2rem, 1.4rem + 3.5vw, 4rem)/1.05 var(--font-display); letter-spacing: -.02em; margin: 0;
+  background: linear-gradient(120deg, var(--fg) 30%, var(--accent-1)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.home__subtitle { margin: 8px 0 0; color: var(--fg-muted); font-size: 1.05rem; }
+.glass { background: var(--glass); border: 1px solid var(--edge); border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px var(--shadow); backdrop-filter: blur(14px) saturate(140%); }
+
+/* NUEVO: fila de acciones sobre la cuadrícula */
+.home__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.home__hint { flex: 1 1 260px; margin: 0; color: var(--fg-muted); font-size: .92rem; }
+.btn { background: var(--glass-dense); border: 1px solid var(--edge); border-radius: 999px; padding: 7px 16px; cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--accent-1); }
+.btn--primary { color: var(--btn-fg); border-color: transparent; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
+
+.home__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.tool-card { position: relative; padding: 0; overflow: hidden; transition: transform .2s, box-shadow .2s, border-color .2s; }
+.tool-card:nth-child(3n + 1) { border-top-left-radius: 28px; }
+.tool-card:nth-child(3n + 2) { border-top-right-radius: 28px; }
+.home:not(.is-editing) .tool-card:hover { transform: translateY(-4px); border-color: var(--accent-1); box-shadow: 0 14px 40px var(--btn-shadow); }
+.tool-card__button { all: unset; box-sizing: border-box; display: grid; gap: 10px; width: 100%; padding: 22px; cursor: pointer; }
+.tool-card__icon { font-size: 2.2rem; line-height: 1; }
+.tool-card__name { font: 600 1.25rem var(--font-display); }
+.tool-card__desc { color: var(--fg-muted); font-size: .92rem; }
+.tool-card__badges { display: flex; gap: 8px; min-height: 26px; }
+.pill { display: inline-flex; align-items: center; font: 600 .72rem/1 var(--font-body); text-transform: uppercase; letter-spacing: .06em;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); }
+.pill--new { color: var(--btn-fg); background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); border-color: transparent; }
+.pill--updated { color: var(--info); border-color: var(--info); }
+
+/* NUEVO: modo Personalizar */
+.is-editing .tool-card { border-style: dashed; border-color: var(--accent-2); cursor: grab; }
+.is-editing .tool-card__button { cursor: grab; }
+.tool-card.is-dragging { opacity: .45; }
+.tool-card.is-target { outline: 2px solid var(--accent-1); outline-offset: 3px; }
+.grip { position: absolute; top: 14px; right: 16px; color: var(--fg-muted); font-size: 1.2rem; letter-spacing: -2px; display: none; }
+.edit { display: none; gap: 10px; padding: 0 22px 18px; }
+.is-editing .grip, .is-editing .edit { display: grid; }
+.move { display: flex; align-items: center; gap: 8px; color: var(--fg-muted); font-size: .85rem; }
+.move .pos { flex: 1; }
+.icon-btn { width: 34px; height: 30px; border-radius: var(--radius-sm); border: 1px solid var(--edge); background: var(--glass-dense); cursor: pointer; }
+.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+.badge-edit { display: none; gap: 6px; }
+.is-admin .badge-edit { display: grid; }
+.badge-edit__label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-muted); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 4px; font-size: .78rem; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button[aria-checked='true'] { background: var(--tab-on); font-weight: 600; color: var(--accent-1); }
+@media (prefers-reduced-motion: reduce) { .tool-card { transition: none; } }
+</style>
+</head>
+<body>
+<nav class="shell">
+  <b>CJLB Toolbox</b><span>Inicio</span><span class="sp"></span>
+  <span class="demo" role="group" aria-label="Solo para el mockup">Ver como:
+    <button type="button" id="asUser" aria-pressed="true">Usuario</button>
+    <button type="button" id="asAdmin" aria-pressed="false">Administrador</button>
+  </span>
+  <button type="button" id="theme">☀ / ☾</button>
+</nav>
+<p class="note">Mockup con las 7 herramientas reales. El recuadro «Ver como» solo existe aquí para comparar las dos vistas; en la app no aparece. Fuera del modo Personalizar el inicio se ve exactamente como hoy, salvo el botón nuevo.</p>
+
+<main class="home" id="home">
+  <header>
+    <h1 class="home__greeting">Hola, Carlos</h1>
+    <p class="home__subtitle">Elige una herramienta para empezar.</p>
+  </header>
+  <div class="home__bar">
+    <p class="home__hint" id="hint" hidden></p>
+    <button type="button" class="btn" id="reset" hidden>Restablecer orden</button>
+    <button type="button" class="btn" id="toggle">Personalizar</button>
+  </div>
+  <section class="home__grid" id="grid" aria-label="Inicio"></section>
+</main>
+
+<script>
+const TOOLS = [
+  ['gantt', '📊', 'Gantt Tracker', 'Seguimiento visual de proyectos con gestión de cronogramas, dependencias de tareas y monitoreo de progreso.', null],
+  ['gapcheck', '📏', 'Análisis GapCheck', 'Análisis avanzado de mediciones con comparaciones de tolerancias, validación estadística y reportes completos.', null],
+  ['bondline', '🌡️', 'Bondline Térmica', 'Análisis térmico y monitoreo de activación de adhesivos con perfiles de temperatura y validación de procesos.', null],
+  ['capaflow', '🧮', 'CapaFlow', 'Análisis estadístico en el navegador. Sin servidores · Sin Minitab · 100% gratuito', 'new'],
+  ['vectorizr', '📐', 'VectoriZr', 'Herramienta para digitalizar/vectorizar dibujos o patrones de corte de forma sencilla.', 'new'],
+  ['gageflow', '🔬', 'GageFlow', 'Estudio Gage R&R: repetibilidad, reproducibilidad y capacidad del sistema de medición.', 'new'],
+  ['quicknesting', '✂️', 'Quick Nesting', 'Acomodo de patrones DXF en tela de rollo: ancho, largo de tendido, separación entre cortes y capas.', 'new'],
+].map(([id, icon, name, desc, badge]) => ({ id, icon, name, desc, badge }))
+const DEFAULT = TOOLS.map((t) => t.id)
+let order = [...DEFAULT]
+let editing = false
+let admin = false
+let dragId = null
+const home = document.getElementById('home')
+const grid = document.getElementById('grid')
+const BADGE_TEXT = { new: 'Nuevo', updated: 'Actualizado' }
+
+function move(id, delta) {
+  const i = order.indexOf(id), j = i + delta
+  if (j < 0 || j >= order.length) return
+  const next = [...order]; next.splice(i, 1); next.splice(j, 0, id); order = next; render(id, delta)
+}
+
+function card(tool, idx) {
+  const el = document.createElement('article')
+  el.className = 'glass tool-card'
+  el.draggable = editing
+  el.dataset.id = tool.id
+  const pill = tool.badge ? `<span class="pill pill--${tool.badge}">${BADGE_TEXT[tool.badge]}</span>` : ''
+  const opt = (v, label) => `<button type="button" role="radio" aria-checked="${tool.badge === v}" data-badge="${v ?? ''}">${label}</button>`
+  el.innerHTML = `
+    <span class="grip" aria-hidden="true">⋮⋮</span>
+    <button type="button" class="tool-card__button" ${editing ? 'tabindex="-1"' : ''}>
+      <span class="tool-card__icon" aria-hidden="true">${tool.icon}</span>
+      <span class="tool-card__name">${tool.name}</span>
+      <span class="tool-card__desc">${tool.desc}</span>
+      <span class="tool-card__badges">${pill}</span>
+    </button>
+    <div class="edit">
+      <div class="move">
+        <button type="button" class="icon-btn" data-move="-1" aria-label="Mover antes: ${tool.name}" ${idx === 0 ? 'disabled' : ''}>←</button>
+        <button type="button" class="icon-btn" data-move="1" aria-label="Mover después: ${tool.name}" ${idx === order.length - 1 ? 'disabled' : ''}>→</button>
+        <span class="pos">Posición ${idx + 1} de ${order.length}</span>
+      </div>
+      <div class="badge-edit">
+        <span class="badge-edit__label">Insignia (la ven todos)</span>
+        <div class="seg" role="radiogroup" aria-label="Insignia de ${tool.name}">
+          ${opt(null, 'Sin insignia')}${opt('new', 'Nuevo')}${opt('updated', 'Actualizado')}
+        </div>
+      </div>
+    </div>`
+  el.querySelectorAll('[data-move]').forEach((b) => b.onclick = () => move(tool.id, Number(b.dataset.move)))
+  el.querySelectorAll('[data-badge]').forEach((b) => b.onclick = () => { tool.badge = b.dataset.badge || null; render() })
+  el.addEventListener('dragstart', (e) => { dragId = tool.id; el.classList.add('is-dragging'); e.dataTransfer.effectAllowed = 'move' })
+  el.addEventListener('dragend', () => { dragId = null; render() })
+  el.addEventListener('dragover', (e) => { if (dragId && dragId !== tool.id) { e.preventDefault(); el.classList.add('is-target') } })
+  el.addEventListener('dragleave', () => el.classList.remove('is-target'))
+  el.addEventListener('drop', (e) => {
+    e.preventDefault()
+    if (!dragId || dragId === tool.id) return
+    const next = order.filter((x) => x !== dragId)
+    next.splice(next.indexOf(tool.id) + (order.indexOf(dragId) < order.indexOf(tool.id) ? 1 : 0), 0, dragId)
+    order = next; dragId = null; render()
+  })
+  return el
+}
+
+function render(focusId, delta) {
+  home.classList.toggle('is-editing', editing)
+  home.classList.toggle('is-admin', admin)
+  document.getElementById('toggle').textContent = editing ? 'Listo' : 'Personalizar'
+  document.getElementById('toggle').classList.toggle('btn--primary', editing)
+  document.getElementById('reset').hidden = !editing
+  const hint = document.getElementById('hint')
+  hint.hidden = !editing
+  hint.textContent = 'Arrastra las tarjetas o usa las flechas para cambiar el orden. El orden solo cambia para ti.'
+    + (admin ? ' Las insignias que cambies las verán todos los usuarios.' : '')
+  grid.replaceChildren(...order.map((id, i) => card(TOOLS.find((t) => t.id === id), i)))
+  if (focusId) {
+    const btn = grid.querySelector(`[data-id="${focusId}"] [data-move="${delta}"]:not(:disabled)`)
+      || grid.querySelector(`[data-id="${focusId}"] [data-move]:not(:disabled)`)
+    btn?.focus()
+  }
+}
+
+document.getElementById('toggle').onclick = () => { editing = !editing; render() }
+document.getElementById('reset').onclick = () => { order = [...DEFAULT]; render() }
+document.getElementById('asUser').onclick = () => { admin = false; syncDemo() }
+document.getElementById('asAdmin').onclick = () => { admin = true; syncDemo() }
+function syncDemo() {
+  document.getElementById('asUser').setAttribute('aria-pressed', String(!admin))
+  document.getElementById('asAdmin').setAttribute('aria-pressed', String(admin))
+  render()
+}
+document.getElementById('theme').onclick = () => {
+  const r = document.documentElement
+  r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'
+}
+render()
+</script>
+</body>
+</html>

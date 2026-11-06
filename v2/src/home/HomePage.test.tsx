@@ -11,6 +11,10 @@ const store = vi.hoisted(() => ({
 vi.mock('../persistence/snapshotStore', () => store)
 const toastFn = vi.hoisted(() => vi.fn())
 vi.mock('../ui/toastStore', () => ({ toast: toastFn }))
+const badgeApi = vi.hoisted(() => ({ useToolBadges: vi.fn(), saveBadge: vi.fn() }))
+vi.mock('./badgeService', () => badgeApi)
+const prefs = vi.hoisted(() => ({ loadPreference: vi.fn(), savePreference: vi.fn() }))
+vi.mock('../persistence/preferences', () => prefs)
 
 import { HomePage } from './HomePage'
 import { SessionProvider } from '../auth/session'
@@ -32,6 +36,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   store.latestPerTool.mockResolvedValue([])
   store.markFreshStart.mockResolvedValue(undefined)
+  badgeApi.useToolBadges.mockReturnValue({})
+  badgeApi.saveBadge.mockResolvedValue(undefined)
+  prefs.loadPreference.mockResolvedValue(undefined)
+  prefs.savePreference.mockResolvedValue(undefined)
 })
 
 test('sin snapshots: saludo, 7 tarjetas y sin sección de reanudar', async () => {
