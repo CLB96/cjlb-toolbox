@@ -120,7 +120,15 @@ describe('Quick Nesting en el toolbox', () => {
     await screen.findByText('Acomodo calculado por capa', undefined, { timeout: 15000 })
     const ids = [...document.querySelectorAll('svg polygon title')].map((n) => n.textContent)
     expect(new Set(ids)).toEqual(new Set(['c1', 'c2']))
-  }, 30000)
+    expect(ids.filter((i) => i === 'c1').length).toBeGreaterThan(ids.filter((i) => i === 'c2').length)
+
+    await u.click(screen.getByRole('checkbox', { name: 'Misma cantidad de cada patrón' }))
+    expect(screen.getByText(/con la misma cantidad de cada patrón seleccionado/)).toBeInTheDocument()
+    await u.click(screen.getByRole('button', { name: 'Generar acomodo' }))
+    await screen.findByText(/Misma cantidad de cada patrón: \d+ de cada uno/, undefined, { timeout: 15000 })
+    const equal = [...document.querySelectorAll('svg polygon title')].map((n) => n.textContent)
+    expect(equal.filter((i) => i === 'c1').length).toBe(equal.filter((i) => i === 'c2').length)
+  }, 60000)
 
   it('rechaza archivos que no son DXF', async () => {
     const u = userEvent.setup({ applyAccept: false })

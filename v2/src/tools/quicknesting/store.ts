@@ -15,6 +15,8 @@ export interface QnForm {
   rotation: RotationMode
   anglePreset: string
   customAngle: string
+  /** Automático con huecos y varios patrones: misma cantidad de cada uno. */
+  balanced: boolean
 }
 
 export type MessageKind = '' | 'ok' | 'error'
@@ -63,7 +65,7 @@ export type QnApi = ReturnType<typeof createQnStore>
 
 export const DEFAULT_FORM: QnForm = {
   width: '1450', length: '2500', gap: '3', marginEnabled: false, margin: '10', mode: 'auto',
-  quantity: '8', multiplePlies: false, rotation: 'fixed', anglePreset: '0', customAngle: '15',
+  quantity: '8', multiplePlies: false, rotation: 'fixed', anglePreset: '0', customAngle: '15', balanced: false,
 }
 
 const cleared = (s: QnData) => ({ result: null, viewGroup: null, revision: s.revision + 1 })

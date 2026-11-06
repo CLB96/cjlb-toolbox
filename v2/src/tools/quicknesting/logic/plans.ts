@@ -16,6 +16,7 @@ export interface Extras {
   marginEnabled: boolean
   margin: number
   multiplePlies: boolean
+  balanced?: boolean
 }
 
 export type Request = Omit<NestPayload, 'pieces'>
@@ -23,7 +24,10 @@ export type Request = Omit<NestPayload, 'pieces'>
 export function requestOptions(base: Settings, extras: Extras): Request {
   const { length, ...rest } = base
   const request: Request = { ...rest, margin: extras.marginEnabled ? extras.margin : 0 }
-  if (base.mode === 'auto') return { ...request, length }
+  if (base.mode === 'auto') {
+    const balanced = extras.balanced === true && base.rotation === 'independent'
+    return balanced ? { ...request, length, balanced } : { ...request, length }
+  }
   if (extras.multiplePlies) return { ...request, plyMode: 'total', plyLength: length }
   return request
 }

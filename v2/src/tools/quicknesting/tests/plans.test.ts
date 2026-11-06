@@ -17,6 +17,9 @@ describe('reglas de pantalla', () => {
     const total = requestOptions({ ...base, mode: 'manual', quantity: 5 }, { ...off, multiplePlies: true })
     expect([total.plyMode, total.plyLength, total.length]).toEqual(['total', 22, undefined])
     expect(requestOptions(base, { ...off, marginEnabled: true }).margin).toBe(10)
+    expect(requestOptions(base, { ...off, balanced: true }).balanced).toBeUndefined()
+    expect(requestOptions({ ...base, rotation: 'independent' }, { ...off, balanced: true }).balanced).toBe(true)
+    expect(requestOptions({ ...base, mode: 'manual', rotation: 'independent' }, { ...off, balanced: true }).balanced).toBeUndefined()
   })
 
   it('valida en el orden del original', () => {

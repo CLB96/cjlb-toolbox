@@ -72,6 +72,9 @@ export function LayoutPanel() {
       {layout && (
         <p className="qn-help">{t('resultDetails', { gap: format(layout.gap), elapsed: format(layout.elapsed), missing: format(layout.missing || 0, 0) })}</p>
       )}
+      {layout?.balancedCopies !== undefined && (
+        <p className="qn-help">{t('balancedDetails', { copies: format(layout.balancedCopies, 0) })}</p>
+      )}
       {layout && (layout.margin ?? 0) > 0 && (
         <p className="qn-help">{t('marginDetails', { margin: format(layout.margin!), width: format(layout.usableWidth!), length: format(layout.usableLength!) })}</p>
       )}

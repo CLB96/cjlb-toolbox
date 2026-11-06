@@ -154,10 +154,81 @@ function stripGroup(g: PlyGroup): NestResult {
   return rest
 }
 
+/**
+ * Automático con huecos y varios patrones, «misma cantidad de cada patrón»: el mayor N tal que
+ * N copias de cada contorno caben juntas en el tendido. Una copia primero y luego búsqueda por
+ * mitades, como las plantillas del plan de capas, dentro del mismo límite de tiempo.
+ */
+function balancedAuto(payload: NestPayload, width: number, length: number, margin: number, opts: NestOptions): NestResult {
+  const now = opts.now ?? clock
+  const maxSeconds = Math.max(0, Math.min(MAX_SECONDS, opts.maxSeconds ?? MAX_SECONDS))
+  const capacity = Math.min(MAX_PIECES, opts.maxPieces ?? MAX_PIECES)
+  const innerWidth = width - 2 * margin
+  const innerLength = length - 2 * margin
+  const started = now()
+  const deadline = started + maxSeconds
+  const remaining = () => Math.max(0, deadline - now())
+  const base: NestPayload = { ...payload, width: innerWidth, mode: 'manual', margin: 0, plyMode: undefined, balanced: undefined }
+  const empty = pack({ ...base, quantity: 1 }, { maxPieces: capacity, maxSeconds: 0, now }, innerLength)
+  const ids = payload.pieces.map((p) => p.id)
+  const area = payload.pieces.reduce((s, p) => s + shape(p).area, 0)
+  const areaBound = Math.max(0, Math.floor((innerWidth * innerLength) / area + 1e-8))
+  const ceiling = Math.floor(capacity / ids.length)
+  let high = Math.min(ceiling, areaBound)
+  let best: NestResult | null = null
+  let bestCount = 0
+  let low = 1
+  let limited: NestResult['status'] | null = null
+  const probes = high >= 1 ? [1] : []
+  while (probes.length || low <= high) {
+    if (remaining() <= 0) {
+      limited = 'time_limit'
+      break
+    }
+    const copies = probes.length ? probes.pop()! : Math.floor((low + high) / 2)
+    const result = pack({ ...base, quantity: copies }, { maxPieces: capacity, maxSeconds: remaining(), now }, innerLength)
+    const counts = new Map<string, number>()
+    for (const p of result.placements) counts.set(p.id, (counts.get(p.id) ?? 0) + 1)
+    const feasible = ids.every((k) => counts.get(k) === copies)
+    if (feasible) {
+      best = result
+      bestCount = copies
+      low = copies + 1
+    } else {
+      high = copies - 1
+    }
+    if (result.status === 'time_limit' || result.status === 'search_limit') {
+      limited = result.status
+      break
+    }
+    if (copies === 1 && !feasible) break
+  }
+  if (bestCount && bestCount === ceiling && areaBound > ceiling) limited = limited ?? 'piece_limit'
+  const chosen = best ?? { ...empty, placements: [], count: 0, usedArea: 0 }
+  const usedArea = chosen.usedArea
+  const area2 = innerWidth * innerLength
+  const inner: NestResult = {
+    placements: chosen.placements, count: chosen.placements.length, usedArea,
+    utilization: area2 ? (100 * usedArea) / area2 : 0, unusedArea: Math.max(0, area2 - usedArea),
+    status: limited ?? (best ? 'filled' : 'no_fit'), missing: 0,
+    elapsed: Math.round((now() - started) * 1000) / 1000,
+    limits: { maxPieces: capacity, maxSeconds }, gap: chosen.gap, angles: chosen.angles,
+    balancedCopies: bestCount,
+  }
+  return margin > 0 ? outer(inner, width, length, margin) : { ...inner, width, length }
+}
+
 /** Punto de entrada público: igual que `nest()` del original. */
 export function nest(payload: NestPayload, opts: NestOptions = {}): NestResult {
   if (!payload || typeof payload !== 'object') throw new InputError('invalid_job')
   const margin = number(payload.margin ?? 0, 'invalid_margin')
+  if (payload.balanced === true && payload.mode === 'auto' && payload.rotation === 'independent' &&
+    Array.isArray(payload.pieces) && payload.pieces.length > 1) {
+    const width = number(payload.width, 'invalid_width', 0.001)
+    const length = number(payload.length, 'invalid_length', 0.001)
+    if (width <= 2 * margin || length <= 2 * margin) throw new InputError('invalid_margin')
+    return balancedAuto(payload, width, length, margin, opts)
+  }
   const basis = payload.plyMode ?? 'per_ply'
   if (basis !== 'per_ply' && basis !== 'total') throw new InputError('invalid_ply_mode')
   // Camino compatible exacto: sin campos nuevos ni cambios en acomodos anteriores.

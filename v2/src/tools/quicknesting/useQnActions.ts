@@ -13,7 +13,7 @@ export function formRequest(f: QnForm): Request {
     width: parseField(f.width), length: parseField(f.length), gap: parseField(f.gap), mode: f.mode,
     quantity: manual ? parseField(f.quantity) : 1, rotation: f.rotation,
     angle: f.rotation === 'fixed' ? selectedAngle(f.anglePreset, f.customAngle) : 0,
-  }, { marginEnabled: f.marginEnabled, margin: parseField(f.margin), multiplePlies: f.multiplePlies })
+  }, { marginEnabled: f.marginEnabled, margin: parseField(f.margin), multiplePlies: f.multiplePlies, balanced: f.balanced })
 }
 
 const codeOf = (error: unknown) => (error instanceof QnRequestError ? error.code : 'internal_error')

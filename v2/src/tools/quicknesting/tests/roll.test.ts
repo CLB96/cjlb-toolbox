@@ -107,6 +107,40 @@ describe('margen y planes de capas', () => {
     }
   })
 
+  describe('automático con huecos y misma cantidad de cada patrón', () => {
+    const big = { id: 'big', points: [[0, 0], [50, 0], [50, 50], [0, 50]] }
+    const small = { id: 'small', points: [[60, 0], [65, 0], [65, 5], [60, 5]] }
+    const base: NestPayload = { ...job(), width: 110, length: 110, gap: 2, rotation: 'independent', pieces: [small, big] }
+    const counts = (r: NestResult) => r.placements.reduce<Record<string, number>>((m, p) => ({ ...m, [p.id]: (m[p.id] ?? 0) + 1 }), {})
+
+    it('marcada: el mayor número igual de cada patrón que cabe junto', () => {
+      const result = nest({ ...base, balanced: true })
+      expect(counts(result)).toEqual({ big: 4, small: 4 })
+      expect(result.balancedCopies).toBe(4)
+      expect(result.status).toBe('filled')
+      expectLayout(result, 110, 110, 2)
+    })
+
+    it('sin marcar: el mayor primero y los demás en los huecos, como antes', () => {
+      const result = nest(base)
+      expect(counts(result).big).toBe(4)
+      expect(counts(result).small).toBeGreaterThan(4)
+      expect(result.balancedCopies).toBeUndefined()
+    })
+
+    it('respeta el margen y devuelve las medidas físicas', () => {
+      const result = nest({ ...base, balanced: true, margin: 5, width: 120, length: 120 })
+      expect([result.width, result.length, result.usableWidth]).toEqual([120, 120, 110])
+      expect(counts(result)).toEqual({ big: 4, small: 4 })
+      expectLayout(result, 120, 120, 2, 5)
+    })
+
+    it('si no cabe ni una de cada, no inventa piezas', () => {
+      const result = nest({ ...base, balanced: true, width: 40, length: 40 })
+      expect([result.count, result.status]).toEqual([0, 'no_fit'])
+    })
+  })
+
   it('sin margen y por capa, el resultado no lleva campos de margen', () => {
     const result = nest(plain())
     expect(result.margin).toBeUndefined()

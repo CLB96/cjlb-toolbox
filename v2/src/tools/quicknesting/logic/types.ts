@@ -34,6 +34,8 @@ export interface NestPayload {
   plyMode?: PlyMode
   /** Largo físico de cada capa en el modo de varias capas. */
   plyLength?: number
+  /** Automático con huecos y varios patrones: misma cantidad de cada uno. */
+  balanced?: boolean
 }
 
 export interface Placement {
@@ -89,6 +91,8 @@ export interface NestResult {
   usableWidth?: number
   usableLength?: number
   plyPlan?: PlyPlan
+  /** Con `balanced`: copias de cada patrón en el acomodo. */
+  balancedCopies?: number
 }
 
 export interface NestOptions {
