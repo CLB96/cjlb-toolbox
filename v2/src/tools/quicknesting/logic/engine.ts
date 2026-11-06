@@ -1,6 +1,6 @@
 // Acomodo acotado abajo-izquierda de polígonos; no es un optimizador industrial global.
 // Port directo de Quick-Nesting-Entrega/nesting/engine.py: mismo orden de búsqueda y límites.
-import { closedCoords, contains, distance, isValidRing, makePoly, openRing, orient, overlaps, translate } from './geometry'
+import { closedCoords, closerThan, contains, isValidRing, makePoly, openRing, orient, overlaps, translate } from './geometry'
 import type { Poly } from './geometry'
 import { InputError } from './types'
 import type { NestOptions, NestPayload, NestResult, NestStatus, Placement } from './types'
@@ -25,7 +25,8 @@ export function conflicts(candidate: Poly, existing: readonly Poly[], gap: numbe
   for (const other of existing) {
     const [x, y, z, w] = other.bounds
     if (c + gap <= x + EPSILON || z + gap <= a + EPSILON || d + gap <= y + EPSILON || w + gap <= b + EPSILON) continue
-    if (overlaps(candidate, other) || distance(candidate, other) + EPSILON < gap) return true
+    // `distance + EPSILON < gap` del original, sin medir pares de bordes que ya están lejos.
+    if (overlaps(candidate, other) || closerThan(candidate, other, gap - EPSILON)) return true
   }
   return false
 }

@@ -157,13 +157,15 @@ function segBounds(a: Pt, b: Pt): Bounds {
  * Tramos de los bordes de `a` separados donde toca el borde de `b`. Devuelve null si los
  * bordes se cruzan de forma transversal. Cada tramo queda entero dentro, fuera o sobre `b`.
  */
-function pieces(a: readonly Pt[], b: readonly Pt[]): { mid: Pt; normal: Pt }[] | null {
+function pieces(a: readonly Pt[], b: readonly Pt[], bBox: Bounds = boundsOf(b)): { mid: Pt; normal: Pt }[] | null {
   const out: { mid: Pt; normal: Pt }[] = []
   const ccw = signedArea(a) > 0
   for (let i = 0; i < a.length; i++) {
     const p = a[i]
     const q = a[(i + 1) % a.length]
     const box = segBounds(p, q)
+    // Un borde fuera de la caja de `b` queda entero fuera de `b`: no cruza ni aporta tramos interiores.
+    if (boxesApart(box, bBox, TOUCH)) continue
     const dx = q[0] - p[0]
     const dy = q[1] - p[1]
     const len2 = dx * dx + dy * dy
@@ -193,7 +195,7 @@ function pieces(a: readonly Pt[], b: readonly Pt[]): { mid: Pt; normal: Pt }[] |
 }
 
 function sideOverlaps(a: Poly, b: Poly): boolean {
-  const parts = pieces(a.pts, b.pts)
+  const parts = pieces(a.pts, b.pts, b.bounds)
   if (parts === null) return true
   for (const { mid, normal } of parts) {
     const where = locate(mid, b.pts)
@@ -225,6 +227,37 @@ export function distance(a: Poly, b: Poly): number {
     }
   }
   return best
+}
+
+type Edge = [Pt, Pt, Bounds]
+
+/** Bordes cuya caja queda a `limit` o menos de la caja `near`; los demás no pueden estar más cerca. */
+function edgesNear(pts: readonly Pt[], near: Bounds, limit: number): Edge[] {
+  const out: Edge[] = []
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]
+    const q = pts[(i + 1) % pts.length]
+    const box = segBounds(p, q)
+    if (!boxesApart(box, near, limit)) out.push([p, q, box])
+  }
+  return out
+}
+
+/**
+ * ¿Hay dos bordes a menos de `limit`? Igual que `distance(a, b) < limit`, pero descarta los
+ * pares cuya separación de cajas ya es mayor y termina en el primer par demasiado cercano.
+ */
+export function closerThan(a: Poly, b: Poly, limit: number): boolean {
+  if (limit <= 0 || boxesApart(a.bounds, b.bounds, limit)) return false
+  const ea = edgesNear(a.pts, b.bounds, limit)
+  if (!ea.length) return false
+  const eb = edgesNear(b.pts, a.bounds, limit)
+  for (const [p, q, box] of ea) {
+    for (const [c, d, other] of eb) {
+      if (!boxesApart(box, other, limit) && segSegDist(p, q, c, d) < limit) return true
+    }
+  }
+  return false
 }
 
 /** ¿`outer` contiene por completo a `inner` (bordes compartidos incluidos)? */
