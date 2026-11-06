@@ -111,6 +111,14 @@
 .auth-card { width: min(400px, 100%); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
 .auth-card__logo { height: 56px; width: auto; align-self: center; object-fit: contain; }
 .auth-card__title { font-size: 22px; }
+/* Cuadro de inicio de sesión con cúpula: la forma y el borde los dibuja DomeCard. */
+.auth-dome { position: relative; width: min(400px, 100%); }
+.auth-dome .auth-card { width: 100%; }
+.auth-card--dome { padding-top: 12px; }
+.auth-card--dome .auth-card__title { text-align: center; }
+.auth-card--shaped { border-color: transparent; box-shadow: none; }
+.auth-card__logo--dome { height: 120px; }
+.auth-dome__edge { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .auth-card__sep, .auth-card__muted { color: var(--fg-muted); text-align: center; }
 .auth-card__form { display: flex; flex-direction: column; gap: 12px; }
 .auth-card__form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Starfield } from '../theme/Starfield'
-import { GlassPanel } from '../ui/GlassPanel'
+import { DomeCard } from './DomeCard'
 import { Button } from '../ui/Button'
 import { useI18n, type MessageKey } from '../i18n/useI18n'
 import { RequestAccessForm } from '../access/RequestAccessForm'
@@ -48,11 +48,10 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
       <>
         <Starfield />
         <main className="auth-screen">
-          <GlassPanel className="auth-card">
-            <img className="auth-card__logo" src={logoSrc} alt="CJLB" height={40} />
+          <DomeCard logoSrc={logoSrc}>
             <h1 className="auth-card__title">{t('auth.title')}</h1>
             <RequestAccessForm onBack={() => setRequesting(false)} />
-          </GlassPanel>
+          </DomeCard>
         </main>
       </>
     )
@@ -62,8 +61,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
     <>
       <Starfield />
       <main className="auth-screen">
-        <GlassPanel className="auth-card">
-          <img className="auth-card__logo" src={logoSrc} alt="CJLB" height={40} />
+        <DomeCard logoSrc={logoSrc}>
           <h1 className="auth-card__title">{t('auth.title')}</h1>
           <Button disabled={busy} onClick={() => void run(signInWithGoogle, 'auth.googleFailed')}>
             {t('auth.google')}
@@ -111,7 +109,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
           <Button variant="ghost" onClick={() => setRequesting(true)}>
             {t('access.link')}
           </Button>
-        </GlassPanel>
+        </DomeCard>
       </main>
     </>
   )

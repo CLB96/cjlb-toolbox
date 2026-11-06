@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logos nuevos</title>
+<style>
+  body { margin: 0; font: 14px/1.4 Inter, system-ui, sans-serif; background: #ddd; color: #111 }
+  h1 { font-size: 18px; margin: 16px }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; padding: 0 16px 16px }
+  .panel { border-radius: 14px; padding: 16px; min-height: 360px }
+  .dark { background: radial-gradient(ellipse at 70% 0%, #3b1a5e 0%, #160c2e 45%, #07061a 100%); color: #eee }
+  .light { background: linear-gradient(160deg, #f6ecff 0%, #e4e2ff 55%, #d9ecff 100%) }
+  .panel h2 { font-size: 14px; margin: 0 0 12px; opacity: .8 }
+  .bar { display: flex; align-items: center; gap: 16px; padding: 8px 16px; border-radius: 14px; margin-bottom: 20px;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15) }
+  .light .bar { background: rgba(255,255,255,.6); border-color: rgba(0,0,0,.08) }
+  .bar img { height: 32px }
+  .tab { padding: 4px 10px; border-radius: 8px; background: rgba(127,127,127,.18) }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 16px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); max-width: 260px; margin: 0 auto }
+  .light .card { background: rgba(255,255,255,.7); border-color: rgba(0,0,0,.08) }
+  .card img { height: 56px }
+  .export { background: #fff; color: #111; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 20px }
+  .export img { height: 44px }
+  .tag { font-size: 12px; opacity: .7 }
+</style>
+</head>
+<body>
+<h1>Logos: actual frente a nuevo (barra 32 px, inicio de sesión 56 px, PNG exportado 44 px)</h1>
+<div class="grid">
+  <section class="panel dark">
+    <h2>Tema oscuro · ACTUAL</h2>
+    <div class="bar"><img src="logos/actual-dark.png" alt=""><span class="tab">Gantt</span><span class="tab">GapCheck</span></div>
+    <div class="card"><img src="logos/actual-dark.png" alt=""><b>Iniciar sesión</b></div>
+    <div class="export"><span>Gapcheck · PNG exportado</span><img src="logos/actual-dark.png" alt=""></div>
+  </section>
+  <section class="panel dark">
+    <h2>Tema oscuro · NUEVO (blanco y negro)</h2>
+    <div class="bar"><img src="logos/logo-dark.png" alt=""><span class="tab">Gantt</span><span class="tab">GapCheck</span></div>
+    <div class="card"><img src="logos/logo-dark.png" alt=""><b>Iniciar sesión</b></div>
+    <div class="export"><span>Gapcheck · PNG exportado</span><img src="logos/logo-dark.png" alt=""></div>
+  </section>
+  <section class="panel dark">
+    <h2>Tema oscuro · NUEVO con borde blanco (como el actual)</h2>
+    <div class="bar"><img src="logos/logo-dark-borde.png" alt=""><span class="tab">Gantt</span><span class="tab">GapCheck</span></div>
+    <div class="card"><img src="logos/logo-dark-borde.png" alt=""><b>Iniciar sesión</b></div>
+    <div class="export"><span>Gapcheck · PNG exportado</span><img src="logos/logo-dark-borde.png" alt=""></div>
+  </section>
+  <section class="panel light">
+    <h2>Tema claro · ACTUAL</h2>
+    <div class="bar"><img src="logos/actual-light.png" alt=""><span class="tab">Gantt</span><span class="tab">GapCheck</span></div>
+    <div class="card"><img src="logos/actual-light.png" alt=""><b>Iniciar sesión</b></div>
+    <p class="tag">También es el ícono de la pestaña del navegador.</p>
+  </section>
+  <section class="panel light">
+    <h2>Tema claro · NUEVO (a color)</h2>
+    <div class="bar"><img src="logos/logo-light.png" alt=""><span class="tab">Gantt</span><span class="tab">GapCheck</span></div>
+    <div class="card"><img src="logos/logo-light.png" alt=""><b>Iniciar sesión</b></div>
+    <p class="tag">También es el ícono de la pestaña del navegador.</p>
+  </section>
+</div>
+</body>
+</html>
