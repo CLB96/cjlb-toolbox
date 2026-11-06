@@ -154,23 +154,99 @@ function segBounds(a: Pt, b: Pt): Bounds {
 }
 
 /**
+ * Índice de bordes por franjas horizontales: cada borde queda en las franjas que cubre su
+ * altura (± TOUCH). Una consulta por altura devuelve un superconjunto de los bordes que la
+ * tocan, así que los resultados no cambian; solo se evita recorrer el resto.
+ */
+interface EdgeIndex {
+  pts: readonly Pt[]
+  y0: number
+  step: number
+  bins: number[][]
+  seen: Uint32Array
+  stamp: number
+}
+
+const BINS = 64
+const indexCache = new WeakMap<Poly, EdgeIndex>()
+
+function indexOf(poly: Poly): EdgeIndex {
+  const cached = indexCache.get(poly)
+  if (cached) return cached
+  const { pts, bounds } = poly
+  const y0 = bounds[1] - TOUCH
+  const step = (bounds[3] - bounds[1] + 2 * TOUCH) / BINS || 1
+  const bins: number[][] = Array.from({ length: BINS }, () => [])
+  const index: EdgeIndex = { pts, y0, step, bins, seen: new Uint32Array(pts.length), stamp: 0 }
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i][1]
+    const b = pts[(i + 1) % pts.length][1]
+    const lo = binOf(index, Math.min(a, b) - TOUCH)
+    const hi = binOf(index, Math.max(a, b) + TOUCH)
+    for (let k = lo; k <= hi; k++) bins[k].push(i)
+  }
+  indexCache.set(poly, index)
+  return index
+}
+
+function binOf(index: EdgeIndex, y: number): number {
+  return Math.max(0, Math.min(BINS - 1, Math.floor((y - index.y0) / index.step)))
+}
+
+/** Bordes que pueden tocar la franja [yMin, yMax], sin repetir. */
+function edgesAt(index: EdgeIndex, yMin: number, yMax: number): number[] {
+  index.stamp = (index.stamp + 1) >>> 0 || 1
+  if (index.stamp === 1) index.seen.fill(0)
+  const out: number[] = []
+  const hi = binOf(index, yMax)
+  for (let k = binOf(index, yMin); k <= hi; k++) {
+    for (const i of index.bins[k]) {
+      if (index.seen[i] !== index.stamp) {
+        index.seen[i] = index.stamp
+        out.push(i)
+      }
+    }
+  }
+  return out
+}
+
+/** Igual que `locate`, pero solo revisa los bordes cuya altura alcanza la del punto. */
+function locateIndexed(p: Pt, index: EdgeIndex): number {
+  const { pts } = index
+  let inside = false
+  for (const i of edgesAt(index, p[1] - TOUCH, p[1] + TOUCH)) {
+    const a = pts[i]
+    const b = pts[(i + 1) % pts.length]
+    // Misma fórmula que `locate` (a = vértice anterior, b = siguiente) para el mismo redondeo.
+    if (pointSegDist(p, a, b) <= TOUCH) return 0
+    if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]) {
+      inside = !inside
+    }
+  }
+  return inside ? 1 : -1
+}
+
+/**
  * Tramos de los bordes de `a` separados donde toca el borde de `b`. Devuelve null si los
  * bordes se cruzan de forma transversal. Cada tramo queda entero dentro, fuera o sobre `b`.
  */
-function pieces(a: readonly Pt[], b: readonly Pt[], bBox: Bounds = boundsOf(b)): { mid: Pt; normal: Pt }[] | null {
+function pieces(a: readonly Pt[], poly: Poly): { mid: Pt; normal: Pt }[] | null {
   const out: { mid: Pt; normal: Pt }[] = []
   const ccw = signedArea(a) > 0
+  const b = poly.pts
+  const index = indexOf(poly)
   for (let i = 0; i < a.length; i++) {
     const p = a[i]
     const q = a[(i + 1) % a.length]
     const box = segBounds(p, q)
     // Un borde fuera de la caja de `b` queda entero fuera de `b`: no cruza ni aporta tramos interiores.
-    if (boxesApart(box, bBox, TOUCH)) continue
+    if (boxesApart(box, poly.bounds, TOUCH)) continue
     const dx = q[0] - p[0]
     const dy = q[1] - p[1]
     const len2 = dx * dx + dy * dy
     const cuts = [0, 1]
-    for (let j = 0; j < b.length; j++) {
+    // Solo los bordes de `b` a la altura de este borde pueden tocarlo; el orden no importa (se ordena después).
+    for (const j of edgesAt(index, box[1] - TOUCH, box[3] + TOUCH)) {
       const c = b[j]
       const d = b[(j + 1) % b.length]
       if (boxesApart(box, segBounds(c, d), TOUCH)) continue
@@ -195,14 +271,15 @@ function pieces(a: readonly Pt[], b: readonly Pt[], bBox: Bounds = boundsOf(b)):
 }
 
 function sideOverlaps(a: Poly, b: Poly): boolean {
-  const parts = pieces(a.pts, b.pts, b.bounds)
+  const parts = pieces(a.pts, b)
   if (parts === null) return true
+  const index = indexOf(b)
   for (const { mid, normal } of parts) {
-    const where = locate(mid, b.pts)
+    const where = locateIndexed(mid, index)
     if (where > 0) return true
     if (where === 0) {
       const probe: Pt = [mid[0] + normal[0] * PROBE, mid[1] + normal[1] * PROBE]
-      if (locate(probe, b.pts) > 0) return true
+      if (locateIndexed(probe, index) > 0) return true
     }
   }
   return false
@@ -265,7 +342,7 @@ export function contains(outer: Poly, inner: Poly): boolean {
   const ib = inner.bounds
   const ob = outer.bounds
   if (ib[0] < ob[0] - TOUCH || ib[1] < ob[1] - TOUCH || ib[2] > ob[2] + TOUCH || ib[3] > ob[3] + TOUCH) return false
-  const parts = pieces(inner.pts, outer.pts)
+  const parts = pieces(inner.pts, outer)
   if (parts === null) return false
   return inner.pts.every((p) => locate(p, outer.pts) >= 0) && parts.every(({ mid }) => locate(mid, outer.pts) >= 0)
 }
