@@ -43,6 +43,13 @@ test('approveRequest crea allowlist y marca approved', async () => {
   expect(store.get('accessRequests/bob@x.com')).toMatchObject({ status: 'approved' })
 })
 
+test('aprobar una solicitud no borra el uid de una cuenta creada por el admin', async () => {
+  store.set('allowlist/juan@prov.com', { addedAt: 1, addedBy: 'admin@x.com', uid: 'juan-uid' })
+  await submitAccessRequest({ email: 'juan@prov.com', name: 'Juan' })
+  await approveRequest('juan@prov.com', 'admin@x.com')
+  expect(store.get('allowlist/juan@prov.com')).toMatchObject({ uid: 'juan-uid', addedBy: 'admin@x.com' })
+})
+
 test('si setDoc nunca responde (offline), a los 15 s devuelve error', async () => {
   vi.useFakeTimers()
   const spy = vi.spyOn(fake, 'setDoc').mockReturnValueOnce(new Promise(() => {}))

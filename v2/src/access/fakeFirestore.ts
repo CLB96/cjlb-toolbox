@@ -36,7 +36,8 @@ export const fake = {
   writeBatch: () => {
     const ops: Array<() => void> = []
     return {
-      set: (ref: Ref, data: Record<string, unknown>) => void ops.push(() => void store.set(ref.path, data)),
+      set: (ref: Ref, data: Record<string, unknown>, opts?: { merge?: boolean }) =>
+        void ops.push(() => void store.set(ref.path, opts?.merge ? { ...store.get(ref.path), ...data } : data)),
       update: (ref: Ref, data: Record<string, unknown>) =>
         void ops.push(() => void store.set(ref.path, { ...store.get(ref.path), ...data })),
       commit: async () => ops.forEach((o) => o()),

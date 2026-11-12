@@ -123,10 +123,11 @@ export async function listPendingRequests(): Promise<AccessRequest[]> {
 export async function approveRequest(email: string, adminEmail: string): Promise<void> {
   const id = normalizeEmail(email)
   const batch = writeBatch(db)
+  // merge: si la cuenta la creó el admin, su uid se conserva (sin él volvería a pedir verificación).
   batch.set(doc(db, 'allowlist', id), {
     addedAt: serverTimestamp(),
     addedBy: normalizeEmail(adminEmail),
-  })
+  }, { merge: true })
   batch.update(doc(db, 'accessRequests', id), { status: 'approved' })
   await batch.commit()
 }
