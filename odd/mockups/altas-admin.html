@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Altas por admin · mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root, :root[data-theme='dark'] {
+  --bg: radial-gradient(ellipse at 70% 0%, #3b1a5e 0%, #160c2e 45%, #07061a 100%);
+  --fg: #efe9ff; --fg-muted: #b3a6d9; --glass: rgba(255,255,255,.07); --glass-dense: rgba(255,255,255,.12);
+  --glass-solid: #241545; --edge: rgba(255,255,255,.16); --shadow: rgba(0,0,0,.35);
+  --accent-1: #d16bff; --accent-2: #6a7bff; --btn-fg: #160c2e; --ok: #7cf0c4; --warn: #ffd166; --error: #ff8a9b; --info: #8fb4ff;
+}
+:root[data-theme='light'] {
+  --bg: linear-gradient(160deg, #f6ecff 0%, #e4e2ff 55%, #d9ecff 100%);
+  --fg: #251a40; --fg-muted: #6d6290; --glass: rgba(255,255,255,.55); --glass-dense: rgba(255,255,255,.78);
+  --glass-solid: #f3eeff; --edge: rgba(255,255,255,.9); --shadow: rgba(90,60,160,.15);
+  --accent-1: #9b3fe0; --accent-2: #4a5fe8; --btn-fg: #fff; --ok: #0f7a56; --warn: #8a5a00; --error: #b3263e; --info: #2a4fc4;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); background-attachment: fixed; color: var(--fg); font: 14px/1.45 'Inter', system-ui, sans-serif; }
+h1, h2, h3 { font-family: 'Space Grotesk', system-ui, sans-serif; font-weight: 500; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 18px; }
+.note { padding: 8px 12px; border: 1px dashed var(--info); color: var(--info); border-radius: 8px; font-size: 12.5px; }
+.glass { background: var(--glass); border: 1px solid var(--edge); border-radius: 12px; box-shadow: 0 8px 30px var(--shadow); backdrop-filter: blur(14px); padding: 16px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.tag { display: inline-block; font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+label { display: grid; gap: 4px; margin-top: 10px; font-size: 12px; color: var(--fg-muted); }
+input { padding: 9px 10px; border-radius: 9px; border: 1px solid var(--edge); background: var(--glass-dense); color: var(--fg); font: inherit; }
+.row { display: flex; gap: 8px; align-items: end; }
+.row > label { flex: 1; }
+.btn { border: 0; border-radius: 8px; padding: 9px 14px; font: 500 14px 'Inter', sans-serif; cursor: pointer; }
+.btn--primary { color: var(--btn-fg); background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); }
+.btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--edge); }
+.help { color: var(--fg-muted); font-size: 12px; margin: 6px 0 0; }
+.ok { border: 1px solid var(--ok); border-radius: 9px; padding: 12px; margin-top: 12px; }
+.ok b { color: var(--ok); }
+.pw { font: 500 18px 'Space Grotesk', monospace; letter-spacing: 1px; padding: 6px 10px; background: var(--glass-dense); border-radius: 8px; }
+.err { border: 1px solid var(--error); color: var(--error); border-radius: 9px; padding: 10px 12px; margin-top: 12px; font-size: 13px; }
+.menu { width: 280px; display: grid; gap: 6px; }
+.menu .email { color: var(--fg-muted); font-size: 12px; }
+.dialog { max-width: 420px; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="note">Mockup con datos de ejemplo. Arriba: tu panel de administrador (página de uso), debajo de «Solicitudes de acceso». Abajo: el menú de usuario de cualquier persona. <button class="btn btn--ghost" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'">☾ / ☀</button></p>
+
+  <div class="grid">
+    <section class="glass">
+      <span class="tag">1 · Formulario</span>
+      <h2 style="margin:0">Crear usuario</h2>
+      <p class="help">Para personas que no reciben el correo de verificación. La cuenta queda aprobada y entra con esta contraseña, sin enlace.</p>
+      <label>Correo<input value="juan.perez@proveedor.com"></label>
+      <label>Nombre (opcional)<input value="Juan Pérez"></label>
+      <div class="row">
+        <label>Contraseña temporal<input value="Rq7-kT3m-Pz9w"></label>
+        <button class="btn btn--ghost">Generar</button>
+      </div>
+      <p class="help">Mínimo 8 caracteres. Compártela por un canal privado; la persona puede cambiarla desde su menú.</p>
+      <div class="actions"><button class="btn btn--primary">Crear usuario</button></div>
+    </section>
+
+    <section class="glass">
+      <span class="tag">2 · Cuenta creada</span>
+      <h2 style="margin:0">Crear usuario</h2>
+      <div class="ok">
+        <b>Usuario creado: juan.perez@proveedor.com</b>
+        <p class="help">Contraseña temporal (solo se muestra ahora):</p>
+        <div class="row" style="align-items:center"><span class="pw">Rq7-kT3m-Pz9w</span><button class="btn btn--ghost">Copiar</button></div>
+        <p class="help">Ya tiene acceso. Entra en la página con «Correo» y «Contraseña».</p>
+      </div>
+      <span class="tag" style="margin-top:16px">3 · El correo ya tiene cuenta</span>
+      <div class="err">Ya existe una cuenta con ese correo. Si es de esa persona y no puede verificarla, bórrala en la consola de Firebase (Authentication → Usuarios) y vuelve a crearla aquí.</div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="glass menu">
+      <span class="tag">4 · Menú de usuario</span>
+      <strong>Juan Pérez</strong>
+      <span class="email">juan.perez@proveedor.com</span>
+      <button class="btn btn--ghost">Cambiar contraseña</button>
+      <button class="btn btn--ghost">Cerrar sesión</button>
+    </section>
+
+    <section class="glass dialog">
+      <span class="tag">5 · Cambiar contraseña</span>
+      <h2 style="margin:0">Cambiar contraseña</h2>
+      <label>Contraseña actual<input type="password" value="xxxxxxxxxxxx"></label>
+      <label>Contraseña nueva<input type="password" value="xxxxxxxxxx"></label>
+      <label>Repite la contraseña nueva<input type="password" value="xxxxxxxxxx"></label>
+      <p class="help">Mínimo 8 caracteres.</p>
+      <div class="actions"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Guardar</button></div>
+      <p class="help" style="color:var(--ok)">Contraseña actualizada.</p>
+    </section>
+  </div>
+</div>
+</body>
+</html>
