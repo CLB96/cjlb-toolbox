@@ -16,6 +16,7 @@ function UsagePage() {
 }
 
 vi.mock('../access/AccessRequestsPanel', () => ({ AccessRequestsPanel: () => <div>panel-solicitudes</div> }))
+vi.mock('../access/CreateUserPanel', () => ({ CreateUserPanel: () => <div>panel-crear-usuario</div> }))
 vi.mock('./UsageChart', () => ({ UsageChart: () => <div>grafico</div> }))
 vi.mock('./usageService', () => ({ fetchSessions: vi.fn() }))
 
@@ -56,6 +57,7 @@ test('muestra la tabla por persona, el panel de solicitudes y exporta a Excel', 
   render(<UsagePage />)
   expect(await screen.findByText('ana@x.com')).toBeInTheDocument()
   expect(screen.getByText('panel-solicitudes')).toBeInTheDocument()
+  expect(screen.getByText('panel-crear-usuario')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Exportar Excel' }))
   await vi.waitFor(() => expect(writeFile).toHaveBeenCalled())
   expect(writeFile.mock.calls[0][1]).toMatch(/^cjlb-uso-\d{4}-\d{2}-\d{2}\.xlsx$/)

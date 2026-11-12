@@ -153,3 +153,18 @@
 .access-panel__email { color: var(--fg-muted); font-size: 14px; word-break: break-all; }
 .access-panel__reason { margin: 0; color: var(--fg-muted); font-size: 14px; flex-basis: 100%; }
 .access-panel__actions { display: flex; gap: 8px; }
+
+/* Alta de usuarios por el admin y cambio de contraseña */
+.create-user__form, .change-password { display: grid; gap: 10px; }
+.create-user__field { display: grid; gap: 4px; flex: 1; font-size: 13px; color: var(--fg-muted); }
+.create-user__field input {
+  padding: 9px 10px; border-radius: 9px; border: 1px solid var(--edge);
+  background: var(--glass-dense); color: var(--fg); font: inherit;
+}
+.create-user__row { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.create-user__actions { display: flex; gap: 8px; justify-content: flex-end; }
+.create-user__error { margin: 0; padding: 10px 12px; border: 1px solid var(--error); border-radius: 9px; color: var(--error); font-size: 14px; }
+.create-user__done { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--ok); border-radius: 9px; }
+.create-user__done strong { color: var(--ok); }
+.create-user__password { font: 500 18px var(--font-display); letter-spacing: 1px; padding: 6px 10px; border-radius: 8px; background: var(--glass-dense); }
+.change-password__ok { margin: 0; color: var(--ok); font-size: 14px; }

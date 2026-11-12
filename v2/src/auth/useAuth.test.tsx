@@ -8,6 +8,7 @@ vi.mock('./authService', () => ({
     signOut: vi.fn(),
     onUser: vi.fn(),
     isAllowed: vi.fn(),
+    isAdminCreated: vi.fn(),
     fetchAdminEmail: vi.fn(),
     sendVerification: vi.fn(),
     reloadUser: vi.fn(),
@@ -33,6 +34,7 @@ beforeEach(() => {
     return () => {}
   })
   svc.isAllowed.mockResolvedValue(true)
+  svc.isAdminCreated.mockResolvedValue(false)
   svc.fetchAdminEmail.mockResolvedValue(null)
 })
 
@@ -72,11 +74,27 @@ test('isAdmin solo si el correo coincide con el admin (sin distinguir mayúscula
   expect(result.current.isAdmin).toBe(true)
 })
 
-test('correo sin verificar -> unverified y no consulta allowlist', async () => {
+test('correo sin verificar y no creado por el admin -> unverified', async () => {
   const { result } = renderHook(() => useAuth())
   act(() => emit(user({ emailVerified: false })))
   await waitFor(() => expect(result.current.status).toBe('unverified'))
+  expect(svc.isAdminCreated).toHaveBeenCalledWith('fulano@gmail.com', 'u1')
   expect(svc.isAllowed).not.toHaveBeenCalled()
+})
+
+test('cuenta creada por el admin entra sin verificar el correo', async () => {
+  svc.isAdminCreated.mockResolvedValue(true)
+  const { result } = renderHook(() => useAuth())
+  act(() => emit(user({ emailVerified: false })))
+  await waitFor(() => expect(result.current.status).toBe('allowed'))
+  expect(svc.isAllowed).toHaveBeenCalledWith('fulano@gmail.com')
+})
+
+test('correo verificado no consulta si lo creó el admin', async () => {
+  const { result } = renderHook(() => useAuth())
+  act(() => emit(user()))
+  await waitFor(() => expect(result.current.status).toBe('allowed'))
+  expect(svc.isAdminCreated).not.toHaveBeenCalled()
 })
 
 test('fallo de isAllowed -> error con toast, y retry reevalúa', async () => {

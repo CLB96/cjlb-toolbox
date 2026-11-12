@@ -29,11 +29,16 @@ export function useAuth() {
       setState({ status: 'signedOut', user: null, isAdmin: false })
       return
     }
-    if (!user.emailVerified) {
-      setState({ status: 'unverified', user, isAdmin: false })
-      return
-    }
     setState({ status: 'loading', user, isAdmin: false })
+    // Sin verificar solo entra la cuenta que creó el admin (su uid está en la allowlist).
+    if (!user.emailVerified) {
+      const created = await authService.isAdminCreated(user.email, user.uid)
+      if (stale()) return
+      if (!created) {
+        setState({ status: 'unverified', user, isAdmin: false })
+        return
+      }
+    }
     let allowed: boolean
     try {
       allowed = await authService.isAllowed(user.email)

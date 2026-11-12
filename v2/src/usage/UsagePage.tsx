@@ -5,6 +5,7 @@ import { toast } from '../ui/toastStore'
 import { useI18n } from '../i18n/useI18n'
 import { useSession } from '../auth/session'
 import { AccessRequestsPanel } from '../access/AccessRequestsPanel'
+import { CreateUserPanel } from '../access/CreateUserPanel'
 import { TOOLS } from '../tools/registry'
 import { TOOL_IDS } from '../app/routes'
 import { aggregateUsage, type UserUsage } from './aggregate'
@@ -158,6 +159,7 @@ export function UsagePage() {
       )}
 
       {session && <AccessRequestsPanel adminEmail={session.user.email} />}
+      {session && <CreateUserPanel adminEmail={session.user.email} />}
     </GlassPanel>
   )
 }

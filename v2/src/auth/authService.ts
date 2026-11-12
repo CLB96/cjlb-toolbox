@@ -1,13 +1,16 @@
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   browserLocalPersistence,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendEmailVerification,
   setPersistence,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as fbSignOut,
+  updatePassword,
   type User,
 } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
@@ -20,6 +23,8 @@ export interface AppUser {
   email: string
   displayName: string | null
   emailVerified: boolean
+  /** Entra con correo y contraseña (puede cambiarla); false para cuentas solo de Google. */
+  hasPassword?: boolean
 }
 
 function toAppUser(u: User | null): AppUser | null {
@@ -29,6 +34,7 @@ function toAppUser(u: User | null): AppUser | null {
     email: normalizeEmail(u.email),
     displayName: u.displayName,
     emailVerified: u.emailVerified,
+    hasPassword: u.providerData.some((p) => p.providerId === 'password'),
   }
 }
 
@@ -89,6 +95,27 @@ export const authService = {
   async isAllowed(email: string): Promise<boolean> {
     const snap = await getDoc(doc(db, 'allowlist', normalizeEmail(email)))
     return snap.exists()
+  },
+
+  /**
+   * ¿La creó el admin? Su entrada en la allowlist guarda este uid. Para otra cuenta sin
+   * verificar las reglas niegan la lectura, y eso cuenta como «no».
+   */
+  async isAdminCreated(email: string, uid: string): Promise<boolean> {
+    try {
+      const snap = await getDoc(doc(db, 'allowlist', normalizeEmail(email)))
+      return snap.exists() && snap.data().uid === uid
+    } catch {
+      return false
+    }
+  },
+
+  /** Cambia la contraseña tras confirmar la actual (Firebase exige un inicio de sesión reciente). */
+  async changePassword(current: string, next: string): Promise<void> {
+    const user = auth.currentUser
+    if (!user || !user.email) throw Object.assign(new Error('no-user'), { code: 'no-user' })
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, current))
+    await updatePassword(user, next)
   },
 
   async fetchAdminEmail(): Promise<string | null> {
