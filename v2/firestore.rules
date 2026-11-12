@@ -2,10 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Cuenta creada por el admin: su entrada en la allowlist guarda el uid con el que se creó.
+    // Otra cuenta registrada con el mismo correo tiene otro uid y sigue necesitando verificarlo.
+    function adminCreated() {
+      let entry = /databases/$(database)/documents/allowlist/$(request.auth.token.email.lower());
+      return exists(entry) && get(entry).data.get('uid', '') == request.auth.uid;
+    }
     function signedIn() {
       return request.auth != null
         && request.auth.token.email != null
-        && request.auth.token.email_verified == true;
+        && (request.auth.token.email_verified == true || adminCreated());
     }
     function userEmail() {
       return request.auth.token.email.lower();

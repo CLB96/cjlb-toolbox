@@ -187,6 +187,42 @@ describe('allowlist y config', () => {
   })
 })
 
+describe('cuentas creadas por el admin (sin verificar el correo)', () => {
+  // `juan` la creó el admin: su entrada en la allowlist guarda su uid.
+  const juan = (e: RulesTestEnvironment) => e.authenticatedContext('juan-uid', { email: 'Juan@Prov.com', email_verified: false }).firestore()
+  // Otra cuenta registrada con el mismo correo, sin acceso al buzón.
+  const impostor = (e: RulesTestEnvironment) => e.authenticatedContext('otro-uid', { email: 'juan@prov.com', email_verified: false }).firestore()
+  const seedJuan = () => env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'allowlist/juan@prov.com'), { addedAt: 1, addedBy: 'admin@x.com', uid: 'juan-uid' })
+  })
+
+  it('la cuenta con el uid guardado entra sin email_verified', async () => {
+    await seedJuan()
+    await assertSucceeds(getDoc(doc(juan(env), 'allowlist/juan@prov.com')))
+    await assertSucceeds(getDoc(doc(juan(env), 'config/app')))
+    await assertSucceeds(setDoc(doc(juan(env), 'sessions/j1'), newSession({ uid: 'juan-uid', email: 'juan@prov.com', name: 'Juan' })))
+  })
+  it('otra cuenta con el mismo correo sigue rechazada', async () => {
+    await seedJuan()
+    await assertFails(getDoc(doc(impostor(env), 'allowlist/juan@prov.com')))
+    await assertFails(getDoc(doc(impostor(env), 'config/app')))
+    await assertFails(setDoc(doc(impostor(env), 'sessions/j2'), newSession({ uid: 'otro-uid', email: 'juan@prov.com', name: 'Juan' })))
+  })
+  it('sin uid en la allowlist, una cuenta sin verificar sigue rechazada', async () => {
+    await assertFails(getDoc(doc(anaUnverified(env), 'allowlist/ana@x.com')))
+    await assertFails(getDoc(doc(anaUnverified(env), 'config/app')))
+  })
+  it('la cuenta de confianza no es admin ni escribe la allowlist', async () => {
+    await seedJuan()
+    await assertFails(getDoc(doc(juan(env), 'sessions/s1')))
+    await assertFails(setDoc(doc(juan(env), 'allowlist/juan@prov.com'), { addedAt: 1, addedBy: 'juan', uid: 'juan-uid' }))
+    await assertFails(setDoc(doc(juan(env), 'allowlist/otro@prov.com'), { addedAt: 1, addedBy: 'juan', uid: 'otro-uid' }))
+  })
+  it('el admin guarda el uid al crear la cuenta', async () => {
+    await assertSucceeds(setDoc(doc(admin(env), 'allowlist/nuevo@prov.com'), { addedAt: 1, addedBy: 'admin@x.com', uid: 'n-uid' }))
+  })
+})
+
 describe('toolBadges', () => {
   const seedBadge = () => env.withSecurityRulesDisabled(async (ctx) => {
     await setDoc(doc(ctx.firestore(), 'toolBadges/gantt'), { badge: 'new' })
