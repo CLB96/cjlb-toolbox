@@ -387,4 +387,43 @@ describe('VectorizrTool', () => {
       expect(qty.value).toBe('1')
     })
   })
+
+  describe('piezas (paso 4)', () => {
+    const mk = (id: string, name: string, contourPoints: typeof square) => ({ id, name, quantity: 1, contourPoints, paths: [] })
+    async function twoPieces() {
+      await seedStep4({ pieces: [mk('a', 'Pieza 1', square), mk('b', 'Pieza 2', square.slice(0, 2))], activePieceId: 'a' })
+      renderTool()
+      await inEditor()
+    }
+
+    it('muestra la pieza en trabajo y al elegir otra cambia todo', async () => {
+      await twoPieces()
+      expect(screen.getByText('Editando: Pieza 1')).toBeInTheDocument()
+      expect(screen.getByText('Puntos: 3')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Pieza 2' }))
+      expect(screen.getByText('Editando: Pieza 2')).toBeInTheDocument()
+      expect(screen.getByText('Puntos: 2')).toBeInTheDocument()
+    })
+
+    it('renombrar la activa actualiza la pestaña y el título', async () => {
+      await twoPieces()
+      fireEvent.change(screen.getByLabelText('Nombre de la pieza'), { target: { value: 'Frente' } })
+      expect(screen.getByRole('button', { name: 'Frente' })).toBeInTheDocument()
+      expect(screen.getByText('Editando: Frente')).toBeInTheDocument()
+    })
+
+    it('"+ Nueva pieza" añade una pieza vacía y la activa', async () => {
+      await twoPieces()
+      fireEvent.click(screen.getByRole('button', { name: '+ Nueva pieza' }))
+      expect(screen.getByText('Editando: Pieza 3')).toBeInTheDocument()
+      expect(screen.getByText('Puntos: 0')).toBeInTheDocument()
+    })
+
+    it('borrar la activa deja a la vecina; con una sola pieza no hay botón de borrar', async () => {
+      await twoPieces()
+      fireEvent.click(screen.getByRole('button', { name: 'Eliminar pieza 1' }))
+      expect(screen.getByText('Editando: Pieza 2')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Eliminar pieza/ })).not.toBeInTheDocument()
+    })
+  })
 })

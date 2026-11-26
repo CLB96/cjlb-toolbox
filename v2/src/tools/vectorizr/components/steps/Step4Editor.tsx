@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../../../../ui/Button'
 import { Dialog } from '../../../../ui/Dialog'
 import { toast } from '../../../../ui/toastStore'
@@ -9,6 +9,7 @@ import { downloadPdf } from '../../logic/exportPdf'
 import { downloadSvg } from '../../logic/exportSvg'
 import type { ContourPoint, SegmentType } from '../../types'
 import { EditorCanvas } from '../editor/EditorCanvas'
+import { PieceBar } from '../editor/PieceBar'
 import { PropertiesPanel } from '../editor/PropertiesPanel'
 import { StatusBar } from '../editor/StatusBar'
 import { Toolbar } from '../editor/Toolbar'
@@ -28,6 +29,7 @@ export function Step4Editor({ active }: { active: boolean }) {
   const contourPoints = useVectorizr((s) => s.contourPoints)
   const paths = useVectorizr((s) => s.paths)
   const zoom = useVectorizr((s) => s.zoom)
+  const activePieceId = useVectorizr((s) => s.activePieceId)
   const imageRotation = useVectorizr((s) => s.imageRotation)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -38,6 +40,7 @@ export function Step4Editor({ active }: { active: boolean }) {
   const [centerTrigger, setCenterTrigger] = useState(0)
 
   useEditorShortcuts(active)
+  useEffect(() => setSelectedId(null), [activePieceId])
 
   const allPaths = [...paths, ...(contourPoints.length > 1 ? [contourPoints] : [])]
   const totalPts = allPaths.reduce((a, p) => a + p.length, 0)
@@ -125,6 +128,8 @@ export function Step4Editor({ active }: { active: boolean }) {
         {imageRotation !== 0 && <span className="vz-pill">{imageRotation}°</span>}
         <Button onClick={() => setShowExport(true)}>{t('exportBtn')}</Button>
       </div>
+
+      <PieceBar />
 
       <div className="vz-ed">
         <Toolbar />

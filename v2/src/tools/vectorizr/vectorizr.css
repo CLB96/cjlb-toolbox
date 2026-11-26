@@ -127,6 +127,22 @@
 .vz-guide b { color: var(--info); }
 .vz-guide__title { font-weight: 600; color: var(--fg); }
 
+/* paso 4: piezas */
+.vz-piecebar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: var(--radius-lg); }
+.vz-piecebar__title { font-weight: 600; }
+.vz-piecebar__name, .vz-piecebar__qty {
+  background: var(--glass-dense); border: 1px solid var(--edge); color: var(--fg);
+  border-radius: var(--radius-sm); padding: 6px 8px; font: 13px var(--font-body);
+}
+.vz-piecebar__name { width: 150px; }
+.vz-piecebar__qty { width: 52px; }
+.vz-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.vz-tab { display: inline-flex; align-items: center; border: 1px solid var(--edge); border-radius: 999px; background: var(--glass-dense); color: var(--fg); }
+.vz-tab button { border: 0; background: transparent; color: inherit; font: 500 13px var(--font-body); padding: 5px 10px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; border-radius: 999px; }
+.vz-tab .vz-tab__x { padding: 5px 8px 5px 0; color: var(--fg-muted); }
+.vz-tab.is-on { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: var(--btn-fg); border-color: transparent; }
+.vz-tab--add { padding: 5px 12px; font: 500 13px var(--font-body); cursor: pointer; }
+
 /* paso 4 */
 .vz-ed { display: grid; grid-template-columns: 52px 1fr 220px; gap: 12px; min-height: var(--vz-canvas-h); }
 .vz-tools { padding: 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; border-radius: var(--radius-lg); }
