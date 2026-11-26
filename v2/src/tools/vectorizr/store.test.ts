@@ -1,5 +1,6 @@
 import { createVectorizrStore, piecesNow, resetInto, restoreInto, snapshotOf, THRESHOLD_LIMITS, type VectorizrSnapshot } from './store'
 import type { ContourPoint } from './types'
+import { newNotch } from './logic/notches'
 
 vi.mock('./logic/imageNormalize', () => ({
   loadImageFromBlob: vi.fn(async () => {
@@ -301,8 +302,8 @@ describe('piezas', () => {
 
   it('setPieces carga las piezas, activa la indicada y limpia el historial', () => {
     const api = createVectorizrStore()
-    const a = { id: 'p1', name: 'A', quantity: 1, contourPoints: [pt('a')], paths: [] }
-    const b = { id: 'p2', name: 'B', quantity: 2, contourPoints: [pt('b'), pt('c')], paths: [] }
+    const a = { id: 'p1', name: 'A', quantity: 1, contourPoints: [pt('a')], paths: [], notches: [] }
+    const b = { id: 'p2', name: 'B', quantity: 2, contourPoints: [pt('b'), pt('c')], paths: [], notches: [] }
     api.getState().setPieces([a, b], 'p2')
     expect(api.getState().activePieceId).toBe('p2')
     expect(api.getState().contourPoints.map((p) => p.id)).toEqual(['b', 'c'])
@@ -322,5 +323,46 @@ describe('detección en baja resolución', () => {
     expect(other.getState().lowRes).toBe(true)
     restoreInto(other, { ...snap, lowRes: undefined, imageBlob: null })
     expect(other.getState().lowRes).toBe(false)
+  })
+})
+
+describe('notches en piezas', () => {
+  it('addNotch, updateNotch y removeNotch actúan sobre la pieza activa', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    const n = newNotch(5, 0, 'V')
+    s().addNotch(n)
+    const active = () => s().pieces.find((p) => p.id === s().activePieceId)!
+    expect(active().notches).toEqual([n])
+    s().updateNotch(n.id, { type: 'T', flipped: true })
+    expect(active().notches[0]).toMatchObject({ type: 'T', flipped: true, x: 5 })
+    s().updateNotch(n.id, { depth: -4 })
+    expect(active().notches[0]!.depth).toBe(5)
+    s().removeNotch(n.id)
+    expect(active().notches).toEqual([])
+  })
+
+  it('cada pieza guarda sus propios notches y la sesión los conserva', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().addNotch(newNotch(1, 1))
+    s().addPiece()
+    expect(s().pieces[1]!.notches).toEqual([])
+    s().addNotch(newNotch(2, 2, 'I'))
+    const snap = snapshotOf(s())
+    expect(snap.pieces!.map((p) => p.notches.length)).toEqual([1, 1])
+    const other = createVectorizrStore()
+    restoreInto(other, { ...snap, imageBlob: null })
+    expect(other.getState().pieces.map((p) => p.notches.length)).toEqual([1, 1])
+  })
+
+  it('una pieza guardada sin notches se abre con una lista vacía', () => {
+    const api = createVectorizrStore()
+    const piece = { id: 'x', name: 'A', quantity: 1, contourPoints: [], paths: [] }
+    restoreInto(api, {
+      step: 4, imageBlob: null, imageWidth: 1, imageHeight: 1, scaleRef: null, scaleFactor: 1,
+      pieces: [piece as never], activePieceId: 'x', imageRotation: 0, detectionMethod: 0, threshold1: 50, threshold2: 150,
+    })
+    expect(api.getState().pieces[0]!.notches).toEqual([])
   })
 })

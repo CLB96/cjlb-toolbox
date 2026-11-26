@@ -3,7 +3,8 @@
 // detección del Paso 3 viven aquí para persistirlos (plan §4).
 import { createStore, type StoreApi } from 'zustand/vanilla'
 import { loadImageFromBlob } from './logic/imageNormalize'
-import type { AppStep, ContourPoint, ContourSnapshot, DetectionMethod, Piece, ScaleRef, ToolId } from './types'
+import type { AppStep, ContourPoint, ContourSnapshot, DetectionMethod, Notch, Piece, ScaleRef, ToolId } from './types'
+import { clampDepth } from './logic/notches'
 import { clampQuantity, newPiece } from './logic/pieces'
 
 /** Rangos de los sliders del original (Step3Vectorize.tsx:259-260). */
@@ -61,6 +62,9 @@ export interface VectorizrActions {
   removePiece(id: string): void
   renamePiece(id: string, name: string): void
   setPieceQuantity(id: string, q: number): void
+  addNotch(notch: Notch): void
+  updateNotch(id: string, patch: Partial<Omit<Notch, 'id'>>): void
+  removeNotch(id: string): void
   pushHistory(): void
   undo(): void
   redo(): void
@@ -136,6 +140,11 @@ export function piecesNow(s: Pick<VectorizrData, 'pieces' | 'activePieceId' | 'c
 /** Historial de deshacer con la pieza cargada como estado base (así su primera edición se puede deshacer). */
 const baseHistory = (points: ContourPoint[]) => ({ history: [{ points: points.map((p) => ({ ...p })) }], historyIndex: 0 })
 
+/** Estado con los notches de la pieza activa cambiados (no hay copia de trabajo: viven en `pieces`). */
+function withActiveNotches(s: Pick<VectorizrData, 'pieces' | 'activePieceId'>, change: (list: Notch[]) => Notch[]) {
+  return { pieces: s.pieces.map((p) => (p.id === s.activePieceId ? { ...p, notches: change(p.notches) } : p)) }
+}
+
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 /** Libera la object URL de una imagen que deja de usarse (loadImageFromBlob no la revoca). */
@@ -199,6 +208,10 @@ export function createVectorizrStore(): VectorizrApi {
     },
 
     renamePiece: (id, name) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, name } : p)) }),
+    addNotch: (notch) => set(withActiveNotches(get(), (list) => [...list, notch])),
+    updateNotch: (id, patch) =>
+      set(withActiveNotches(get(), (list) => list.map((n) => (n.id === id ? { ...n, ...patch, depth: clampDepth(patch.depth ?? n.depth) } : n)))),
+    removeNotch: (id) => set(withActiveNotches(get(), (list) => list.filter((n) => n.id !== id))),
     setPieceQuantity: (id, q) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, quantity: clampQuantity(q) } : p)) }),
 
     pushHistory: () => {
@@ -270,7 +283,7 @@ const isBlobLike = (v: unknown): v is Blob =>
 /** Piezas de un snapshot; uno antiguo (sin pieces) pasa a ser una sola pieza. */
 function restoredPieces(snap: VectorizrSnapshot, base: VectorizrData): { pieces: Piece[]; activePieceId: string } {
   if (Array.isArray(snap.pieces) && snap.pieces.length > 0) {
-    const pieces = snap.pieces.map((p) => ({ ...p, quantity: clampQuantity(p.quantity), paths: Array.isArray(p.paths) ? p.paths : [] }))
+    const pieces = snap.pieces.map((p) => ({ ...p, quantity: clampQuantity(p.quantity), paths: Array.isArray(p.paths) ? p.paths : [], notches: Array.isArray(p.notches) ? p.notches : [] }))
     return { pieces, activePieceId: pieces.some((p) => p.id === snap.activePieceId) ? snap.activePieceId! : pieces[0]!.id }
   }
   const piece = {

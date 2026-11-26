@@ -57,6 +57,19 @@ export interface ImagePoint {
 /** Estado del worker de OpenCV visto desde la UI. */
 export type OpencvStatus = 'idle' | 'loading' | 'ready' | 'error'
 
+export type NotchType = 'I' | 'V' | 'T'
+
+/** Notch visual (no se exporta): punto cualquiera que se dibuja pegado al contorno, hacia el interior. */
+export interface Notch {
+  id: string
+  x: number
+  y: number
+  type: NotchType
+  /** Profundidad en mm. */
+  depth: number
+  flipped: boolean
+}
+
 /** Una pieza de patrón: su contorno editable y los trazos guardados (agujeros, contornos interiores). */
 export interface Piece {
   id: string
@@ -64,4 +77,5 @@ export interface Piece {
   quantity: number
   contourPoints: ContourPoint[]
   paths: ContourPoint[][]
+  notches: Notch[]
 }

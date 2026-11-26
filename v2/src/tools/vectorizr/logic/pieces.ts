@@ -36,5 +36,5 @@ export function uniqueFileNames(labels: string[], ext: 'dxf' | 'svg' | 'pdf'): s
 let counter = 0
 export function newPiece(index: number, points: ContourPoint[] = []): Piece {
   counter += 1
-  return { id: `piece-${Date.now().toString(36)}-${counter}`, name: `Pieza ${index + 1}`, quantity: 1, contourPoints: points, paths: [] }
+  return { id: `piece-${Date.now().toString(36)}-${counter}`, name: `Pieza ${index + 1}`, quantity: 1, contourPoints: points, paths: [], notches: [] }
 }

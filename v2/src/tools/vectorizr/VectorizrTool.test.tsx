@@ -389,7 +389,7 @@ describe('VectorizrTool', () => {
   })
 
   describe('piezas (paso 4)', () => {
-    const mk = (id: string, name: string, contourPoints: typeof square) => ({ id, name, quantity: 1, contourPoints, paths: [] })
+    const mk = (id: string, name: string, contourPoints: typeof square) => ({ id, name, quantity: 1, contourPoints, paths: [], notches: [] })
     async function twoPieces() {
       await seedStep4({ pieces: [mk('a', 'Pieza 1', square), mk('b', 'Pieza 2', square.slice(0, 2))], activePieceId: 'a' })
       renderTool()
@@ -428,7 +428,7 @@ describe('VectorizrTool', () => {
   })
 
   describe('exportar con varias piezas', () => {
-    const mk = (id: string, name: string) => ({ id, name, quantity: 1, contourPoints: square, paths: [] })
+    const mk = (id: string, name: string) => ({ id, name, quantity: 1, contourPoints: square, paths: [], notches: [] })
     async function openExport() {
       await seedStep4({ pieces: [mk('a', 'Frente'), mk('b', 'Espalda'), mk('c', 'Manga')], activePieceId: 'a' })
       renderTool()

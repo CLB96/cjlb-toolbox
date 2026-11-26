@@ -5,6 +5,7 @@ import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
 import { allInOneArgs } from './exportPieces'
 import { lowResScale, scalePointsBack } from './lowRes'
+import { clampDepth, newNotch, notchGeometry, nearestOnContour } from './notches'
 import { clampQuantity, fileSafeName, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
@@ -100,14 +101,14 @@ describe('piezas: cantidad y nombres de archivo', () => {
     expect(uniqueFileNames(['A', 'a'], 'dxf')).toEqual(['A.dxf', 'a-2.dxf'])
   })
   it('pieceLabel usa el nombre recortado o Pieza N', () => {
-    const base = { id: 'i', quantity: 1, contourPoints: [], paths: [] }
+    const base = { id: 'i', quantity: 1, contourPoints: [], paths: [], notches: [] }
     expect(pieceLabel({ ...base, name: '  Frente ' }, 0)).toBe('Frente')
     expect(pieceLabel({ ...base, name: '' }, 2)).toBe('Pieza 3')
   })
 })
 
 describe('allInOneArgs (exportar todo en un archivo)', () => {
-  const piece = (id: string, contourPoints: ContourPoint[], paths: ContourPoint[][] = []) => ({ id, name: id, quantity: 1, contourPoints, paths })
+  const piece = (id: string, contourPoints: ContourPoint[], paths: ContourPoint[][] = []) => ({ id, name: id, quantity: 1, contourPoints, paths, notches: [] })
   const a = [p(0, 0), p(1, 0), p(1, 1)]
   const hole = [p(5, 5), p(6, 5), p(6, 6)]
   it('con una pieza da exactamente el contorno y los trazos de hoy', () => {
@@ -130,5 +131,40 @@ describe('baja resolución (solo para detectar)', () => {
     const pts = [{ x: 10, y: 20 }, { x: 100, y: 5 }]
     expect(scalePointsBack(pts, 0.5)).toEqual([{ x: 20, y: 40 }, { x: 200, y: 10 }])
     expect(scalePointsBack(pts, 1)).toBe(pts)
+  })
+})
+
+describe('notches (geometría)', () => {
+  const square = [p(0, 0), p(10, 0), p(10, 10), p(0, 10)]
+  const reversed = [...square].reverse()
+  it('nearestOnContour da el punto más cercano y la normal hacia el interior, en ambos sentidos', () => {
+    for (const poly of [square, reversed]) {
+      const n = nearestOnContour(poly, 5, -2)!
+      expect(n.x).toBeCloseTo(5)
+      expect(n.y).toBeCloseTo(0)
+      expect(n.nx).toBeCloseTo(0)
+      expect(n.ny).toBeCloseTo(1)
+      expect(n.dist).toBeCloseTo(2)
+    }
+    expect(nearestOnContour([p(0, 0)], 1, 1)).toBeNull()
+    expect(nearestOnContour([], 1, 1)).toBeNull()
+  })
+  it('notchGeometry: I, V y T hacia el interior; Voltear invierte; la profundidad va en mm / escala', () => {
+    const at = (type: 'I' | 'V' | 'T', extra = {}) => notchGeometry({ ...newNotch(5, 0, type), depth: 5, ...extra }, square, 1)!
+    expect(at('I')).toMatchObject({ base: { x: 5, y: 0 }, tip: { x: 5, y: 5 } })
+    const v = at('V')
+    expect(v.a!.x).toBeCloseTo(2.5)
+    expect(v.b!.x).toBeCloseTo(7.5)
+    expect(v.a!.y).toBeCloseTo(0)
+    const t = at('T')
+    expect(t.a!.y).toBeCloseTo(5)
+    expect(t.b!.x).toBeCloseTo(7.5)
+    expect(at('I', { flipped: true }).tip.y).toBeCloseTo(-5)
+    expect(notchGeometry({ ...newNotch(5, 0, 'I'), depth: 5 }, square, 0.5)!.tip.y).toBeCloseTo(10)
+    expect(notchGeometry({ ...newNotch(5, 0, 'I'), depth: 5 }, square, 0)!.tip.y).toBeCloseTo(5)
+    expect(notchGeometry(newNotch(5, 0), [p(0, 0)], 1)).toBeNull()
+  })
+  it('clampDepth corrige valores vacíos, cero, negativos o enormes', () => {
+    expect(['', 0, -3, 'x', 2.5, '7', 500].map(clampDepth)).toEqual([5, 5, 5, 5, 2.5, 7, 100])
   })
 })
