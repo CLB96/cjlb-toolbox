@@ -23,6 +23,7 @@ export function NotchMenu({ menu, onClose, onSelectNotch }: Props) {
     onClose()
   }
   const s = () => api.getState()
+  if (menu.kind === 'notch' && !notch) return null
 
   return (
     <div className="vz-notch-menu" role="menu" style={{ left: menu.x, top: menu.y }}>

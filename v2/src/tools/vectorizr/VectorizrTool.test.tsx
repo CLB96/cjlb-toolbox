@@ -532,6 +532,24 @@ describe('VectorizrTool', () => {
       expect(screen.getByText('Notches: 0')).toBeInTheDocument()
     })
 
+    it('el clic derecho sobre el propio menú no lo cierra', async () => {
+      await open()
+      rightClick(55, 12)
+      fireEvent.contextMenu(screen.getByRole('menuitem', { name: 'Añadir notch' }), { clientX: 300, clientY: 250 })
+      expect(screen.getByRole('menu')).toBeInTheDocument()
+    })
+
+    it('cambiar de pieza con un menú abierto lo cierra', async () => {
+      const mk = (id: string, name: string) => ({ id, name, quantity: 1, contourPoints: square, paths: [], notches: [] })
+      await seedStep4({ pieces: [mk('a', 'Pieza 1'), mk('b', 'Pieza 2')], activePieceId: 'a' })
+      renderTool()
+      await inEditor()
+      rightClick(55, 12)
+      expect(screen.getByRole('menu')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Pieza 2' }))
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    })
+
     it('la profundidad del panel se corrige a un valor válido y Escape cierra el menú', async () => {
       await open()
       await addAtTop()

@@ -54,6 +54,8 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
                 e.cancelBubble = true
                 const hit = nearestOnContour(api.getState().contourPoints, e.target.x(), e.target.y())
                 if (hit) api.getState().updateNotch(n.id, { x: hit.x, y: hit.y })
+                // si el punto no cambió, react-konva no mueve el nodo: se devuelve a la base dibujada
+                e.target.position({ x: hit?.x ?? g.base.x, y: hit?.y ?? g.base.y })
                 onSelect(n.id)
               }}
             />

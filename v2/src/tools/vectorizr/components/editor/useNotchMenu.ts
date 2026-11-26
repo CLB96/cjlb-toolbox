@@ -1,5 +1,5 @@
 import { useEffect, useState, type RefObject } from 'react'
-import { useVectorizrApi } from '../../VectorizrStoreProvider'
+import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { nearestOnContour, notchGeometry } from '../../logic/notches'
 import { activeNotches } from '../../store'
 import type { ImagePoint } from '../../types'
@@ -22,11 +22,20 @@ export function useNotchMenu(
 ) {
   const api = useVectorizrApi()
   const [menu, setMenu] = useState<NotchMenuState | null>(null)
+  const activePieceId = useVectorizr((s) => s.activePieceId)
+
+  // un menú abierto no debe sobrevivir a un cambio de pieza (su posición o su notch serían de otra)
+  useEffect(() => setMenu(null), [activePieceId])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
     const handler = (ev: MouseEvent) => {
+      // el clic derecho sobre el propio menú no se trata como un clic sobre el lienzo
+      if ((ev.target as Element | null)?.closest?.('.vz-notch-menu')) {
+        ev.preventDefault()
+        return
+      }
       const s = api.getState()
       const p = toImage(ev)
       const reach = REACH_PX / s.zoom
