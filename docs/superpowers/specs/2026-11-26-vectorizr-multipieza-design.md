@@ -29,9 +29,13 @@ Se agrega un botón **"Descarga individual"** en ese mismo diálogo. Abre la sel
 
 Con varias piezas, el navegador puede pedir permiso para descargar varios archivos a la vez. Un ZIP queda como alternativa si molesta (decisión del constructor).
 
-## Entrega 2: notches (solo visual)
-- Los notches siguen siendo parte del trazo, como hoy. No hay entidad de notch en la exportación y el DXF no cambia.
-- Se añade una **línea fantasma** visual en el editor, con menú de clic derecho al estilo NShot (añadir, mover, girar, voltear, tipo I/V/T, profundidad). Vive en `Pieza.notches` solo para mostrarse y guardarse con la sesión.
+## Entrega 2: notches (solo visual) — mockup aprobado: `odd/mockups/vectorizr-notches.html`
+- Los notches siguen siendo parte del trazo, como hoy. No hay entidad de notch en la exportación: DXF, SVG y PDF no cambian.
+- `Notch { id, x, y, type: 'I' | 'V' | 'T', depth (mm, 5 por defecto), flipped }`, guardado en `Pieza.notches` (visual, se guarda con la sesión). No entra al historial de deshacer.
+- Clic derecho sobre el contorno: menú "Añadir notch" (coloca el notch en el punto más cercano del contorno). Clic derecho sobre un notch: Eliminar, Voltear, I/V/T y Profundidad…; el notch seleccionado muestra tipo y profundidad en el panel lateral. Se mueve arrastrándolo.
+- Dibujo: línea fantasma amarilla y punteada hacia el interior de la pieza (normal del contorno; "Voltear" la invierte). El notch siempre se dibuja pegado al punto más cercano del contorno, así que si se editan los puntos no se descuadra.
+- Fuera de alcance: Rotar, Mover x,y y Añadir esquina de NShot.
+- Nota: el mockup decía que el menú contextual "ya existe"; no era cierto, el editor no tenía ninguno. Se crea aquí.
 
 ## Entrega 3: polilínea y paralelas
 Unir los segmentos de un contorno en una sola polilínea y generar líneas paralelas a una distancia dada. Se diseña con detalle después de la entrega 2.
