@@ -3,6 +3,7 @@ import { Button } from '../../../../ui/Button'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { THRESHOLD_LIMITS } from '../../store'
+import { lowResScale, scalePointsBack } from '../../logic/lowRes'
 import { clampQuantity, newPiece, pieceColor } from '../../logic/pieces'
 import type { ContourPoint, ImagePoint } from '../../types'
 import { useOpencv } from '../../worker/useOpencv'
@@ -38,6 +39,7 @@ export function Step3Vectorize() {
   const method = useVectorizr((s) => s.detectionMethod)
   const threshold1 = useVectorizr((s) => s.threshold1)
   const threshold2 = useVectorizr((s) => s.threshold2)
+  const lowRes = useVectorizr((s) => s.lowRes)
   const { detect, detectAll } = useOpencv()
 
   const [mode, setMode] = useState<Mode>('choose')
@@ -57,14 +59,22 @@ export function Step3Vectorize() {
     }
   }, [])
 
-  function getImageData(img: HTMLImageElement): ImageData {
+  /** Píxeles para el detector; `scale` < 1 es la copia reducida de baja resolución (la imagen no cambia). */
+  function getImageData(img: HTMLImageElement, scale = 1): ImageData {
+    const w = scale === 1 ? imageWidth : Math.max(1, Math.round(imageWidth * scale))
+    const h = scale === 1 ? imageHeight : Math.max(1, Math.round(imageHeight * scale))
     const offscreen = document.createElement('canvas')
-    offscreen.width = imageWidth
-    offscreen.height = imageHeight
+    offscreen.width = w
+    offscreen.height = h
     const ctx = offscreen.getContext('2d')
     if (!ctx) throw new Error('canvas 2d no disponible')
-    ctx.drawImage(img, 0, 0)
-    return ctx.getImageData(0, 0, imageWidth, imageHeight)
+    if (scale === 1) {
+      ctx.drawImage(img, 0, 0)
+    } else {
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, w, h)
+    }
+    return ctx.getImageData(0, 0, w, h)
   }
 
   /** M12: la detección se encola hasta que OpenCV esté listo; un error se muestra y el spinner termina. */
@@ -72,19 +82,20 @@ export function Step3Vectorize() {
     const img = api.getState().image?.image
     if (!img) return
     const id = ++requestRef.current
-    const { detectionMethod, threshold1: low, threshold2: high } = api.getState()
+    const { detectionMethod, threshold1: low, threshold2: high, lowRes: small } = api.getState()
+    const scale = small ? lowResScale(imageWidth, imageHeight) : 1
     setDetecting(true)
     setDetectError(false)
     try {
       const params = { method: detectionMethod, threshold1: low, threshold2: high }
       if (multiNow) {
-        const found = await detectAll(getImageData(img), params)
+        const found = await detectAll(getImageData(img, scale), params)
         if (aliveRef.current && id === requestRef.current) {
-          setRows(found.map((points, i) => ({ key: i, name: `Pieza ${i + 1}`, quantity: 1, points })))
+          setRows(found.map((points, i) => ({ key: i, name: `Pieza ${i + 1}`, quantity: 1, points: scalePointsBack(points, scale) })))
         }
       } else {
-        const pts = await detect(getImageData(img), params)
-        if (aliveRef.current && id === requestRef.current) setDetectedPoints(pts)
+        const pts = await detect(getImageData(img, scale), params)
+        if (aliveRef.current && id === requestRef.current) setDetectedPoints(scalePointsBack(pts, scale))
       }
     } catch {
       if (aliveRef.current && id === requestRef.current) setDetectError(true)
@@ -223,6 +234,18 @@ export function Step3Vectorize() {
               {t('multiPieces')}
             </label>
             {multi && <p className="vz-muted vz-small">{t('multiPiecesHint')}</p>}
+            <label className="vz-chk">
+              <input
+                type="checkbox"
+                checked={lowRes}
+                onChange={(e) => {
+                  api.getState().setLowRes(e.target.checked)
+                  void runDetection()
+                }}
+              />
+              {t('lowRes')}
+            </label>
+            {lowRes && <p className="vz-muted vz-small">{t('lowResHint')}</p>}
             <div className="vz-seg" role="group">
               <button type="button" className={method === 0 ? 'is-on' : ''} aria-pressed={method === 0} onClick={() => api.getState().setDetectionMethod(0)}>
                 {t('methodAuto')}

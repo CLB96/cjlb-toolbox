@@ -21,7 +21,8 @@ export function persistedChanged(s: VectorizrData, prev: VectorizrData): boolean
     s.imageRotation !== prev.imageRotation ||
     s.detectionMethod !== prev.detectionMethod ||
     s.threshold1 !== prev.threshold1 ||
-    s.threshold2 !== prev.threshold2
+    s.threshold2 !== prev.threshold2 ||
+    s.lowRes !== prev.lowRes
   )
 }
 

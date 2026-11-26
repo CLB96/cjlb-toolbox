@@ -43,6 +43,8 @@ export interface VectorizrData {
   detectionMethod: DetectionMethod
   threshold1: number
   threshold2: number
+  /** Detectar sobre una copia reducida (640 px); no cambia la imagen ni la resolución de los puntos. */
+  lowRes: boolean
 }
 
 export interface VectorizrActions {
@@ -68,6 +70,7 @@ export interface VectorizrActions {
   setImageRotation(r: number): void
   setExported(v: boolean): void
   setDetectionMethod(m: DetectionMethod): void
+  setLowRes(v: boolean): void
   /** M19: el umbral bajo queda siempre por debajo del alto. */
   setThreshold1(v: number): void
   setThreshold2(v: number): void
@@ -94,6 +97,7 @@ export interface VectorizrSnapshot {
   detectionMethod: DetectionMethod
   threshold1: number
   threshold2: number
+  lowRes?: boolean
 }
 
 export function initialData(): VectorizrData {
@@ -120,6 +124,7 @@ export function initialData(): VectorizrData {
     detectionMethod: 0,
     threshold1: 50,
     threshold2: 150,
+    lowRes: false,
   }
 }
 
@@ -221,6 +226,7 @@ export function createVectorizrStore(): VectorizrApi {
     setImageRotation: (imageRotation) => set({ imageRotation }),
     setExported: (exported) => set({ exported }),
     setDetectionMethod: (detectionMethod) => set({ detectionMethod }),
+    setLowRes: (lowRes) => set({ lowRes }),
 
     setThreshold1: (v) => {
       const { low } = THRESHOLD_LIMITS
@@ -251,6 +257,7 @@ export function snapshotOf(s: VectorizrData): VectorizrSnapshot {
     detectionMethod: s.detectionMethod,
     threshold1: s.threshold1,
     threshold2: s.threshold2,
+    lowRes: s.lowRes,
   }
 }
 
@@ -301,6 +308,7 @@ export function restoreInto(api: VectorizrApi, snap: VectorizrSnapshot): void {
     detectionMethod: snap.detectionMethod === 1 ? 1 : 0,
     threshold1: t1 < t2 ? t1 : base.threshold1,
     threshold2: t1 < t2 ? t2 : base.threshold2,
+    lowRes: snap.lowRes === true,
   })
   if (!blob) return
   loadImageFromBlob(blob).then(

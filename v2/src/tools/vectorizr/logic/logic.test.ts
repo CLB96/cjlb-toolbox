@@ -4,6 +4,7 @@ import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
 import { allInOneArgs } from './exportPieces'
+import { lowResScale, scalePointsBack } from './lowRes'
 import { clampQuantity, fileSafeName, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
@@ -115,5 +116,19 @@ describe('allInOneArgs (exportar todo en un archivo)', () => {
   it('con varias piezas pone los demás contornos y trazos en extra y omite los de menos de 2 puntos', () => {
     const b = [p(10, 0), p(11, 0), p(11, 1)]
     expect(allInOneArgs([piece('a', a, [hole]), piece('b', b), piece('c', [p(20, 0)])])).toEqual({ active: a, extra: [hole, b] })
+  })
+})
+
+describe('baja resolución (solo para detectar)', () => {
+  it('lowResScale limita el lado mayor a 640 px y nunca agranda', () => {
+    expect(lowResScale(960, 1280)).toBe(0.5)
+    expect(lowResScale(3024, 4032)).toBeCloseTo(640 / 4032, 10)
+    expect(lowResScale(480, 640)).toBe(1)
+    expect(lowResScale(400, 300)).toBe(1)
+  })
+  it('scalePointsBack devuelve los puntos al tamaño original; con escala 1 deja los mismos', () => {
+    const pts = [{ x: 10, y: 20 }, { x: 100, y: 5 }]
+    expect(scalePointsBack(pts, 0.5)).toEqual([{ x: 20, y: 40 }, { x: 200, y: 10 }])
+    expect(scalePointsBack(pts, 1)).toBe(pts)
   })
 })

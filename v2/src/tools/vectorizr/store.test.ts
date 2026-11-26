@@ -309,3 +309,18 @@ describe('piezas', () => {
     expect(api.getState().history).toHaveLength(1)
   })
 })
+
+describe('detección en baja resolución', () => {
+  it('arranca apagada, se enciende con setLowRes y se guarda y restaura', () => {
+    const api = createVectorizrStore()
+    expect(api.getState().lowRes).toBe(false)
+    api.getState().setLowRes(true)
+    const snap = snapshotOf(api.getState())
+    expect(snap.lowRes).toBe(true)
+    const other = createVectorizrStore()
+    restoreInto(other, { ...snap, imageBlob: null })
+    expect(other.getState().lowRes).toBe(true)
+    restoreInto(other, { ...snap, lowRes: undefined, imageBlob: null })
+    expect(other.getState().lowRes).toBe(false)
+  })
+})

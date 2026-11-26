@@ -470,4 +470,23 @@ describe('VectorizrTool', () => {
       expect(screen.queryByRole('button', { name: 'Descarga individual →' })).not.toBeInTheDocument()
     })
   })
+
+  describe('baja resolución (paso 3)', () => {
+    const drawImage = () => (fakeCtx as unknown as { drawImage: ReturnType<typeof vi.fn> }).drawImage
+    async function openAuto() {
+      await seedStep4({ step: 3, imageWidth: 1280, imageHeight: 960 })
+      renderTool()
+      fireEvent.click(await screen.findByRole('button', { name: /Detección automática/ }))
+      await screen.findByRole('button', { name: 'Confirmar (4 pts)' })
+    }
+
+    it('apagada detecta a tamaño completo; encendida detecta sobre una copia de 640 px de lado mayor', async () => {
+      await openAuto()
+      expect(drawImage()).not.toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480)
+      drawImage().mockClear()
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Baja resolución' }))
+      await waitFor(() => expect(drawImage()).toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480))
+      expect(detect).toHaveBeenCalledTimes(2)
+    })
+  })
 })
