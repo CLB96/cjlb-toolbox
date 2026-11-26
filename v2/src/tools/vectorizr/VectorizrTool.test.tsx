@@ -489,4 +489,63 @@ describe('VectorizrTool', () => {
       expect(detect).toHaveBeenCalledTimes(2)
     })
   })
+
+  describe('notches (paso 4)', () => {
+    const canvas = () => document.querySelector('.vz-editor-canvas') as HTMLElement
+    const rightClick = (x: number, y: number) => fireEvent.contextMenu(canvas(), { clientX: x, clientY: y })
+    async function open() {
+      await seedStep4()
+      renderTool()
+      await inEditor()
+    }
+    async function addAtTop() {
+      rightClick(55, 12)
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Añadir notch' }))
+    }
+
+    it('clic derecho sobre el contorno ofrece Añadir notch y deja el notch seleccionado en el panel', async () => {
+      await open()
+      await addAtTop()
+      expect(screen.getByText('Notch seleccionado')).toBeInTheDocument()
+      expect((screen.getByLabelText('Profundidad (mm)') as HTMLInputElement).value).toBe('5')
+      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
+    })
+
+    it('lejos del contorno no hay menú', async () => {
+      await open()
+      rightClick(300, 250)
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    })
+
+    it('el menú de un notch permite voltear, cambiar el tipo y eliminar', async () => {
+      await open()
+      await addAtTop()
+      rightClick(55, 10)
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'T-notch' }))
+      expect((screen.getByLabelText('Tipo') as HTMLSelectElement).value).toBe('T')
+      rightClick(55, 10)
+      expect(screen.getByRole('menuitemradio', { name: /T-notch/ })).toHaveAttribute('aria-checked', 'true')
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Voltear' }))
+      rightClick(55, 10)
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar' }))
+      expect(screen.queryByText('Notch seleccionado')).not.toBeInTheDocument()
+      expect(screen.getByText('Notches: 0')).toBeInTheDocument()
+    })
+
+    it('la profundidad del panel se corrige a un valor válido y Escape cierra el menú', async () => {
+      await open()
+      await addAtTop()
+      const depth = screen.getByLabelText('Profundidad (mm)') as HTMLInputElement
+      fireEvent.change(depth, { target: { value: '8' } })
+      fireEvent.blur(depth)
+      expect(depth.value).toBe('8')
+      fireEvent.change(depth, { target: { value: '' } })
+      fireEvent.blur(depth)
+      expect(depth.value).toBe('5')
+      rightClick(55, 10)
+      expect(screen.getByRole('menu')).toBeInTheDocument()
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    })
+  })
 })

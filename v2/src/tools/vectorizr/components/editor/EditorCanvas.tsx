@@ -1,6 +1,6 @@
 import type Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Layer, Line, Path, Stage, Text } from 'react-konva'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
@@ -8,10 +8,15 @@ import { buildPath } from '../../logic/contourPath'
 import { pxToMm } from '../../logic/scale'
 import type { ImagePoint } from '../../types'
 import { fitZoom } from '../fit'
+import { NotchLayer } from './NotchLayer'
+import { NotchMenu } from './NotchMenu'
+import { useNotchMenu } from './useNotchMenu'
 
 interface Props {
   selectedId: string | null
   onSelect: (id: string | null) => void
+  selectedNotchId: string | null
+  onSelectNotch: (id: string | null) => void
   onPointMove: (id: string, x: number, y: number) => void
   onAddPoint: (x: number, y: number) => void
   onDeletePoint: (id: string) => void
@@ -50,7 +55,7 @@ const CURSORS: Partial<Record<string, string>> = {
   zoom: 'zoom-in',
 }
 
-export function EditorCanvas({ selectedId, onSelect, onPointMove, onAddPoint, onDeletePoint, onToggleSegmentType, centerTrigger }: Props) {
+export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNotch, onPointMove, onAddPoint, onDeletePoint, onToggleSegmentType, centerTrigger }: Props) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const image = useVectorizr((s) => s.image)
@@ -72,6 +77,19 @@ export function EditorCanvas({ selectedId, onSelect, onPointMove, onAddPoint, on
   onAddPointRef.current = onAddPoint
   const blockClickRef = useRef(false)
   const fittedRef = useRef(false)
+
+  /** Posición de un evento del ratón en coordenadas de imagen (con zoom, desplazamiento y rotación). */
+  const toImage = useCallback(
+    (ev: MouseEvent): ImagePoint => {
+      const s = api.getState()
+      const rect = containerRef.current!.getBoundingClientRect()
+      const sx = (ev.clientX - rect.left - s.stagePos.x) / s.zoom
+      const sy = (ev.clientY - rect.top - s.stagePos.y) / s.zoom
+      return stageToImageCoords(sx, sy, s.imageWidth, s.imageHeight, s.imageRotation)
+    },
+    [api],
+  )
+  const { menu, closeMenu } = useNotchMenu(containerRef, toImage, onSelectNotch)
 
   // Medidas del contenedor (ResizeObserver si existe)
   useEffect(() => {
@@ -148,7 +166,10 @@ export function EditorCanvas({ selectedId, onSelect, onPointMove, onAddPoint, on
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
     if (e.target !== e.target.getStage()) return
-    if (activeToolId === 'select' || activeToolId === 'edit-point') onSelect(null)
+    if (activeToolId === 'select' || activeToolId === 'edit-point') {
+      onSelect(null)
+      onSelectNotch(null)
+    }
   }
 
   const m0 = measurePts[0]
@@ -224,6 +245,7 @@ export function EditorCanvas({ selectedId, onSelect, onPointMove, onAddPoint, on
                 />
               )
             })}
+            <NotchLayer selectedNotchId={selectedNotchId} onSelect={onSelectNotch} />
             {m0 && <Circle x={m0.x} y={m0.y} radius={4 / zoom} fill="#fbbf24" listening={false} />}
             {m0 && m1 && (
               <>
@@ -244,6 +266,7 @@ export function EditorCanvas({ selectedId, onSelect, onPointMove, onAddPoint, on
         </Layer>
       </Stage>
 
+      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} />}
       <div className="vz-overlay vz-overlay--zoom">{t('zoomHint', Math.round(zoom * 100))}</div>
       {activeToolId === 'measure' && (
         <div className="vz-overlay vz-overlay--measure">

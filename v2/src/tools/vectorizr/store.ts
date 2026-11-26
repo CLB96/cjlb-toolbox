@@ -140,6 +140,13 @@ export function piecesNow(s: Pick<VectorizrData, 'pieces' | 'activePieceId' | 'c
 /** Historial de deshacer con la pieza cargada como estado base (así su primera edición se puede deshacer). */
 const baseHistory = (points: ContourPoint[]) => ({ history: [{ points: points.map((p) => ({ ...p })) }], historyIndex: 0 })
 
+const NO_NOTCHES: Notch[] = []
+
+/** Notches de la pieza activa (siempre la misma lista vacía si no hay, para no provocar renders de más). */
+export function activeNotches(s: Pick<VectorizrData, 'pieces' | 'activePieceId'>): Notch[] {
+  return s.pieces.find((p) => p.id === s.activePieceId)?.notches ?? NO_NOTCHES
+}
+
 /** Estado con los notches de la pieza activa cambiados (no hay copia de trabajo: viven en `pieces`). */
 function withActiveNotches(s: Pick<VectorizrData, 'pieces' | 'activePieceId'>, change: (list: Notch[]) => Notch[]) {
   return { pieces: s.pieces.map((p) => (p.id === s.activePieceId ? { ...p, notches: change(p.notches) } : p)) }

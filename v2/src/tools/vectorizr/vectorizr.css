@@ -127,6 +127,16 @@
 .vz-guide b { color: var(--info); }
 .vz-guide__title { font-weight: 600; color: var(--fg); }
 
+/* notches */
+.vz-notch-menu {
+  position: absolute; z-index: 5; min-width: 170px; padding: 4px; border-radius: 8px;
+  background: #2b1d4d; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.vz-notch-menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: #efe9ff; font: 13px var(--font-body); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.vz-notch-menu button:hover, .vz-notch-menu button:focus-visible { background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); color: #160c2e; outline: none; }
+.vz-notch-menu hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 4px 0; }
+.vz-notch-panel { display: grid; gap: 8px; }
+
 /* exportar */
 .vz-opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--glass-dense); }
 .vz-opt input { accent-color: var(--accent-1); }

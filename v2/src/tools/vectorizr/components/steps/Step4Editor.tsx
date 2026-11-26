@@ -23,6 +23,7 @@ export function Step4Editor({ active }: { active: boolean }) {
   const imageRotation = useVectorizr((s) => s.imageRotation)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedNotchId, setSelectedNotchId] = useState<string | null>(null)
   const [showExport, setShowExport] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [confirmStart, setConfirmStart] = useState(false)
@@ -30,7 +31,10 @@ export function Step4Editor({ active }: { active: boolean }) {
   const [centerTrigger, setCenterTrigger] = useState(0)
 
   useEditorShortcuts(active)
-  useEffect(() => setSelectedId(null), [activePieceId])
+  useEffect(() => {
+    setSelectedId(null)
+    setSelectedNotchId(null)
+  }, [activePieceId])
 
   const allPaths = [...paths, ...(contourPoints.length > 1 ? [contourPoints] : [])]
   const totalPts = allPaths.reduce((a, p) => a + p.length, 0)
@@ -115,13 +119,15 @@ export function Step4Editor({ active }: { active: boolean }) {
         <EditorCanvas
           selectedId={selectedId}
           onSelect={setSelectedId}
+          selectedNotchId={selectedNotchId}
+          onSelectNotch={setSelectedNotchId}
           onPointMove={updatePoint}
           onAddPoint={addPoint}
           onDeletePoint={deletePoint}
           onToggleSegmentType={toggleSegmentType}
           centerTrigger={centerTrigger}
         />
-        <PropertiesPanel selectedId={selectedId} onSegmentTypeChange={changeSegmentType} />
+        <PropertiesPanel selectedId={selectedId} selectedNotchId={selectedNotchId} onSegmentTypeChange={changeSegmentType} />
       </div>
 
       <StatusBar />

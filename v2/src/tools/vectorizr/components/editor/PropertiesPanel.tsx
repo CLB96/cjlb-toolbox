@@ -1,17 +1,21 @@
 import { useVectorizr } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { pxToMm } from '../../logic/scale'
+import { activeNotches } from '../../store'
 import type { SegmentType } from '../../types'
+import { NotchPanel } from './NotchPanel'
 
 interface Props {
   selectedId: string | null
+  selectedNotchId: string | null
   onSegmentTypeChange: (id: string, type: SegmentType) => void
 }
 
-export function PropertiesPanel({ selectedId, onSegmentTypeChange }: Props) {
+export function PropertiesPanel({ selectedId, selectedNotchId, onSegmentTypeChange }: Props) {
   const { t } = useVzT()
   const contourPoints = useVectorizr((s) => s.contourPoints)
   const scaleFactor = useVectorizr((s) => s.scaleFactor)
+  const notchCount = useVectorizr((s) => activeNotches(s).length)
   const pt = contourPoints.find((p) => p.id === selectedId)
 
   // Igual que el original: cierra el lazo y mide en recto (bug #29 sin cambiar)
@@ -42,7 +46,9 @@ export function PropertiesPanel({ selectedId, onSegmentTypeChange }: Props) {
           </select>
         </label>
       )}
+      {selectedNotchId && <NotchPanel notchId={selectedNotchId} />}
       <div className="vz-props__totals">
+        <p className="vz-muted vz-small">{t('notchesCount', notchCount)}</p>
         <p className="vz-muted vz-small">{t('total', contourPoints.length)}</p>
         <p className="vz-muted vz-small">{t('length', pxToMm(totalLength, scaleFactor).toFixed(1))}</p>
       </div>
