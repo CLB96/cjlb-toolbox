@@ -1,27 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../../../ui/Button'
 import { Dialog } from '../../../../ui/Dialog'
-import { toast } from '../../../../ui/toastStore'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
-import { downloadDxf } from '../../logic/exportDxf'
-import { downloadPdf } from '../../logic/exportPdf'
-import { downloadSvg } from '../../logic/exportSvg'
+import type { ExportFormat } from '../../logic/exportPieces'
 import type { ContourPoint, SegmentType } from '../../types'
 import { EditorCanvas } from '../editor/EditorCanvas'
+import { ExportDialog } from '../editor/ExportDialog'
 import { PieceBar } from '../editor/PieceBar'
 import { PropertiesPanel } from '../editor/PropertiesPanel'
 import { StatusBar } from '../editor/StatusBar'
 import { Toolbar } from '../editor/Toolbar'
 import { useEditorShortcuts } from '../editor/useEditorShortcuts'
-
-type Format = 'DXF' | 'SVG' | 'PDF'
-
-export const EXPORT_FILENAMES: Record<Format, string> = {
-  DXF: 'vectorizr.dxf',
-  SVG: 'vectorizr.svg',
-  PDF: 'vectorizr.pdf',
-}
 
 export function Step4Editor({ active }: { active: boolean }) {
   const { t } = useVzT()
@@ -67,18 +57,7 @@ export function Step4Editor({ active }: { active: boolean }) {
     setSelectedId(null)
   }
 
-  async function doExport(format: Format) {
-    const { contourPoints: active, scaleFactor, paths: extra } = api.getState()
-    const filename = EXPORT_FILENAMES[format]
-    try {
-      if (format === 'DXF') downloadDxf(active, scaleFactor, extra, filename)
-      else if (format === 'SVG') downloadSvg(active, scaleFactor, extra, filename)
-      else await downloadPdf(active, scaleFactor, extra, filename)
-    } catch {
-      toast('error', t('errExport'))
-      return
-    }
-    setShowExport(false)
+  function onExported(format: ExportFormat) {
     setExportedFormat(format)
     api.getState().setExported(true)
     setShowSuccess(true)
@@ -163,18 +142,7 @@ export function Step4Editor({ active }: { active: boolean }) {
         </div>
       )}
 
-      <Dialog open={showExport} onClose={() => setShowExport(false)} title={t('exportTitle', allPaths.length)}>
-        <div className="vz-dialog-col">
-          <p className="vz-muted vz-small">{t('exportDesc', allPaths.length)}</p>
-          <Button onClick={() => void doExport('DXF')}>{t('exportDxf')}</Button>
-          <Button variant="ghost" onClick={() => void doExport('SVG')}>
-            {t('exportSvg')}
-          </Button>
-          <Button variant="ghost" onClick={() => void doExport('PDF')}>
-            {t('exportPdf')}
-          </Button>
-        </div>
-      </Dialog>
+      <ExportDialog open={showExport} onClose={() => setShowExport(false)} onDone={onExported} />
 
       <Dialog open={showSuccess} onClose={() => setShowSuccess(false)} title={t('successTitle')}>
         <div className="vz-success">

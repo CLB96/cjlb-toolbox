@@ -426,4 +426,48 @@ describe('VectorizrTool', () => {
       expect(screen.queryByRole('button', { name: /Eliminar pieza/ })).not.toBeInTheDocument()
     })
   })
+
+  describe('exportar con varias piezas', () => {
+    const mk = (id: string, name: string) => ({ id, name, quantity: 1, contourPoints: square, paths: [] })
+    async function openExport() {
+      await seedStep4({ pieces: [mk('a', 'Frente'), mk('b', 'Espalda'), mk('c', 'Manga')], activePieceId: 'a' })
+      renderTool()
+      await inEditor()
+      fireEvent.click(screen.getByRole('button', { name: '↓ Exportar' }))
+      return screen.getByRole('dialog')
+    }
+
+    it('todo en un archivo baja un solo vectorizr.dxf', async () => {
+      const dlg = await openExport()
+      fireEvent.click(within(dlg).getByRole('button', { name: '📐 DXF (AutoCAD / CNC)' }))
+      await screen.findByRole('dialog', { name: '¡Exportación exitosa!' })
+      expect(downloads).toEqual(['vectorizr.dxf'])
+    })
+
+    it('descarga individual: una pieza por archivo con su nombre', async () => {
+      const dlg = await openExport()
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Descarga individual →' }))
+      fireEvent.click(within(dlg).getByRole('checkbox', { name: 'Manga' }))
+      fireEvent.click(within(dlg).getByRole('button', { name: 'DXF (2)' }))
+      await screen.findByRole('dialog', { name: '¡Exportación exitosa!' })
+      expect(downloads).toEqual(['Frente.dxf', 'Espalda.dxf'])
+    })
+
+    it('sin selección los botones de formato están desactivados; Seleccionar todo los reactiva', async () => {
+      const dlg = await openExport()
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Descarga individual →' }))
+      fireEvent.click(within(dlg).getByRole('checkbox', { name: 'Seleccionar todo' }))
+      expect(within(dlg).getByRole('button', { name: 'SVG (0)' })).toBeDisabled()
+      fireEvent.click(within(dlg).getByRole('checkbox', { name: 'Seleccionar todo' }))
+      expect(within(dlg).getByRole('button', { name: 'SVG (3)' })).toBeEnabled()
+    })
+
+    it('con una sola pieza no hay descarga individual', async () => {
+      await seedStep4()
+      renderTool()
+      await inEditor()
+      fireEvent.click(screen.getByRole('button', { name: '↓ Exportar' }))
+      expect(screen.queryByRole('button', { name: 'Descarga individual →' })).not.toBeInTheDocument()
+    })
+  })
 })

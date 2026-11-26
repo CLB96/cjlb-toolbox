@@ -127,6 +127,10 @@
 .vz-guide b { color: var(--info); }
 .vz-guide__title { font-weight: 600; color: var(--fg); }
 
+/* exportar */
+.vz-opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--glass-dense); }
+.vz-opt input { accent-color: var(--accent-1); }
+
 /* paso 4: piezas */
 .vz-piecebar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: var(--radius-lg); }
 .vz-piecebar__title { font-weight: 600; }

@@ -3,6 +3,7 @@ import type { ContourPoint } from '../types'
 import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
+import { allInOneArgs } from './exportPieces'
 import { clampQuantity, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
@@ -92,5 +93,18 @@ describe('piezas: cantidad y nombres de archivo', () => {
     const base = { id: 'i', quantity: 1, contourPoints: [], paths: [] }
     expect(pieceLabel({ ...base, name: '  Frente ' }, 0)).toBe('Frente')
     expect(pieceLabel({ ...base, name: '' }, 2)).toBe('Pieza 3')
+  })
+})
+
+describe('allInOneArgs (exportar todo en un archivo)', () => {
+  const piece = (id: string, contourPoints: ContourPoint[], paths: ContourPoint[][] = []) => ({ id, name: id, quantity: 1, contourPoints, paths })
+  const a = [p(0, 0), p(1, 0), p(1, 1)]
+  const hole = [p(5, 5), p(6, 5), p(6, 6)]
+  it('con una pieza da exactamente el contorno y los trazos de hoy', () => {
+    expect(allInOneArgs([piece('a', a, [hole])])).toEqual({ active: a, extra: [hole] })
+  })
+  it('con varias piezas pone los demás contornos y trazos en extra y omite los de menos de 2 puntos', () => {
+    const b = [p(10, 0), p(11, 0), p(11, 1)]
+    expect(allInOneArgs([piece('a', a, [hole]), piece('b', b), piece('c', [p(20, 0)])])).toEqual({ active: a, extra: [hole, b] })
   })
 })
