@@ -128,6 +128,9 @@ export function piecesNow(s: Pick<VectorizrData, 'pieces' | 'activePieceId' | 'c
   return s.pieces.map((p) => (p.id === s.activePieceId ? { ...p, contourPoints: s.contourPoints, paths: s.paths } : p))
 }
 
+/** Historial de deshacer con la pieza cargada como estado base (así su primera edición se puede deshacer). */
+const baseHistory = (points: ContourPoint[]) => ({ history: [{ points: points.map((p) => ({ ...p })) }], historyIndex: 0 })
+
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 /** Libera la object URL de una imagen que deja de usarse (loadImageFromBlob no la revoca). */
@@ -161,7 +164,7 @@ export function createVectorizrStore(): VectorizrApi {
     setPieces: (pieces, activeId) => {
       if (pieces.length === 0) return
       const active = pieces.find((p) => p.id === activeId) ?? pieces[0]!
-      set({ pieces, activePieceId: active.id, contourPoints: active.contourPoints, paths: active.paths, history: [], historyIndex: -1 })
+      set({ pieces, activePieceId: active.id, contourPoints: active.contourPoints, paths: active.paths, ...baseHistory(active.contourPoints) })
     },
 
     switchPiece: (id) => {
@@ -170,13 +173,13 @@ export function createVectorizrStore(): VectorizrApi {
       const pieces = piecesNow(s)
       const target = pieces.find((p) => p.id === id)
       if (!target) return
-      set({ pieces, activePieceId: id, contourPoints: target.contourPoints, paths: target.paths, history: [], historyIndex: -1 })
+      set({ pieces, activePieceId: id, contourPoints: target.contourPoints, paths: target.paths, ...baseHistory(target.contourPoints) })
     },
 
     addPiece: () => {
       const pieces = piecesNow(get())
       const piece = newPiece(pieces.length)
-      set({ pieces: [...pieces, piece], activePieceId: piece.id, contourPoints: [], paths: [], history: [], historyIndex: -1 })
+      set({ pieces: [...pieces, piece], activePieceId: piece.id, contourPoints: [], paths: [], ...baseHistory([]) })
     },
 
     removePiece: (id) => {
@@ -187,7 +190,7 @@ export function createVectorizrStore(): VectorizrApi {
       const rest = pieces.filter((p) => p.id !== id)
       if (id !== s.activePieceId) return set({ pieces: rest })
       const next = rest[Math.min(index, rest.length - 1)]!
-      set({ pieces: rest, activePieceId: next.id, contourPoints: next.contourPoints, paths: next.paths, history: [], historyIndex: -1 })
+      set({ pieces: rest, activePieceId: next.id, contourPoints: next.contourPoints, paths: next.paths, ...baseHistory(next.contourPoints) })
     },
 
     renamePiece: (id, name) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, name } : p)) }),

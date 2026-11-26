@@ -13,16 +13,23 @@ export function clampQuantity(v: unknown): number {
 
 export const pieceLabel = (piece: Piece, index: number): string => piece.name.trim() || `Pieza ${index + 1}`
 
-export const fileSafeName = (label: string): string => label.replace(/[\/:*?"<>|]/g, '_')
+const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i
 
-/** Nombres de archivo válidos y únicos; los repetidos llevan -2, -3… */
+/** Nombre válido en Windows: sin \ / : * ? " < > | ni controles, sin puntos/espacios finales ni nombres reservados. */
+export function fileSafeName(label: string): string {
+  const clean = label.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/[. ]+$/, '')
+  return RESERVED.test(clean) ? `_${clean}` : clean
+}
+
+/** Nombres de archivo válidos y únicos (sin distinguir mayúsculas, como Windows); los repetidos llevan -2, -3… */
 export function uniqueFileNames(labels: string[], ext: 'dxf' | 'svg' | 'pdf'): string[] {
-  const used = new Map<string, number>()
+  const used = new Set<string>()
   return labels.map((label, i) => {
-    const base = fileSafeName(label.trim() || `Pieza-${i + 1}`)
-    const n = (used.get(base) ?? 0) + 1
-    used.set(base, n)
-    return `${n === 1 ? base : `${base}-${n}`}.${ext}`
+    const base = fileSafeName(label.trim() || `Pieza-${i + 1}`) || `Pieza-${i + 1}`
+    let name = base
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = `${base}-${n}`
+    used.add(name.toLowerCase())
+    return `${name}.${ext}`
   })
 }
 

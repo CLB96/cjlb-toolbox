@@ -147,7 +147,6 @@ export function Step3Vectorize() {
   function confirmPieces() {
     const s = api.getState()
     s.setPieces(rows.map((r, i) => ({ ...newPiece(i, toContour(r.points)), name: r.name, quantity: clampQuantity(r.quantity) })))
-    s.pushHistory()
     s.setStep(4)
   }
 

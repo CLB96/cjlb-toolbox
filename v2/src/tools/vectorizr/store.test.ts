@@ -244,8 +244,23 @@ describe('piezas', () => {
     s().pushHistory()
     s().switchPiece(s().pieces[0]!.id)
     expect(s().contourPoints.map((p) => p.id)).toEqual(['a', 'b', 'c'])
-    expect(s().history).toEqual([])
+    expect(s().history).toHaveLength(1)
+    expect(s().historyIndex).toBe(0)
     expect(piecesNow(s()).map((p) => p.contourPoints.length)).toEqual([3, 2])
+  })
+
+  it('la primera edición tras cambiar o añadir pieza se puede deshacer', () => {
+    const { s } = twoPieces()
+    s().switchPiece(s().pieces[0]!.id)
+    s().setContourPoints([pt('a', 5, 5), pt('b'), pt('c')])
+    s().pushHistory()
+    s().undo()
+    expect(s().contourPoints[0]).toMatchObject({ id: 'a', x: 0, y: 0 })
+    s().addPiece()
+    s().setContourPoints([pt('n')])
+    s().pushHistory()
+    s().undo()
+    expect(s().contourPoints).toEqual([])
   })
 
   it('removePiece de la activa activa a la vecina; con una sola pieza no hace nada', () => {
@@ -291,6 +306,6 @@ describe('piezas', () => {
     api.getState().setPieces([a, b], 'p2')
     expect(api.getState().activePieceId).toBe('p2')
     expect(api.getState().contourPoints.map((p) => p.id)).toEqual(['b', 'c'])
-    expect(api.getState().history).toEqual([])
+    expect(api.getState().history).toHaveLength(1)
   })
 })

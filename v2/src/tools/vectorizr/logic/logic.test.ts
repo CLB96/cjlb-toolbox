@@ -4,7 +4,7 @@ import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
 import { allInOneArgs } from './exportPieces'
-import { clampQuantity, pieceLabel, uniqueFileNames } from './pieces'
+import { clampQuantity, fileSafeName, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
 
@@ -88,6 +88,15 @@ describe('piezas: cantidad y nombres de archivo', () => {
   })
   it('uniqueFileNames sanea, desambigua y rellena vacíos', () => {
     expect(uniqueFileNames(['A', 'A', 'x/y', ''], 'dxf')).toEqual(['A.dxf', 'A-2.dxf', 'x_y.dxf', 'Pieza-4.dxf'])
+  })
+  it('fileSafeName quita la barra invertida, puntos finales y nombres reservados de Windows', () => {
+    expect(fileSafeName('a\\b')).toBe('a_b')
+    expect(fileSafeName('x. ')).toBe('x')
+    expect(fileSafeName('CON')).toBe('_CON')
+  })
+  it('uniqueFileNames no repite nombres aunque ya exista el sufijo ni distinguiendo mayúsculas', () => {
+    expect(uniqueFileNames(['a', 'a', 'a-2'], 'dxf')).toEqual(['a.dxf', 'a-2.dxf', 'a-2-2.dxf'])
+    expect(uniqueFileNames(['A', 'a'], 'dxf')).toEqual(['A.dxf', 'a-2.dxf'])
   })
   it('pieceLabel usa el nombre recortado o Pieza N', () => {
     const base = { id: 'i', quantity: 1, contourPoints: [], paths: [] }
