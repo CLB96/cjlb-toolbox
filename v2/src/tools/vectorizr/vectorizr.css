@@ -4,6 +4,7 @@
   --vz-rose: #e11d48;
   --vz-orange: #ea580c;
   --vz-ok-fg: #06231a;
+  --vz-canvas-h: max(470px, calc(100vh - 290px));
   display: grid;
   gap: 12px;
   position: relative;
@@ -45,11 +46,11 @@
 .vz-pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--glass-dense); color: var(--fg-muted); white-space: nowrap; }
 
 /* área de trabajo + panel lateral */
-.vz-work { display: grid; grid-template-columns: 1fr 260px; gap: 12px; min-height: 470px; }
+.vz-work { display: grid; grid-template-columns: 1fr 260px; gap: 12px; min-height: var(--vz-canvas-h); }
 .vz-work > :only-child { grid-column: 1 / -1; }
 .vz-canvas {
   background: var(--vz-canvas); border-radius: var(--radius-lg); border: 1px solid var(--edge);
-  position: relative; overflow: hidden; min-height: 470px; color: #efe9ff;
+  position: relative; overflow: hidden; min-height: var(--vz-canvas-h); color: #efe9ff;
 }
 .vz-canvas--scroll { overflow: auto; display: flex; }
 .vz-side { padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: var(--radius-lg); }
@@ -90,6 +91,18 @@
 }
 .vz-scale-line { position: absolute; height: 2px; background: var(--vz-rose); opacity: 0.85; transform-origin: 0 50%; }
 
+/* paso 3: varias piezas */
+.vz-chk { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+.vz-chk input { accent-color: var(--accent-1); width: 16px; height: 16px; }
+.vz-pieces-list { display: grid; gap: 6px; }
+.vz-piece-row { display: grid; grid-template-columns: 14px 1fr 52px 26px; gap: 6px; align-items: center; }
+.vz-piece-row input {
+  background: var(--glass-dense); border: 1px solid var(--edge); color: var(--fg);
+  border-radius: var(--radius-sm); padding: 6px 8px; font: 13px var(--font-body); width: 100%;
+}
+.vz-sw { width: 14px; height: 14px; border-radius: 4px; }
+.vz-x { border: 1px solid var(--edge); background: transparent; color: var(--fg-muted); border-radius: 6px; cursor: pointer; height: 26px; padding: 0; }
+
 /* paso 3 */
 .vz-choose { display: grid; justify-items: center; gap: 24px; padding: 32px 16px; }
 .vz-choose h2 { margin: 0; }
@@ -115,9 +128,9 @@
 .vz-guide__title { font-weight: 600; color: var(--fg); }
 
 /* paso 4 */
-.vz-ed { display: grid; grid-template-columns: 52px 1fr 220px; gap: 12px; min-height: 470px; }
+.vz-ed { display: grid; grid-template-columns: 52px 1fr 220px; gap: 12px; min-height: var(--vz-canvas-h); }
 .vz-tools { padding: 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; border-radius: var(--radius-lg); }
-.vz-editor-canvas { min-height: 470px; }
+.vz-editor-canvas { min-height: var(--vz-canvas-h); }
 .vz-props__totals { margin-top: auto; border-top: 1px solid var(--edge); padding-top: 12px; }
 .vz-overlay { position: absolute; font-size: 11px; padding: 3px 8px; border-radius: 999px; pointer-events: none; }
 .vz-overlay--zoom { bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.55); color: rgba(255, 255, 255, 0.75); }

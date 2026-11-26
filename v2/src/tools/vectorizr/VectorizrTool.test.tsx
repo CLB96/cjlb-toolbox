@@ -11,8 +11,9 @@ import { initialData, snapshotOf, type VectorizrSnapshot } from './store'
 import type { ContourPoint } from './types'
 
 const detect = vi.fn()
+const detectAll = vi.fn()
 vi.mock('./worker/useOpencv', () => ({
-  useOpencv: () => ({ status: 'ready', error: null, detect }),
+  useOpencv: () => ({ status: 'ready', error: null, detect, detectAll }),
 }))
 vi.mock('./worker/opencvClient', () => ({ preloadOpencv: vi.fn(), disposeOpencvClient: vi.fn() }))
 vi.mock('./logic/imageNormalize', () => ({
@@ -51,6 +52,7 @@ beforeEach(async () => {
   __resetI18nForTests()
   useToasts.setState({ toasts: [] })
   detect.mockReset()
+  detectAll.mockReset()
   detect.mockResolvedValue([
     { x: 10, y: 10 },
     { x: 100, y: 10 },
@@ -346,5 +348,43 @@ describe('VectorizrTool', () => {
     vi.useRealTimers()
     unmount()
     expect(disposeOpencvClient).toHaveBeenCalled()
+  })
+
+  describe('varias piezas (paso 3)', () => {
+    const sq = (o: number) => [{ x: o, y: 10 }, { x: o + 50, y: 10 }, { x: o + 50, y: 60 }, { x: o, y: 60 }]
+    async function openMulti() {
+      await seedStep4({ step: 3 })
+      renderTool()
+      fireEvent.click(await screen.findByRole('button', { name: /Detección automática/ }))
+      fireEvent.click(await screen.findByRole('checkbox', { name: 'Varias piezas' }))
+    }
+
+    it('lista una fila por contorno, deja quitar una y confirma como piezas', async () => {
+      detectAll.mockResolvedValue([sq(10), sq(100), sq(200)])
+      await openMulti()
+      expect(await screen.findAllByLabelText('Nombre de la pieza')).toHaveLength(3)
+      expect(screen.getAllByLabelText('Nombre de la pieza').map((i) => (i as HTMLInputElement).value)).toEqual(['Pieza 1', 'Pieza 2', 'Pieza 3'])
+      fireEvent.click(screen.getByRole('button', { name: 'Quitar pieza 2' }))
+      expect(screen.getAllByLabelText('Nombre de la pieza')).toHaveLength(2)
+      fireEvent.click(screen.getByRole('button', { name: 'Confirmar (2 piezas)' }))
+      await inEditor()
+      expect(screen.getByText('Puntos: 4')).toBeInTheDocument()
+    })
+
+    it('sin contornos avisa y no deja confirmar', async () => {
+      detectAll.mockResolvedValue([])
+      await openMulti()
+      expect(await screen.findByText('No se detectó ninguna pieza.')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Confirmar (0 piezas)' })).toBeDisabled()
+    })
+
+    it('la cantidad se corrige a un entero entre 1 y 999 al salir del campo', async () => {
+      detectAll.mockResolvedValue([sq(10)])
+      await openMulti()
+      const qty = (await screen.findByLabelText('Cantidad')) as HTMLInputElement
+      fireEvent.change(qty, { target: { value: '0' } })
+      fireEvent.blur(qty)
+      expect(qty.value).toBe('1')
+    })
   })
 })

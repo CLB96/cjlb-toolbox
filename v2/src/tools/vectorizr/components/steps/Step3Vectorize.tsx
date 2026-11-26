@@ -3,8 +3,10 @@ import { Button } from '../../../../ui/Button'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { THRESHOLD_LIMITS } from '../../store'
+import { clampQuantity, newPiece, pieceColor } from '../../logic/pieces'
 import type { ContourPoint, ImagePoint } from '../../types'
 import { useOpencv } from '../../worker/useOpencv'
+import { DetectedPieces, type DetectedRow } from './DetectedPieces'
 
 type Mode = 'choose' | 'auto' | 'manual'
 
@@ -36,13 +38,15 @@ export function Step3Vectorize() {
   const method = useVectorizr((s) => s.detectionMethod)
   const threshold1 = useVectorizr((s) => s.threshold1)
   const threshold2 = useVectorizr((s) => s.threshold2)
-  const { detect } = useOpencv()
+  const { detect, detectAll } = useOpencv()
 
   const [mode, setMode] = useState<Mode>('choose')
   const [detecting, setDetecting] = useState(false)
   const [detectError, setDetectError] = useState(false)
   const [detectedPoints, setDetectedPoints] = useState<ImagePoint[]>([])
   const [manualPoints, setManualPoints] = useState<ImagePoint[]>([])
+  const [multi, setMulti] = useState(false)
+  const [rows, setRows] = useState<DetectedRow[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const requestRef = useRef(0)
   const aliveRef = useRef(true)
@@ -64,7 +68,7 @@ export function Step3Vectorize() {
   }
 
   /** M12: la detección se encola hasta que OpenCV esté listo; un error se muestra y el spinner termina. */
-  async function runDetection() {
+  async function runDetection(multiNow = multi) {
     const img = api.getState().image?.image
     if (!img) return
     const id = ++requestRef.current
@@ -72,8 +76,16 @@ export function Step3Vectorize() {
     setDetecting(true)
     setDetectError(false)
     try {
-      const pts = await detect(getImageData(img), { method: detectionMethod, threshold1: low, threshold2: high })
-      if (aliveRef.current && id === requestRef.current) setDetectedPoints(pts)
+      const params = { method: detectionMethod, threshold1: low, threshold2: high }
+      if (multiNow) {
+        const found = await detectAll(getImageData(img), params)
+        if (aliveRef.current && id === requestRef.current) {
+          setRows(found.map((points, i) => ({ key: i, name: `Pieza ${i + 1}`, quantity: 1, points })))
+        }
+      } else {
+        const pts = await detect(getImageData(img), params)
+        if (aliveRef.current && id === requestRef.current) setDetectedPoints(pts)
+      }
     } catch {
       if (aliveRef.current && id === requestRef.current) setDetectError(true)
     } finally {
@@ -95,6 +107,18 @@ export function Step3Vectorize() {
     canvas.width = imageWidth
     canvas.height = imageHeight
     ctx.drawImage(image.image, 0, 0)
+    if (mode === 'auto' && multi) {
+      const lw = Math.max(2, imageWidth / 300)
+      rows.forEach((r, i) => {
+        ctx.beginPath()
+        r.points.forEach((p, j) => (j === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
+        ctx.closePath()
+        ctx.strokeStyle = pieceColor(i)
+        ctx.lineWidth = lw
+        ctx.stroke()
+      })
+      return
+    }
     const pts = mode === 'manual' ? manualPoints : detectedPoints
     if (pts.length > 1) {
       ctx.beginPath()
@@ -111,11 +135,18 @@ export function Step3Vectorize() {
       ctx.fillStyle = i === 0 && pts.length > 1 ? '#ea580c' : '#e11d48'
       ctx.fill()
     })
-  }, [detectedPoints, manualPoints, mode, image, imageWidth, imageHeight])
+  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight])
 
   function confirmPoints(pts: ImagePoint[]) {
     const s = api.getState()
     s.setContourPoints(toContour(pts))
+    s.pushHistory()
+    s.setStep(4)
+  }
+
+  function confirmPieces() {
+    const s = api.getState()
+    s.setPieces(rows.map((r, i) => ({ ...newPiece(i, toContour(r.points)), name: r.name, quantity: clampQuantity(r.quantity) })))
     s.pushHistory()
     s.setStep(4)
   }
@@ -181,6 +212,18 @@ export function Step3Vectorize() {
       <aside className="vz-side glass">
         {mode === 'auto' && (
           <>
+            <label className="vz-chk">
+              <input
+                type="checkbox"
+                checked={multi}
+                onChange={(e) => {
+                  setMulti(e.target.checked)
+                  void runDetection(e.target.checked)
+                }}
+              />
+              {t('multiPieces')}
+            </label>
+            {multi && <p className="vz-muted vz-small">{t('multiPiecesHint')}</p>}
             <div className="vz-seg" role="group">
               <button type="button" className={method === 0 ? 'is-on' : ''} aria-pressed={method === 0} onClick={() => api.getState().setDetectionMethod(0)}>
                 {t('methodAuto')}
@@ -232,9 +275,18 @@ export function Step3Vectorize() {
             <Button variant="ghost" onClick={() => void runDetection()} disabled={detecting}>
               {detecting ? t('detecting') : t('detectAgain')}
             </Button>
-            <Button onClick={() => confirmPoints(detectedPoints)} disabled={detectedPoints.length < 3}>
-              {t('confirmPts', detectedPoints.length)}
-            </Button>
+            {multi ? (
+              <>
+                <DetectedPieces rows={rows} onChange={setRows} />
+                <Button onClick={confirmPieces} disabled={rows.length === 0 || detecting}>
+                  {t('confirmPieces', rows.length)}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => confirmPoints(detectedPoints)} disabled={detectedPoints.length < 3}>
+                {t('confirmPts', detectedPoints.length)}
+              </Button>
+            )}
             {method === 1 && (
               <div className="vz-guide">
                 <p className="vz-guide__title">{t('guideTitle')}</p>
@@ -279,6 +331,8 @@ export function Step3Vectorize() {
             setMode('choose')
             setDetectedPoints([])
             setManualPoints([])
+            setRows([])
+            setMulti(false)
           }}
         >
           {t('changeMode')}
