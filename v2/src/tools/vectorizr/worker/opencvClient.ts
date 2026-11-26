@@ -22,6 +22,8 @@ export interface OpencvClient {
   preload(): void
   /** Detecta el contorno mayor. El buffer de `imageData` se transfiere: no reutilices ese ImageData. */
   detect(imageData: ImageData, params: DetectParams): Promise<ImagePoint[]>
+  /** Detecta todos los contornos (varias piezas), de izquierda a derecha. Mismo trato del buffer. */
+  detectAll(imageData: ImageData, params: DetectParams): Promise<ImagePoint[][]>
   /** Termina el worker, rechaza lo pendiente y vuelve a 'idle'. */
   dispose(): void
 }
@@ -30,7 +32,8 @@ interface Job {
   id: number
   imageData: ImageData
   params: DetectParams
-  resolve: (points: ImagePoint[]) => void
+  multi: boolean
+  resolve: (result: ImagePoint[] | ImagePoint[][]) => void
   reject: (err: Error) => void
 }
 
@@ -63,7 +66,7 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
     queue = rest
     inFlight = job
     const { data, width, height } = job.imageData
-    const msg: DetectRequest = { type: 'detect', id: job.id, data, width, height, ...job.params }
+    const msg: DetectRequest = { type: 'detect', id: job.id, data, width, height, ...job.params, ...(job.multi ? { multi: true } : {}) }
     worker.postMessage(msg, [data.buffer])
   }
 
@@ -96,9 +99,17 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
     const job = inFlight
     inFlight = null
     if (res.type === 'contour') job.resolve(res.points)
+    else if (res.type === 'contours') job.resolve(res.contours)
     else job.reject(new Error(res.message))
     pump()
   }
+
+  const enqueue = <T,>(imageData: ImageData, params: DetectParams, multi: boolean) =>
+    new Promise<T>((resolve, reject) => {
+      queue = [...queue, { id: nextId++, imageData, params, multi, resolve: resolve as Job['resolve'], reject }]
+      start()
+      pump()
+    })
 
   const start = () => {
     if (worker) return
@@ -119,13 +130,8 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
       return () => { listeners.delete(listener) }
     },
     preload: start,
-    detect(imageData, params) {
-      return new Promise<ImagePoint[]>((resolve, reject) => {
-        queue = [...queue, { id: nextId++, imageData, params, resolve, reject }]
-        start()
-        pump()
-      })
-    },
+    detect: (imageData, params) => enqueue<ImagePoint[]>(imageData, params, false),
+    detectAll: (imageData, params) => enqueue<ImagePoint[][]>(imageData, params, true),
     dispose() {
       teardown()
       failAll(DISPOSED)

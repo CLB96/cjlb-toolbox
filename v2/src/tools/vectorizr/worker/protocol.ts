@@ -12,6 +12,8 @@ export interface DetectRequest extends DetectParams {
   id: number
   width: number
   height: number
+  /** true: devuelve todos los contornos (respuesta 'contours'); si no, solo el mayor ('contour'). */
+  multi?: boolean
   /** Píxeles RGBA; su buffer se transfiere (M8), el ImageData original queda vacío. */
   data: Uint8ClampedArray
 }
@@ -28,6 +30,12 @@ export interface ContourResponse {
   points: ImagePoint[]
 }
 
+export interface ContoursResponse {
+  type: 'contours'
+  id: number
+  contours: ImagePoint[][]
+}
+
 /** Sin `id`: fallo al cargar OpenCV (fatal). Con `id`: falló esa detección (M12). */
 export interface ErrorResponse {
   type: 'error'
@@ -35,4 +43,4 @@ export interface ErrorResponse {
   message: string
 }
 
-export type WorkerResponse = ReadyResponse | ContourResponse | ErrorResponse
+export type WorkerResponse = ReadyResponse | ContourResponse | ContoursResponse | ErrorResponse

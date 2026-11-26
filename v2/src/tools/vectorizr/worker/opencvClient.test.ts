@@ -81,4 +81,19 @@ describe('opencvClient', () => {
     await expect(p).rejects.toThrow()
     expect(client.getSnapshot().status).toBe('idle')
   })
+
+  it('detectAll sends multi:true and resolves with the contours response; detect stays single', async () => {
+    const { client, workers } = setup()
+    client.preload(); workers[0].emit({ type: 'ready' })
+    const all = client.detectAll(img(), PARAMS)
+    const [{ msg }] = workers[0].detects()
+    expect(msg).toMatchObject({ multi: true })
+    workers[0].emit({ type: 'contours', id: msg.id, contours: [[{ x: 1, y: 1 }], [{ x: 2, y: 2 }]] })
+    await expect(all).resolves.toEqual([[{ x: 1, y: 1 }], [{ x: 2, y: 2 }]])
+    const one = client.detect(img(), PARAMS)
+    const sent = workers[0].detects()[1].msg as { multi?: boolean; id: number }
+    expect(sent.multi).toBeFalsy()
+    workers[0].emit({ type: 'contour', id: sent.id, points: [] })
+    await expect(one).resolves.toEqual([])
+  })
 })

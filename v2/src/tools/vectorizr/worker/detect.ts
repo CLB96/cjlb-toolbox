@@ -131,6 +131,58 @@ function detectOtsu(cv: Cv, blurred: Mat, minArea: number): ImagePoint[] {
   }
 }
 
+/** Todos los contornos de un binario con área mínima, con su borde izquierdo para ordenar. */
+function allPoints(cv: Cv, contours: Mat, minArea: number): ImagePoint[][] {
+  const found: { left: number; points: ImagePoint[] }[] = []
+  for (let i = 0; i < contours.size(); i++) {
+    if (areaAt(cv, contours, i) < minArea) continue
+    const points = approxPoints(cv, contours, i)
+    if (points.length > 2) found.push({ left: Math.min(...points.map((p) => p.x)), points })
+  }
+  return found.sort((a, b) => a.left - b.left).map((f) => f.points)
+}
+
+/** Polaridad de Otsu que da el contorno mayor (misma regla que detectOtsu); null si ninguna encuentra nada. */
+function allOtsu(cv: Cv, blurred: Mat, minArea: number): ImagePoint[][] | null {
+  const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(KERNEL, KERNEL))
+  let inv: Mat = null
+  let normal: Mat = null
+  try {
+    inv = otsuContours(cv, blurred, kernel, THRESH_BINARY_INV)
+    const invIdx = findLargestContour(cv, inv, minArea)
+    normal = otsuContours(cv, blurred, kernel, THRESH_BINARY)
+    const normIdx = findLargestContour(cv, normal, minArea)
+    if (invIdx < 0 && normIdx < 0) return null
+    const useInv = normIdx < 0 || (invIdx >= 0 && areaAt(cv, inv, invIdx) >= areaAt(cv, normal, normIdx))
+    return allPoints(cv, useInv ? inv : normal, minArea)
+  } finally {
+    inv?.delete(); normal?.delete(); kernel.delete()
+  }
+}
+
+/** Varias piezas: todos los contornos externos con el área mínima, de izquierda a derecha. */
+export function detectAll(cv: Cv, input: DetectInput): ImagePoint[][] {
+  const { imageData, method, threshold1, threshold2 } = input
+  const minArea = imageData.width * imageData.height * MIN_AREA_RATIO
+  const src = cv.matFromImageData(imageData)
+  const gray = new cv.Mat()
+  const blurred = new cv.Mat()
+  try {
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
+    cv.GaussianBlur(gray, blurred, new cv.Size(BLUR, BLUR), 0)
+    if (method === 1) {
+      const contours = cannyContours(cv, blurred, threshold1, threshold2)
+      try { return allPoints(cv, contours, minArea) } finally { contours.delete() }
+    }
+    const found = allOtsu(cv, blurred, minArea)
+    if (found) return found
+    const fallback = detectCanny(cv, blurred, 0, FALLBACK_CANNY[0], FALLBACK_CANNY[1])
+    return fallback.length > 0 ? [fallback] : []
+  } finally {
+    src.delete(); gray.delete(); blurred.delete()
+  }
+}
+
 export function detect(cv: Cv, input: DetectInput): ImagePoint[] {
   const { imageData, method, threshold1, threshold2 } = input
   const minArea = imageData.width * imageData.height * MIN_AREA_RATIO

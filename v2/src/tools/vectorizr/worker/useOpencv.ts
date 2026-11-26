@@ -8,6 +8,8 @@ export interface UseOpencv {
   error: string | null
   /** Rechaza con Error(message) si el worker falla. Transfiere el buffer de `imageData`. */
   detect(imageData: ImageData, params: DetectParams): Promise<ImagePoint[]>
+  /** Todos los contornos (varias piezas). */
+  detectAll(imageData: ImageData, params: DetectParams): Promise<ImagePoint[][]>
 }
 
 export function useOpencv(): UseOpencv {
@@ -17,5 +19,9 @@ export function useOpencv(): UseOpencv {
     (imageData: ImageData, params: DetectParams) => client.detect(imageData, params),
     [client],
   )
-  return { status, error, detect }
+  const detectAll = useCallback(
+    (imageData: ImageData, params: DetectParams) => client.detectAll(imageData, params),
+    [client],
+  )
+  return { status, error, detect, detectAll }
 }
