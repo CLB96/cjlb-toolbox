@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VectoriZr varias piezas · mockup</title>
+<style>
+:root, :root[data-theme='dark'] {
+  --bg: radial-gradient(ellipse at 70% 0%, #3b1a5e 0%, #160c2e 45%, #07061a 100%);
+  --fg: #efe9ff; --fg-muted: #b3a6d9; --glass: rgba(255,255,255,.07); --glass-dense: rgba(255,255,255,.12);
+  --edge: rgba(255,255,255,.16); --shadow: rgba(0,0,0,.35);
+  --accent-1: #d16bff; --accent-2: #6a7bff; --btn-fg: #160c2e; --ok: #7cf0c4; --info: #8fb4ff; --canvas: #141022;
+}
+:root[data-theme='light'] {
+  --bg: linear-gradient(160deg, #f6ecff 0%, #e4e2ff 55%, #d9ecff 100%);
+  --fg: #251a40; --fg-muted: #6d6290; --glass: rgba(255,255,255,.55); --glass-dense: rgba(255,255,255,.78);
+  --edge: rgba(255,255,255,.9); --shadow: rgba(90,60,160,.15);
+  --accent-1: #9b3fe0; --accent-2: #4a5fe8; --btn-fg: #fff; --ok: #0f7a56; --info: #2a4fc4; --canvas: #141022;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); background-attachment: fixed; color: var(--fg); font: 14px/1.45 system-ui, sans-serif; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 22px; }
+h2 { margin: 0 0 8px; font-size: 16px; font-weight: 500; }
+.note { padding: 8px 12px; border: 1px dashed var(--info); color: var(--info); border-radius: 8px; font-size: 12.5px; }
+.glass { background: var(--glass); border: 1px solid var(--edge); border-radius: 12px; box-shadow: 0 8px 30px var(--shadow); padding: 12px; }
+.screen { display: grid; gap: 10px; }
+.work { display: grid; grid-template-columns: 1fr 270px; gap: 12px; }
+.canvas { background: var(--canvas); border-radius: 12px; border: 1px solid var(--edge); min-height: 300px; }
+.canvas svg { width: 100%; height: 100%; display: block; }
+.side { display: grid; gap: 10px; align-content: start; }
+.chk { display: flex; gap: 8px; align-items: center; font-weight: 500; }
+.chk input { accent-color: var(--accent-1); width: 16px; height: 16px; }
+.cap { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--fg-muted); margin: 0; }
+.muted { color: var(--fg-muted); font-size: 12.5px; }
+.piece { display: grid; grid-template-columns: 14px 1fr 56px 26px; gap: 6px; align-items: center; }
+.sw { width: 14px; height: 14px; border-radius: 4px; }
+.piece input { background: var(--glass-dense); border: 1px solid var(--edge); color: var(--fg); border-radius: 8px; padding: 6px 8px; font: inherit; width: 100%; }
+.x { border: 1px solid var(--edge); background: transparent; color: var(--fg-muted); border-radius: 6px; cursor: pointer; height: 26px; }
+.btn { border: 0; border-radius: 8px; padding: 9px 14px; font: 500 14px system-ui; cursor: pointer; }
+.primary { color: var(--btn-fg); background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); }
+.ghost { background: transparent; color: var(--fg); border: 1px solid var(--edge); }
+.bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sp { flex: 1; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass-dense); color: var(--fg); font: 500 13px system-ui; cursor: pointer; display: flex; gap: 7px; align-items: center; }
+.tab.on { background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); color: var(--btn-fg); border-color: transparent; }
+.title { font-size: 15px; font-weight: 600; }
+.files { display: grid; gap: 4px; font-size: 12.5px; }
+.files code { background: var(--glass-dense); border-radius: 6px; padding: 2px 6px; }
+.dlg { max-width: 420px; display: grid; gap: 10px; }
+.opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--glass-dense); }
+.opt input { accent-color: var(--accent-1); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.theme { position: fixed; top: 10px; right: 10px; }
+</style>
+</head>
+<body>
+<button class="btn ghost theme" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">Tema</button>
+<div class="wrap">
+  <div class="note">Mockup · VectoriZr varias piezas (entrega 1). Dibujo ilustrativo; los textos definitivos se ajustan al original.</div>
+
+  <section class="screen">
+    <h2>Paso 3 · Vectorize, con "Varias piezas" encendida</h2>
+    <div class="work">
+      <div class="canvas">
+        <svg viewBox="0 0 640 300">
+          <rect x="20" y="20" width="600" height="260" fill="#fff"/>
+          <path d="M50 190 L120 60 L260 40 L290 120 L220 230 Z" fill="none" stroke="#d16bff" stroke-width="3"/>
+          <path d="M330 80 L470 50 L500 140 L380 170 Z" fill="none" stroke="#7cf0c4" stroke-width="3"/>
+          <path d="M360 210 L560 190 L585 250 L400 262 Z" fill="none" stroke="#ffd166" stroke-width="3"/>
+          <path d="M520 60 L590 60 L590 130 L520 130 Z" fill="none" stroke="#ff8a9b" stroke-width="3" stroke-dasharray="6 5"/>
+          <text x="150" y="150" font-size="14" fill="#d16bff" font-weight="700">Frente</text>
+          <text x="395" y="115" font-size="14" fill="#0f7a56" font-weight="700">Espalda</text>
+          <text x="440" y="235" font-size="14" fill="#9a6b00" font-weight="700">Manga</text>
+          <text x="527" y="100" font-size="12" fill="#b3263e">descartado</text>
+        </svg>
+      </div>
+      <aside class="glass side">
+        <div class="bar"><button class="btn ghost" style="padding:6px 12px">Automatic</button><button class="btn primary" style="padding:6px 12px">Semi-automatic</button></div>
+        <label class="chk"><input type="checkbox" checked> Varias piezas</label>
+        <p class="muted">Detecta todos los contornos de la foto. Quita los falsos con la X y nombra cada pieza.</p>
+        <p class="cap">Piezas detectadas · 3</p>
+        <div class="piece"><span class="sw" style="background:#d16bff"></span><input value="Frente"><input value="2" aria-label="Cantidad"><button class="x">×</button></div>
+        <div class="piece"><span class="sw" style="background:#7cf0c4"></span><input value="Espalda"><input value="1" aria-label="Cantidad"><button class="x">×</button></div>
+        <div class="piece"><span class="sw" style="background:#ffd166"></span><input value="Manga"><input value="2" aria-label="Cantidad"><button class="x">×</button></div>
+        <button class="btn primary">Confirm (3 piezas)</button>
+        <button class="btn ghost">← Change mode</button>
+      </aside>
+    </div>
+  </section>
+
+  <section class="screen">
+    <h2>Paso 4 · Edit, una pieza a la vez</h2>
+    <div class="glass bar">
+      <span class="title">Editando: Espalda</span>
+      <span class="sp"></span>
+      <div class="tabs">
+        <button class="tab"><span class="sw" style="background:#d16bff"></span>Frente</button>
+        <button class="tab on"><span class="sw" style="background:#7cf0c4"></span>Espalda</button>
+        <button class="tab"><span class="sw" style="background:#ffd166"></span>Manga</button>
+        <button class="tab">+ Nueva pieza</button>
+      </div>
+      <button class="btn primary">↓ Export</button>
+    </div>
+    <div class="work">
+      <div class="canvas">
+        <svg viewBox="0 0 640 300">
+          <rect x="20" y="20" width="600" height="260" fill="#fff" opacity=".96"/>
+          <path d="M130 80 L470 50 L520 150 L220 215 Z" fill="none" stroke="#4a7eff" stroke-width="3"/>
+          <g fill="#fff" stroke="#4a7eff" stroke-width="2"><circle cx="130" cy="80" r="6"/><circle cx="470" cy="50" r="6"/><circle cx="520" cy="150" r="6"/><circle cx="220" cy="215" r="6"/></g>
+          <text x="40" y="270" font-size="12" fill="#6d6290">Las otras piezas quedan guardadas; solo se ve la que editas.</text>
+        </svg>
+      </div>
+      <aside class="glass side">
+        <p class="cap">Pieza</p>
+        <div class="piece" style="grid-template-columns:1fr 56px"><input value="Espalda"><input value="1" aria-label="Cantidad"></div>
+        <p class="cap">Sin selección</p>
+        <p class="muted">Total: 4 pts · Longitud: 1010.7 mm</p>
+        <p class="cap">Al exportar (3 piezas)</p>
+        <div class="files"><span><code>Frente.dxf</code> <code>Frente.pdf</code> <code>Frente.svg</code></span><span><code>Espalda.dxf</code> …</span><span><code>Manga.dxf</code> …</span></div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="screen">
+    <h2>Exportar (diálogo actual, con el botón nuevo)</h2>
+    <div class="grid2">
+      <div class="glass dlg">
+        <b>Exportar 3 piezas</b>
+        <span class="muted">Todo en un archivo, como hoy.</span>
+        <button class="btn primary">Exportar DXF</button>
+        <button class="btn ghost">Exportar SVG</button>
+        <button class="btn ghost">Exportar PDF</button>
+        <button class="btn ghost" style="border-color:var(--accent-1)">Descarga individual →</button>
+      </div>
+      <div class="glass dlg">
+        <b>Descarga individual</b>
+        <span class="muted">Un archivo por pieza, con su nombre.</span>
+        <label class="opt"><input type="checkbox" checked> Seleccionar todo</label>
+        <label class="opt"><input type="checkbox" checked> Frente</label>
+        <label class="opt"><input type="checkbox" checked> Espalda</label>
+        <label class="opt"><input type="checkbox"> Manga</label>
+        <div class="bar"><button class="btn primary">DXF (2)</button><button class="btn ghost">SVG (2)</button><button class="btn ghost">PDF (2)</button></div>
+        <button class="btn ghost">← Volver</button>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
