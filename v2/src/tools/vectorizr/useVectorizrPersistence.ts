@@ -16,6 +16,8 @@ export function persistedChanged(s: VectorizrData, prev: VectorizrData): boolean
     s.scaleFactor !== prev.scaleFactor ||
     s.contourPoints !== prev.contourPoints ||
     s.paths !== prev.paths ||
+    s.pieces !== prev.pieces ||
+    s.activePieceId !== prev.activePieceId ||
     s.imageRotation !== prev.imageRotation ||
     s.detectionMethod !== prev.detectionMethod ||
     s.threshold1 !== prev.threshold1 ||

@@ -3,6 +3,7 @@ import type { ContourPoint } from '../types'
 import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
+import { clampQuantity, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
 
@@ -77,5 +78,19 @@ describe('loadImageFromBlob', () => {
     })
     await loadImageFromBlob(new Blob(['x']))
     expect(URL.revokeObjectURL).not.toHaveBeenCalled()
+  })
+})
+
+describe('piezas: cantidad y nombres de archivo', () => {
+  it('clampQuantity deja un entero entre 1 y 999', () => {
+    expect(['', 0, -3, 2.7, '5', 5000, 'x'].map(clampQuantity)).toEqual([1, 1, 1, 3, 5, 999, 1])
+  })
+  it('uniqueFileNames sanea, desambigua y rellena vacíos', () => {
+    expect(uniqueFileNames(['A', 'A', 'x/y', ''], 'dxf')).toEqual(['A.dxf', 'A-2.dxf', 'x_y.dxf', 'Pieza-4.dxf'])
+  })
+  it('pieceLabel usa el nombre recortado o Pieza N', () => {
+    const base = { id: 'i', quantity: 1, contourPoints: [], paths: [] }
+    expect(pieceLabel({ ...base, name: '  Frente ' }, 0)).toBe('Frente')
+    expect(pieceLabel({ ...base, name: '' }, 2)).toBe('Pieza 3')
   })
 })

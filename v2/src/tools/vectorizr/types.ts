@@ -56,3 +56,12 @@ export interface ImagePoint {
 
 /** Estado del worker de OpenCV visto desde la UI. */
 export type OpencvStatus = 'idle' | 'loading' | 'ready' | 'error'
+
+/** Una pieza de patrón: su contorno editable y los trazos guardados (agujeros, contornos interiores). */
+export interface Piece {
+  id: string
+  name: string
+  quantity: number
+  contourPoints: ContourPoint[]
+  paths: ContourPoint[][]
+}

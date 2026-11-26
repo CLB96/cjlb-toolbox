@@ -106,15 +106,19 @@ const square: ContourPoint[] = [
 ]
 
 async function seedStep4(extra: Partial<VectorizrSnapshot> = {}) {
+  const { contourPoints = square, paths = [], ...rest } = extra
+  const base = snapshotOf(initialData())
+  const piece = { ...base.pieces![0]!, contourPoints, paths }
   await saveSnapshot('u1', 'vectorizr', {
-    ...snapshotOf(initialData()),
+    ...base,
     step: 4,
     imageBlob: new NodeBlob(['j']) as unknown as Blob,
     imageWidth: 400,
     imageHeight: 300,
     scaleFactor: 0.5,
-    contourPoints: square,
-    ...extra,
+    pieces: [piece],
+    activePieceId: piece.id,
+    ...rest,
   })
 }
 const inEditor = () => waitFor(() => expect(screen.getByText('Herramienta: Seleccionar')).toBeInTheDocument())

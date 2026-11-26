@@ -1,4 +1,4 @@
-import { createVectorizrStore, resetInto, restoreInto, snapshotOf, THRESHOLD_LIMITS, type VectorizrSnapshot } from './store'
+import { createVectorizrStore, piecesNow, resetInto, restoreInto, snapshotOf, THRESHOLD_LIMITS, type VectorizrSnapshot } from './store'
 import type { ContourPoint } from './types'
 
 vi.mock('./logic/imageNormalize', () => ({
@@ -213,5 +213,84 @@ describe('object URLs de la imagen', () => {
     expect(revoke).toHaveBeenCalledWith('blob:a')
     api.getState().reset()
     expect(revoke).toHaveBeenCalledWith('blob:b')
+  })
+})
+
+describe('piezas', () => {
+  const twoPieces = () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().setContourPoints([pt('a'), pt('b'), pt('c')])
+    s().addPiece()
+    s().setContourPoints([pt('x'), pt('y')])
+    return { api, s }
+  }
+
+  it('arranca con una pieza vacía activa', () => {
+    const s = createVectorizrStore().getState()
+    expect(s.pieces).toHaveLength(1)
+    expect(s.activePieceId).toBe(s.pieces[0]!.id)
+  })
+
+  it('addPiece vuelca el trabajo a la pieza anterior y activa una nueva', () => {
+    const { s } = twoPieces()
+    expect(s().pieces).toHaveLength(2)
+    expect(s().pieces[0]!.contourPoints.map((p) => p.id)).toEqual(['a', 'b', 'c'])
+    expect(s().activePieceId).toBe(s().pieces[1]!.id)
+  })
+
+  it('switchPiece carga la otra pieza y deja el historial vacío', () => {
+    const { s } = twoPieces()
+    s().pushHistory()
+    s().switchPiece(s().pieces[0]!.id)
+    expect(s().contourPoints.map((p) => p.id)).toEqual(['a', 'b', 'c'])
+    expect(s().history).toEqual([])
+    expect(piecesNow(s()).map((p) => p.contourPoints.length)).toEqual([3, 2])
+  })
+
+  it('removePiece de la activa activa a la vecina; con una sola pieza no hace nada', () => {
+    const { s } = twoPieces()
+    s().removePiece(s().activePieceId)
+    expect(s().pieces).toHaveLength(1)
+    expect(s().contourPoints.map((p) => p.id)).toEqual(['a', 'b', 'c'])
+    s().removePiece(s().activePieceId)
+    expect(s().pieces).toHaveLength(1)
+  })
+
+  it('renamePiece y setPieceQuantity (cantidad entre 1 y 999)', () => {
+    const { s } = twoPieces()
+    const id = s().pieces[0]!.id
+    s().renamePiece(id, 'Frente')
+    s().setPieceQuantity(id, 0)
+    expect(s().pieces[0]).toMatchObject({ name: 'Frente', quantity: 1 })
+  })
+
+  it('snapshotOf guarda las piezas con el trabajo de la activa', () => {
+    const { s } = twoPieces()
+    const snap = snapshotOf(s())
+    expect(snap.pieces!.map((p) => p.contourPoints.length)).toEqual([3, 2])
+    expect(snap.activePieceId).toBe(s().activePieceId)
+  })
+
+  it('restoreInto con una sesión antigua (sin pieces) la abre como una sola pieza', () => {
+    const api = createVectorizrStore()
+    restoreInto(api, {
+      step: 4, imageBlob: null, imageWidth: 10, imageHeight: 10, scaleRef: null, scaleFactor: 1,
+      contourPoints: [pt('a'), pt('b'), pt('c')], paths: [[pt('h1'), pt('h2')]],
+      imageRotation: 0, detectionMethod: 0, threshold1: 50, threshold2: 150,
+    })
+    expect(api.getState().pieces).toHaveLength(1)
+    expect(api.getState().contourPoints).toHaveLength(3)
+    expect(api.getState().paths).toHaveLength(1)
+  })
+
+  it('setPieces carga las piezas, activa la indicada y limpia el historial', () => {
+    const api = createVectorizrStore()
+    const a = { id: 'p1', name: 'A', quantity: 1, contourPoints: [pt('a')], paths: [] }
+    const b = { id: 'p2', name: 'B', quantity: 2, contourPoints: [pt('b'), pt('c')], paths: [] }
+    api.getState().setPieces([a, b], 'p2')
+    expect(api.getState().activePieceId).toBe('p2')
+    expect(api.getState().contourPoints.map((p) => p.id)).toEqual(['b', 'c'])
+    expect(api.getState().history).toEqual([])
   })
 })

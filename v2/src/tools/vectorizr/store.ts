@@ -3,7 +3,8 @@
 // detección del Paso 3 viven aquí para persistirlos (plan §4).
 import { createStore, type StoreApi } from 'zustand/vanilla'
 import { loadImageFromBlob } from './logic/imageNormalize'
-import type { AppStep, ContourPoint, ContourSnapshot, DetectionMethod, ScaleRef, ToolId } from './types'
+import type { AppStep, ContourPoint, ContourSnapshot, DetectionMethod, Piece, ScaleRef, ToolId } from './types'
+import { clampQuantity, newPiece } from './logic/pieces'
 
 /** Rangos de los sliders del original (Step3Vectorize.tsx:259-260). */
 export const THRESHOLD_LIMITS = {
@@ -29,6 +30,9 @@ export interface VectorizrData {
   contourPoints: ContourPoint[]
   /** Trazos finalizados */
   paths: ContourPoint[][]
+  /** Piezas; la activa guarda aquí su última versión volcada, el trabajo vivo está en contourPoints/paths. */
+  pieces: Piece[]
+  activePieceId: string
   history: ContourSnapshot[]
   historyIndex: number
   activeToolId: ToolId
@@ -49,6 +53,12 @@ export interface VectorizrActions {
   addNewPath(): void
   removePathAt(index: number): void
   setPaths(paths: ContourPoint[][], active?: ContourPoint[]): void
+  setPieces(pieces: Piece[], activeId?: string): void
+  switchPiece(id: string): void
+  addPiece(): void
+  removePiece(id: string): void
+  renamePiece(id: string, name: string): void
+  setPieceQuantity(id: string, q: number): void
   pushHistory(): void
   undo(): void
   redo(): void
@@ -75,8 +85,11 @@ export interface VectorizrSnapshot {
   imageHeight: number
   scaleRef: ScaleRef | null
   scaleFactor: number
-  contourPoints: ContourPoint[]
-  paths: ContourPoint[][]
+  /** Sesiones antiguas (antes de las piezas): se leen como una sola pieza. */
+  contourPoints?: ContourPoint[]
+  paths?: ContourPoint[][]
+  pieces?: Piece[]
+  activePieceId?: string
   imageRotation: number
   detectionMethod: DetectionMethod
   threshold1: number
@@ -84,6 +97,7 @@ export interface VectorizrSnapshot {
 }
 
 export function initialData(): VectorizrData {
+  const first = newPiece(0)
   return {
     step: 1,
     image: null,
@@ -94,6 +108,8 @@ export function initialData(): VectorizrData {
     scaleFactor: 0,
     contourPoints: [],
     paths: [],
+    pieces: [first],
+    activePieceId: first.id,
     history: [],
     historyIndex: -1,
     activeToolId: 'select',
@@ -105,6 +121,11 @@ export function initialData(): VectorizrData {
     threshold1: 50,
     threshold2: 150,
   }
+}
+
+/** Piezas con la activa al día (su trabajo vivo volcado). */
+export function piecesNow(s: Pick<VectorizrData, 'pieces' | 'activePieceId' | 'contourPoints' | 'paths'>): Piece[] {
+  return s.pieces.map((p) => (p.id === s.activePieceId ? { ...p, contourPoints: s.contourPoints, paths: s.paths } : p))
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
@@ -136,6 +157,41 @@ export function createVectorizrStore(): VectorizrApi {
 
     removePathAt: (index) => set({ paths: get().paths.filter((_, i) => i !== index) }),
     setPaths: (paths, active = []) => set({ paths, contourPoints: active }),
+
+    setPieces: (pieces, activeId) => {
+      if (pieces.length === 0) return
+      const active = pieces.find((p) => p.id === activeId) ?? pieces[0]!
+      set({ pieces, activePieceId: active.id, contourPoints: active.contourPoints, paths: active.paths, history: [], historyIndex: -1 })
+    },
+
+    switchPiece: (id) => {
+      const s = get()
+      if (id === s.activePieceId) return
+      const pieces = piecesNow(s)
+      const target = pieces.find((p) => p.id === id)
+      if (!target) return
+      set({ pieces, activePieceId: id, contourPoints: target.contourPoints, paths: target.paths, history: [], historyIndex: -1 })
+    },
+
+    addPiece: () => {
+      const pieces = piecesNow(get())
+      const piece = newPiece(pieces.length)
+      set({ pieces: [...pieces, piece], activePieceId: piece.id, contourPoints: [], paths: [], history: [], historyIndex: -1 })
+    },
+
+    removePiece: (id) => {
+      const s = get()
+      const pieces = piecesNow(s)
+      const index = pieces.findIndex((p) => p.id === id)
+      if (pieces.length < 2 || index < 0) return
+      const rest = pieces.filter((p) => p.id !== id)
+      if (id !== s.activePieceId) return set({ pieces: rest })
+      const next = rest[Math.min(index, rest.length - 1)]!
+      set({ pieces: rest, activePieceId: next.id, contourPoints: next.contourPoints, paths: next.paths, history: [], historyIndex: -1 })
+    },
+
+    renamePiece: (id, name) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, name } : p)) }),
+    setPieceQuantity: (id, q) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, quantity: clampQuantity(q) } : p)) }),
 
     pushHistory: () => {
       const { contourPoints, history, historyIndex } = get()
@@ -186,8 +242,8 @@ export function snapshotOf(s: VectorizrData): VectorizrSnapshot {
     imageHeight: s.imageHeight,
     scaleRef: s.scaleRef,
     scaleFactor: s.scaleFactor,
-    contourPoints: s.contourPoints,
-    paths: s.paths,
+    pieces: piecesNow(s),
+    activePieceId: s.activePieceId,
     imageRotation: s.imageRotation,
     detectionMethod: s.detectionMethod,
     threshold1: s.threshold1,
@@ -201,6 +257,20 @@ const isStep = (v: unknown): v is AppStep => v === 1 || v === 2 || v === 3 || v 
 const isBlobLike = (v: unknown): v is Blob =>
   v instanceof Blob || (typeof v === 'object' && v !== null && typeof (v as Blob).size === 'number' && typeof (v as Blob).slice === 'function')
 
+/** Piezas de un snapshot; uno antiguo (sin pieces) pasa a ser una sola pieza. */
+function restoredPieces(snap: VectorizrSnapshot, base: VectorizrData): { pieces: Piece[]; activePieceId: string } {
+  if (Array.isArray(snap.pieces) && snap.pieces.length > 0) {
+    const pieces = snap.pieces.map((p) => ({ ...p, quantity: clampQuantity(p.quantity), paths: Array.isArray(p.paths) ? p.paths : [] }))
+    return { pieces, activePieceId: pieces.some((p) => p.id === snap.activePieceId) ? snap.activePieceId! : pieces[0]!.id }
+  }
+  const piece = {
+    ...base.pieces[0]!,
+    contourPoints: Array.isArray(snap.contourPoints) ? snap.contourPoints : [],
+    paths: Array.isArray(snap.paths) ? snap.paths : [],
+  }
+  return { pieces: [piece], activePieceId: piece.id }
+}
+
 /**
  * Aplica un snapshot; la imagen se reconstruye en segundo plano desde el Blob.
  * Sin imagen (o si no se puede cargar) se vuelve al Paso 1.
@@ -210,6 +280,8 @@ export function restoreInto(api: VectorizrApi, snap: VectorizrSnapshot): void {
   const blob = isBlobLike(snap.imageBlob) ? snap.imageBlob : null
   const t1 = Number.isFinite(snap.threshold1) ? snap.threshold1 : base.threshold1
   const t2 = Number.isFinite(snap.threshold2) ? snap.threshold2 : base.threshold2
+  const restored = restoredPieces(snap, base)
+  const active = restored.pieces.find((p) => p.id === restored.activePieceId) ?? restored.pieces[0]!
   api.setState({
     ...base,
     step: blob && isStep(snap.step) ? snap.step : 1,
@@ -218,8 +290,10 @@ export function restoreInto(api: VectorizrApi, snap: VectorizrSnapshot): void {
     imageHeight: snap.imageHeight ?? 0,
     scaleRef: snap.scaleRef ?? null,
     scaleFactor: snap.scaleFactor ?? 0,
-    contourPoints: Array.isArray(snap.contourPoints) ? snap.contourPoints : [],
-    paths: Array.isArray(snap.paths) ? snap.paths : [],
+    pieces: restored.pieces,
+    activePieceId: active.id,
+    contourPoints: active.contourPoints,
+    paths: active.paths,
     imageRotation: snap.imageRotation ?? 0,
     detectionMethod: snap.detectionMethod === 1 ? 1 : 0,
     threshold1: t1 < t2 ? t1 : base.threshold1,
