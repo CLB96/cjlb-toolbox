@@ -37,8 +37,8 @@ Con varias piezas, el navegador puede pedir permiso para descargar varios archiv
 - Fuera de alcance: Rotar, Mover x,y y Añadir esquina de NShot.
 - Nota: el mockup decía que el menú contextual "ya existe"; no era cierto, el editor no tenía ninguno. Se crea aquí.
 
-## Entrega 3: polilínea y paralelas
-Unir los segmentos de un contorno en una sola polilínea y generar líneas paralelas a una distancia dada. Se diseña con detalle después de la entrega 2.
+## Entrega 3: cancelada (2026-11-26)
+La polilínea y las líneas paralelas se cancelaron por decisión del dueño: cada contorno ya sale en el DXF como una sola polilínea cerrada y funciona bien en AutoCAD, así que no hace falta unir segmentos, y sin eso las paralelas tampoco.
 
 ## Objetivos / no objetivos
 - Objetivos: varias piezas por foto, nombres y cantidades, sin romper sesiones guardadas ni la exportación actual.
