@@ -9,6 +9,7 @@ import type { ContourPoint, ImagePoint } from '../../types'
 import { useOpencv } from '../../worker/useOpencv'
 import { Icon } from '../icons'
 import { DetectedPieces, type DetectedRow } from './DetectedPieces'
+import { useCanvasZoom } from './useCanvasZoom'
 
 type Mode = 'choose' | 'auto' | 'manual'
 
@@ -51,6 +52,9 @@ export function Step3Vectorize() {
   const [multi, setMulti] = useState(false)
   const [rows, setRows] = useState<DetectedRow[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const zoom = useCanvasZoom(frameRef, mode === 'manual')
+  const zoomScale = zoom.scale
   const requestRef = useRef(0)
   const aliveRef = useRef(true)
   useEffect(() => {
@@ -138,16 +142,16 @@ export function Step3Vectorize() {
       pts.slice(1).forEach((p) => ctx.lineTo(p.x, p.y))
       ctx.closePath()
       ctx.strokeStyle = '#4a7eff'
-      ctx.lineWidth = Math.max(2, imageWidth / 300)
+      ctx.lineWidth = Math.max(2, imageWidth / 300) / zoomScale
       ctx.stroke()
     }
     pts.forEach((p, i) => {
       ctx.beginPath()
-      ctx.arc(p.x, p.y, Math.max(4, imageWidth / 200), 0, Math.PI * 2)
+      ctx.arc(p.x, p.y, Math.max(4, imageWidth / 200) / zoomScale, 0, Math.PI * 2)
       ctx.fillStyle = i === 0 && pts.length > 1 ? '#ea580c' : '#e11d48'
       ctx.fill()
     })
-  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight])
+  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight, zoomScale])
 
   function confirmPoints(pts: ImagePoint[]) {
     const s = api.getState()
@@ -164,6 +168,7 @@ export function Step3Vectorize() {
 
   function handleCanvasClick(e: MouseEvent<HTMLCanvasElement>) {
     if (mode !== 'manual') return
+    if (zoom.consumeDrag()) return
     const coords = canvasClickToImageCoords(e, imageWidth, imageHeight)
     if (!coords) return
     // Cierra el contorno si el clic cae a menos de 18 px (pantalla) del primer punto
@@ -206,13 +211,27 @@ export function Step3Vectorize() {
 
   return (
     <div className="vz-work">
-      <div className="vz-canvas">
+      <div className="vz-canvas" ref={frameRef}>
         <canvas
           ref={canvasRef}
           className="vz-detect-canvas"
-          style={{ cursor: mode === 'manual' ? 'crosshair' : 'default' }}
+          style={{ cursor: mode === 'manual' ? 'crosshair' : 'default', ...(mode === 'manual' ? zoom.style : {}) }}
           onClick={handleCanvasClick}
+          {...(mode === 'manual' ? zoom.handlers : {})}
         />
+        {mode === 'manual' && (
+          <div className="vz-zoombar glass" role="group">
+            <button type="button" aria-label={t('zoomOut')} title={t('zoomOut')} onClick={zoom.zoomOut} disabled={zoom.scale <= 1}>
+              −
+            </button>
+            <button type="button" className="vz-zoombar__pct" onClick={zoom.reset} disabled={zoom.scale <= 1}>
+              {Math.round(zoom.scale * 100)}%
+            </button>
+            <button type="button" aria-label={t('zoomIn')} title={t('zoomIn')} onClick={zoom.zoomIn}>
+              +
+            </button>
+          </div>
+        )}
         {detecting && (
           <div className="vz-spinner-wrap" role="status">
             <div className="vz-spinner" />

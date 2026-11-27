@@ -235,3 +235,7 @@
 .vz-ib--danger:hover { border-color: var(--error); }
 .vz-ib--danger .vz-ico .a { stroke: var(--error); }
 .vz-tab .vz-ico { width: 14px; height: 14px; }
+.vz-zoombar { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px; z-index: 2; }
+.vz-zoombar button { min-width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; color: var(--fg); font: 600 16px var(--font-body); cursor: pointer; }
+.vz-zoombar button:disabled { opacity: 0.4; cursor: default; }
+.vz-zoombar__pct { font-size: 12px !important; padding: 0 6px; }
