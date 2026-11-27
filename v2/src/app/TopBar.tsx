@@ -7,6 +7,7 @@ import { TOOLS } from '../tools/registry'
 import type { ToolDef } from '../tools/types'
 import type { Route } from './routes'
 import type { BarMode } from './useHeaderMode'
+import { useElasticMenu } from './useElasticMenu'
 import './header.css'
 
 type Props = {
@@ -23,8 +24,11 @@ export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOO
   const { resolved, setMode } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const barRef = useRef<HTMLElement>(null)
+  const shapeRef = useRef<SVGSVGElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const isCircle = mode === 'col'
   const open = menuOpen && isCircle
+  useElasticMenu(open, isCircle, { shape: shapeRef, content: contentRef })
 
   // el menú del círculo se cierra con Escape, al tocar fuera o al elegir una herramienta
   useEffect(() => {
@@ -60,6 +64,18 @@ export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOO
       className={`topbar glass topbar--${mode}${open ? ' topbar--open' : ''}`}
       data-mode={mode}
     >
+      <svg ref={shapeRef} className="topbar__shape" aria-hidden="true">
+        <defs>
+          <linearGradient id="topbar-shape-gradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="var(--accent-1)" />
+            <stop offset="1" stopColor="var(--accent-2)" />
+          </linearGradient>
+        </defs>
+        <g transform="translate(-1 -1)">
+          <path className="topbar__shape-grad" fill="url(#topbar-shape-gradient)" />
+          <path className="topbar__shape-solid" />
+        </g>
+      </svg>
       <button
         type="button"
         className="topbar__orb"
@@ -71,7 +87,7 @@ export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOO
       >
         <img src={resolved === 'dark' ? '/logo-dark.png' : '/logo-light.png'} alt="CJLB" height={32} />
       </button>
-      <div className="topbar__full">
+      <div ref={contentRef} className="topbar__full">
         <Tabs
           items={items}
           value={route}
