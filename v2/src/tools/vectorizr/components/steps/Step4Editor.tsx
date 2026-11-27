@@ -12,6 +12,7 @@ import { PieceBar } from '../editor/PieceBar'
 import { StatusBar } from '../editor/StatusBar'
 import { Toolbar } from '../editor/Toolbar'
 import { isTyping, useEditorShortcuts } from '../editor/useEditorShortcuts'
+import { ExpandButton } from '../../../../ui/ExpandButton'
 
 export function Step4Editor({ active }: { active: boolean }) {
   const { t } = useVzT()
@@ -92,10 +93,14 @@ export function Step4Editor({ active }: { active: boolean }) {
           {t('backStep3')}
         </Button>
         <span className="vz-pill">{t('pathsCount', allPaths.length, totalPts)}</span>
-        <Button variant="ghost" onClick={handleAddNewPath} disabled={contourPoints.length < 2} title={t('newPathTitle')}>
-          <Icon name="path" inline />
-          {t('newPath')}
-        </Button>
+        <ExpandButton
+          className="btn btn--ghost"
+          icon={<Icon name="path" inline />}
+          label={t('newPath')}
+          onClick={handleAddNewPath}
+          disabled={contourPoints.length < 2}
+          title={t('newPathTitle')}
+        />
         <span className="vz-spacer" />
         <Button variant="ghost" onClick={() => setCenterTrigger((c) => c + 1)} title={t('fitTitle')}>
           <Icon name="fit" inline />

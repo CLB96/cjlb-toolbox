@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type PointerEvent, type ReactNode } from 'react'
+import { useFingerDent } from './useFingerDent'
 import './expandButton.css'
+import './fingerDent.css'
 
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   label: string
@@ -19,6 +21,10 @@ const TOUCH_OPEN_MS = 1500
  */
 export function ExpandButton({ label, icon, className = '', onPointerEnter, onPointerLeave, onPointerDown, onFocus, onBlur, ...rest }: Props) {
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLButtonElement>(null)
+  // si es un botón principal, también hunde su contorno bajo el dedo
+  const primary = /btn--primary/.test(className)
+  useFingerDent(ref, primary)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
 
@@ -28,6 +34,7 @@ export function ExpandButton({ label, icon, className = '', onPointerEnter, onPo
 
   return (
     <button
+      ref={ref}
       type="button"
       className={`xb${open ? ' xb--open' : ''} ${className}`.trim()}
       onPointerEnter={(e: PointerEvent<HTMLButtonElement>) => {
@@ -58,6 +65,7 @@ export function ExpandButton({ label, icon, className = '', onPointerEnter, onPo
     >
       <span className="xb__icon">{glyph}</span>
       <span className="xb__label">{text}</span>
+      {primary && <span className="btn__ring" aria-hidden="true" />}
     </button>
   )
 }

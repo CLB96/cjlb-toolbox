@@ -69,7 +69,9 @@ export function QuantityPanel() {
         )}
       </fieldset>
       <hr className="qn-sep" />
-      <Button className="qn-generate" disabled={busy} onClick={() => void generate()}>{t(busy ? 'running' : 'generate')}</Button>
+      <Button className="qn-generate" status={busy ? 'loading' : 'idle'} onClick={() => void generate()}>
+        {t('generate')}
+      </Button>
       <p className="qn-feedback" role="status" data-kind={message.kind}>
         {isQnKey(message.key) ? t(message.key, message.values) : message.key}
       </p>

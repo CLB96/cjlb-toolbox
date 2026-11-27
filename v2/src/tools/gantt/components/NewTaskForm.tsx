@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button } from '../../../ui/Button'
 import { toast } from '../../../ui/toastStore'
 import { useGantt, useGanttApi } from '../GanttStoreProvider'
 import { useGanttT } from '../i18n'
@@ -7,6 +6,7 @@ import { addDays, fmtDate } from '../logic/dates'
 import type { ParentOption } from '../logic/tree'
 import type { Status } from '../logic/types'
 import { Panel } from './Panel'
+import { ExpandButton } from '../../../ui/ExpandButton'
 
 const FORM_STATUSES: { value: Status; key: 'statusPend' | 'statusProg' | 'statusDone' | 'statusBloc' }[] = [
   { value: 'pend', key: 'statusPend' },
@@ -107,9 +107,7 @@ export function NewTaskForm({ today, parents, disabled }: Props) {
             disabled={disabled}
             onChange={(e) => setComment(e.target.value)}
           />
-          <Button onClick={add} disabled={disabled}>
-            {t('formBtnAdd')}
-          </Button>
+          <ExpandButton className="btn btn--primary" label={t('formBtnAdd')} onClick={add} disabled={disabled} />
         </div>
         <div className="gt-tip">{t('formTip')}</div>
       </div>

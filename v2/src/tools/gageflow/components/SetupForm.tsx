@@ -3,6 +3,7 @@ import { errorFormTexto, useGageflowT, type GageflowKey } from '../i18n'
 import { Button } from '../../../ui/Button'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { LIMITES_FORM, type CampoEstudio } from '../logic/estudioForm'
+import { ExpandButton } from '../../../ui/ExpandButton'
 
 interface CampoProps {
   etiqueta: string
@@ -109,9 +110,11 @@ export function SetupForm() {
                 onClick={() => api.getState().quitarOperador(i)}>×</Button>
             </span>
           ))}
-          <Button variant="ghost" onClick={() => api.getState().agregarOperador()}>
-            + {t('agregarOperador')}
-          </Button>
+          <ExpandButton
+            className="btn btn--ghost"
+            label={`+ ${t('agregarOperador')}`}
+            onClick={() => api.getState().agregarOperador()}
+          />
         </div>
         {errorDe('operadores') && <span className="gf-error" role="alert">{errorDe('operadores')}</span>}
       </div>
