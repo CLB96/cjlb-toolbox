@@ -38,6 +38,8 @@ export interface VectorizrData {
   history: ContourSnapshot[]
   historyIndex: number
   activeToolId: ToolId
+  /** Tras «Nuevo trazo»: cada clic agrega un vértice al final (trazo a clic); cambiar de herramienta o pieza lo apaga. */
+  drawingPath: boolean
   zoom: number
   stagePos: { x: number; y: number }
   imageRotation: number
@@ -127,6 +129,7 @@ export function initialData(): VectorizrData {
     history: [],
     historyIndex: -1,
     activeToolId: 'select',
+    drawingPath: false,
     zoom: 1,
     stagePos: { x: 0, y: 0 },
     imageRotation: 0,
@@ -194,6 +197,8 @@ export function createVectorizrStore(): VectorizrApi {
         contourPoints: [],
         history: [],
         historyIndex: -1,
+        drawingPath: true,
+        activeToolId: 'add-point',
         // los notches del trazo que se guarda se quedan pegados a él, no siguen al trazo nuevo
         pieces: get().pieces.map((p) =>
           p.id === id ? { ...p, notches: p.notches.map((n) => (n.pathIndex === undefined ? { ...n, pathIndex: paths.length } : n)) } : p,
@@ -222,7 +227,7 @@ export function createVectorizrStore(): VectorizrApi {
     setPieces: (pieces, activeId) => {
       if (pieces.length === 0) return
       const active = pieces.find((p) => p.id === activeId) ?? pieces[0]!
-      set({ pieces, activePieceId: active.id, contourPoints: active.contourPoints, paths: active.paths, ...baseHistory(active.contourPoints) })
+      set({ drawingPath: false, pieces, activePieceId: active.id, contourPoints: active.contourPoints, paths: active.paths, ...baseHistory(active.contourPoints) })
     },
 
     switchPiece: (id) => {
@@ -231,13 +236,13 @@ export function createVectorizrStore(): VectorizrApi {
       const pieces = piecesNow(s)
       const target = pieces.find((p) => p.id === id)
       if (!target) return
-      set({ pieces, activePieceId: id, contourPoints: target.contourPoints, paths: target.paths, ...baseHistory(target.contourPoints) })
+      set({ drawingPath: false, pieces, activePieceId: id, contourPoints: target.contourPoints, paths: target.paths, ...baseHistory(target.contourPoints) })
     },
 
     addPiece: () => {
       const pieces = piecesNow(get())
       const piece = newPiece(pieces.length)
-      set({ pieces: [...pieces, piece], activePieceId: piece.id, contourPoints: [], paths: [], ...baseHistory([]) })
+      set({ drawingPath: false, pieces: [...pieces, piece], activePieceId: piece.id, contourPoints: [], paths: [], ...baseHistory([]) })
     },
 
     removePiece: (id) => {
@@ -248,7 +253,7 @@ export function createVectorizrStore(): VectorizrApi {
       const rest = pieces.filter((p) => p.id !== id)
       if (id !== s.activePieceId) return set({ pieces: rest })
       const next = rest[Math.min(index, rest.length - 1)]!
-      set({ pieces: rest, activePieceId: next.id, contourPoints: next.contourPoints, paths: next.paths, ...baseHistory(next.contourPoints) })
+      set({ drawingPath: false, pieces: rest, activePieceId: next.id, contourPoints: next.contourPoints, paths: next.paths, ...baseHistory(next.contourPoints) })
     },
 
     renamePiece: (id, name) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, name } : p)) }),
@@ -290,7 +295,7 @@ export function createVectorizrStore(): VectorizrApi {
       set({ contourPoints: history[historyIndex + 1]!.points, historyIndex: historyIndex + 1 })
     },
 
-    setActiveTool: (activeToolId) => set({ activeToolId }),
+    setActiveTool: (activeToolId) => set({ activeToolId, drawingPath: false }),
     setZoom: (zoom) => set({ zoom }),
     setStagePos: (stagePos) => set({ stagePos }),
     setImageRotation: (imageRotation) => set({ imageRotation }),

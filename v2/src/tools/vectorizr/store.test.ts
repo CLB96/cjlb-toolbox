@@ -111,6 +111,21 @@ describe('store de VectoriZr (port de appStore)', () => {
     expect(notches[0]!.pathIndex).toBe(0)
   })
 
+  it('addNewPath activa el trazo a clic con Nuevo punto y cambiar de herramienta o pieza lo apaga', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().setContourPoints([pt('a'), pt('b')])
+    s().addNewPath()
+    expect(s().drawingPath).toBe(true)
+    expect(s().activeToolId).toBe('add-point')
+    s().setActiveTool('add-point')
+    expect(s().drawingPath).toBe(false)
+    s().setContourPoints([pt('c'), pt('d')])
+    s().addNewPath()
+    s().addPiece()
+    expect(s().drawingPath).toBe(false)
+  })
+
   it('addNewPath con menos de 2 puntos no hace nada', () => {
     const api = createVectorizrStore()
     api.getState().setContourPoints([pt('a')])

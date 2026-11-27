@@ -64,7 +64,12 @@ export function Step4Editor({ active }: { active: boolean }) {
   const current = () => api.getState().contourPoints
 
   const updatePoint = (id: string, x: number, y: number) => edit(current().map((p) => (p.id === id ? { ...p, x, y } : p)))
-  const addPoint = (x: number, y: number) => edit(insertPointOnContour(current(), x, y, Date.now().toString()))
+  /** «Nuevo punto» entra en el tramo más cercano; tras «Nuevo trazo» cada clic es un vértice nuevo al final. */
+  const addPoint = (x: number, y: number) => {
+    const id = Date.now().toString()
+    if (api.getState().drawingPath) edit([...current(), { id, x, y, type: 'line' }])
+    else edit(insertPointOnContour(current(), x, y, id))
+  }
   const toggleSegmentType = (id: string) =>
     edit(current().map((p) => (p.id === id ? { ...p, type: p.type === 'line' ? 'bezier' : 'line' } : p)))
   function deletePoint(id: string) {
