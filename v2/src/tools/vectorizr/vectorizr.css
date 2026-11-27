@@ -142,7 +142,6 @@
 .vz-notch-menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: #efe9ff; font: 13px var(--font-body); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 .vz-notch-menu button:hover, .vz-notch-menu button:focus-visible { background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); color: #160c2e; outline: none; }
 .vz-notch-menu hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 4px 0; }
-.vz-notch-panel { display: grid; gap: 8px; }
 
 /* exportar */
 .vz-opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--glass-dense); }
@@ -168,9 +167,7 @@
 .vz-ed { display: grid; grid-template-columns: 52px 1fr 220px; gap: 12px; min-height: var(--vz-canvas-h); }
 .vz-tools { padding: 8px; display: flex; flex-direction: column; gap: 6px; align-items: center; border-radius: var(--radius-lg); }
 .vz-editor-canvas { min-height: var(--vz-canvas-h); }
-.vz-props__totals { margin-top: auto; border-top: 1px solid var(--edge); padding-top: 12px; }
 .vz-overlay { position: absolute; font-size: 11px; padding: 3px 8px; border-radius: 999px; pointer-events: none; }
-.vz-overlay--zoom { bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.55); color: rgba(255, 255, 255, 0.75); }
 .vz-overlay--keys { top: 10px; right: 10px; background: rgba(0, 0, 0, 0.45); color: rgba(255, 255, 255, 0.55); }
 .vz-overlay--measure { bottom: 10px; right: 10px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); color: #fbbf24; }
 .vz-status { display: flex; gap: 16px; padding: 7px 14px; font-size: 12px; color: var(--fg-muted); flex-wrap: wrap; border-radius: var(--radius-lg); }
