@@ -57,9 +57,7 @@ function GapcheckBody({ toolId }: Props) {
     }
   }
 
-  const onExport = () => {
-    void exportGapcheckPng(api.getState(), lang, chartCanvas.current)
-  }
+  const onExport = () => exportGapcheckPng(api.getState(), lang, chartCanvas.current)
 
   const onRestore = async (id: string) => {
     await restoreVersion(id)

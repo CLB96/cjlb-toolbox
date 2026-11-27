@@ -13,7 +13,7 @@ import { PlanSection } from './PlanSection'
 import { StatsCards } from './StatsCards'
 
 /** Columna derecha: el análisis activo del proyecto (o la pista de estado vacío). */
-export function Results({ disabled, onExportPlan }: { disabled: boolean; onExportPlan: () => void }) {
+export function Results({ disabled, onExportPlan }: { disabled: boolean; onExportPlan: () => unknown }) {
   const { t, lang } = useCapaT()
   const api = useCapaApi()
   const point = useCapa(selectActive)

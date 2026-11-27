@@ -5,6 +5,7 @@ import { useGanttT } from '../i18n'
 import { useRef } from 'react'
 import { formatHuman } from '../logic/dates'
 import { ChartPicker } from './ChartPicker'
+import { ActionButton } from '../../../ui/ActionButton'
 
 interface Props {
   today: Date
@@ -12,8 +13,8 @@ interface Props {
   lastSavedAt: number | null
   disabled: boolean
   onHistory: () => void
-  onExcel: () => void
-  onPng: () => void
+  onExcel: () => unknown
+  onPng: () => unknown
   onImport: (file: File) => void
 }
 
@@ -47,12 +48,12 @@ export function Header({ today, pct, lastSavedAt, disabled, onHistory, onExcel, 
             if (file) onImport(file)
           }}
         />
-        <Button variant="ghost" onClick={onExcel} disabled={disabled}>
+        <ActionButton variant="ghost" onClick={onExcel} disabled={disabled}>
           {t('menuExportExcel')}
-        </Button>
-        <Button onClick={onPng} disabled={disabled}>
+        </ActionButton>
+        <ActionButton onClick={onPng} disabled={disabled}>
           {t('menuExportPNG')}
-        </Button>
+        </ActionButton>
       </div>
     </GlassPanel>
   )

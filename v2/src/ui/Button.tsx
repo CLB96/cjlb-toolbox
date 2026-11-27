@@ -7,10 +7,12 @@ import './buttonStatus.css'
 /** Estado de un botón que lanza trabajo: reposo, cargando (círculo con cargador) o listo (palomita). */
 export type ButtonStatus = 'idle' | 'loading' | 'success'
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'ghost' | 'danger'
   status?: ButtonStatus
 }
+
+type Props = ButtonProps
 
 export function Button({
   variant = 'primary',

@@ -8,6 +8,7 @@ import { INLINE, useCapaT } from '../i18n'
 import { colorForCpk } from '../logic'
 import { clampDrop, type CapaPoint } from '../store'
 import { Section } from './ChartSections'
+import { ActionButton } from '../../../ui/ActionButton'
 
 const MARKER_MIN = 20
 const MARKER_MAX = 60
@@ -29,7 +30,7 @@ function useObjectUrl(blob: Blob | null): string | null {
 const colorOf = (p: CapaPoint) => (p.result.Cpk != null ? colorForCpk(p.result.Cpk) : 'var(--accent)')
 
 /** Plano con marcadores (widget de foto del original, 4271-4503) dentro de una tarjeta plegable. */
-export function PlanSection({ onExport }: { onExport: () => void }) {
+export function PlanSection({ onExport }: { onExport: () => unknown }) {
   const { t, lang } = useCapaT()
   const api = useCapaApi()
   const sliderId = useId()
@@ -98,7 +99,7 @@ export function PlanSection({ onExport }: { onExport: () => void }) {
               {t('photo.change')}
               <input type="file" className="cf-file-input" accept="image/*" data-testid="cf-photo-change" onChange={onPick} />
             </label>
-            <Button variant="ghost" onClick={onExport}>{t('photo.exportBtn')}</Button>
+            <ActionButton variant="ghost" onClick={onExport}>{t('photo.exportBtn')}</ActionButton>
           </div>
           <div className="cf-tray" data-testid="cf-tray">
             {unplaced.length > 0 && <div className="cf-tray__label">{INLINE.dragTo[lang]}</div>}

@@ -2,19 +2,20 @@ import { SavedIndicator } from '../../../persistence/SavedIndicator'
 import { Button } from '../../../ui/Button'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { useCapaT } from '../i18n'
+import { ActionButton } from '../../../ui/ActionButton'
 
 interface Props {
   lastSavedAt: number | null
   disabled: boolean
   onHistory: () => void
-  onExport: () => void
+  onExport: () => unknown
   exportBusy?: boolean
   onGuide: () => void
   onConverter: () => void
 }
 
 /** Franja superior del mockup: título, guardado y acciones. */
-export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, onConverter, exportBusy = false }: Props) {
+export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, onConverter }: Props) {
   const { t } = useCapaT()
   return (
     <GlassPanel as="header" className="cf-head">
@@ -25,7 +26,7 @@ export function Header({ lastSavedAt, disabled, onHistory, onExport, onGuide, on
         <Button variant="ghost" onClick={onHistory} disabled={disabled}>{t('v2.history')}</Button>
         <Button variant="ghost" onClick={onGuide}>{`📖 ${t('panel.guideTitle')}`}</Button>
         <Button variant="ghost" onClick={onConverter}>{`🔄 ${t('panel.mwxTitle')}`}</Button>
-        <Button onClick={onExport} disabled={exportBusy}>{`⬇ ${t('panel.exportTitle')}`}</Button>
+        <ActionButton onClick={onExport}>{`⬇ ${t('panel.exportTitle')}`}</ActionButton>
       </div>
     </GlassPanel>
   )

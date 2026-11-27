@@ -3,6 +3,7 @@ import { GlassPanel } from '../../../ui/GlassPanel'
 import { SavedIndicator } from '../../../persistence/SavedIndicator'
 import { useGapcheckT } from '../i18n'
 import { FileInput } from './FileInput'
+import { ActionButton } from '../../../ui/ActionButton'
 
 export interface LoadedFile {
   name: string
@@ -16,7 +17,7 @@ interface Props {
   disabled: boolean
   onFile: (file: File) => void
   onHistory: () => void
-  onExport: () => void
+  onExport: () => unknown
 }
 
 /** Franja superior: título, archivo cargado, guardado y acciones (mockup aprobado). */
@@ -45,9 +46,9 @@ export function Header({ file, lastSavedAt, disabled, onFile, onHistory, onExpor
           <span aria-hidden="true">🕘</span> {t('history')}
         </Button>
         {file && (
-          <Button onClick={onExport} disabled={disabled}>
+          <ActionButton onClick={onExport} disabled={disabled}>
             <span aria-hidden="true">⬇</span> {t('exportPng')}
-          </Button>
+          </ActionButton>
         )}
       </div>
     </GlassPanel>

@@ -6,6 +6,7 @@ import { useBondline, useBondlineApi } from '../BondlineStoreProvider'
 import { STATIC_TEXTS, useBondlineT } from '../i18n'
 import { selectActiveSheet } from '../store'
 import { FileInput } from './EmptyState'
+import { ActionButton } from '../../../ui/ActionButton'
 
 interface Props {
   lastSavedAt: number | null
@@ -15,7 +16,7 @@ interface Props {
   onDefaults: () => void
   onHistory: () => void
   /** Descarga PNG (Task 9); sin él no se muestra el botón. */
-  onExport?: () => void
+  onExport?: () => unknown
 }
 
 /** Franja superior (R6): archivo, hoja activa, fecha de prueba, guardado y acciones. */
@@ -109,9 +110,9 @@ export function Header({ lastSavedAt, disabled, onFile, onSelectSheet, onDefault
           <span aria-hidden="true">🕘</span> {t('history')}
         </Button>
         {loaded && onExport && (
-          <Button onClick={onExport} disabled={disabled}>
+          <ActionButton onClick={onExport} disabled={disabled}>
             <span aria-hidden="true">📥</span> {t('menuDownload')}
-          </Button>
+          </ActionButton>
         )}
       </div>
     </GlassPanel>

@@ -74,7 +74,7 @@ function BondlineBody({ toolId, defaultsLoaded, coolingTarget }: Props) {
         onSelectSheet={(i) => report(api.getState().selectSheet(i))}
         onDefaults={() => setDefaultsOpen(true)}
         onHistory={() => setHistoryOpen(true)}
-        onExport={() => void exportBondlinePng(api.getState(), defaults, lang)}
+        onExport={() => exportBondlinePng(api.getState(), defaults, lang)}
       />
       {view ? (
         <>

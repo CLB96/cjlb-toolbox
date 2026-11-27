@@ -109,8 +109,8 @@ function GanttBody({ toolId, active }: ToolProps) {
         lastSavedAt={lastSavedAt}
         disabled={disabled}
         onHistory={() => setHistoryOpen(true)}
-        onExcel={() => void onExcel()}
-        onPng={() => void onPng()}
+        onExcel={onExcel}
+        onPng={onPng}
         onImport={(f) => void onImport(f)}
       />
       <Overview stats={view.stats} />

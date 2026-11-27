@@ -12,6 +12,7 @@ import { construirModeloPng } from '../export/pngModel'
 import { exportarPng } from '../export/exportPng'
 import { exportarPdf } from '../export/exportPdf'
 import { exportarExcel } from '../export/exportExcel'
+import { ActionButton } from '../../../ui/ActionButton'
 
 const pct = (n: number, d = 1) => `${n.toFixed(d)} %`
 const num = (n: number, d = 3) => n.toFixed(d)
@@ -240,9 +241,9 @@ export function Results() {
       </div>
 
       <GlassPanel className="gf-acciones gf-acciones--pie">
-        <Button onClick={() => void descargar('png')}>{t('descargarPng')}</Button>
-        <Button variant="ghost" onClick={() => void descargar('pdf')}>{t('descargarPdf')}</Button>
-        <Button variant="ghost" onClick={() => void descargar('xlsx')}>{t('exportarExcel')}</Button>
+        <ActionButton onClick={() => descargar('png')}>{t('descargarPng')}</ActionButton>
+        <ActionButton variant="ghost" onClick={() => descargar('pdf')}>{t('descargarPdf')}</ActionButton>
+        <ActionButton variant="ghost" onClick={() => descargar('xlsx')}>{t('exportarExcel')}</ActionButton>
         <span className="gf-spacer" />
         <Button variant="ghost" onClick={() => api.getState().limpiarArchivo()}>{t('nuevoEstudio')}</Button>
       </GlassPanel>
