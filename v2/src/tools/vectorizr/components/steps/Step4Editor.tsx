@@ -11,7 +11,7 @@ import { PieceBar } from '../editor/PieceBar'
 import { PropertiesPanel } from '../editor/PropertiesPanel'
 import { StatusBar } from '../editor/StatusBar'
 import { Toolbar } from '../editor/Toolbar'
-import { useEditorShortcuts } from '../editor/useEditorShortcuts'
+import { isTyping, useEditorShortcuts } from '../editor/useEditorShortcuts'
 
 export function Step4Editor({ active }: { active: boolean }) {
   const { t } = useVzT()
@@ -31,6 +31,21 @@ export function Step4Editor({ active }: { active: boolean }) {
   const [centerTrigger, setCenterTrigger] = useState(0)
 
   useEditorShortcuts(active)
+
+  // Supr o Retroceso borran el notch seleccionado (no dentro de campos ni de diálogos)
+  useEffect(() => {
+    if (!active || !selectedNotchId) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (isTyping(e.target)) return
+      if (e.target instanceof Element && e.target.closest('[role="dialog"]')) return
+      e.preventDefault()
+      api.getState().removeNotch(selectedNotchId)
+      setSelectedNotchId(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, api, selectedNotchId])
   useEffect(() => {
     setSelectedId(null)
     setSelectedNotchId(null)

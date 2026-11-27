@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useVectorizrApi } from '../../VectorizrStoreProvider'
 import { TOOL_KEYS } from './Toolbar'
 
-function isTyping(target: EventTarget | null): boolean {
+export function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   const tag = target.tagName
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable

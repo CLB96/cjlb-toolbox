@@ -532,6 +532,22 @@ describe('VectorizrTool', () => {
       expect(screen.getByText('Notches: 0')).toBeInTheDocument()
     })
 
+    it('Supr o Retroceso borran el notch seleccionado', async () => {
+      await open()
+      await addAtTop()
+      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
+      fireEvent.keyDown(document.body, { key: 'Delete' })
+      expect(screen.getByText('Notches: 0')).toBeInTheDocument()
+      expect(screen.queryByText('Notch seleccionado')).not.toBeInTheDocument()
+    })
+
+    it('Supr dentro del campo de profundidad no borra el notch', async () => {
+      await open()
+      await addAtTop()
+      fireEvent.keyDown(screen.getByLabelText('Profundidad (mm)'), { key: 'Delete' })
+      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
+    })
+
     it('el clic derecho sobre el propio menú no lo cierra', async () => {
       await open()
       rightClick(55, 12)
