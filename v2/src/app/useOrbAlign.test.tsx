@@ -23,7 +23,7 @@ function Shell({ active, height }: { active: boolean; height: number }) {
 
 test('centra el círculo con la cabecera de la herramienta', () => {
   const { getByTestId } = render(<Shell active height={64} />)
-  expect(getByTestId('shell').style.getPropertyValue('--orb-y')).toBe('24px')
+  expect(getByTestId('shell').style.getPropertyValue('--orb-y')).toBe('14px')
 })
 
 test('con una cabecera baja no sube más que el margen mínimo', () => {

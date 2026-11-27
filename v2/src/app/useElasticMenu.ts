@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { bulges, contentOpacity, menuShapePath, stepSpring, type Spring } from './elasticMenu'
 
 /** Espacio sobre el contenido (el círculo) y márgenes dentro del cuadro. */
-const TOP_OFFSET = 48
+const TOP_OFFSET = 68
 const BOTTOM_PAD = 10
 const SIDE_PAD = 16
 

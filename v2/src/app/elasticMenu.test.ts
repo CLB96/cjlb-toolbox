@@ -33,10 +33,10 @@ test('en reposo no hay abombamiento y con velocidad se abomba sin pasar del máx
 
 test('con p = 0 el trazo es el círculo del logo y con p = 1 el cuadro completo', () => {
   const circle = menuShapePath(0, 0, 0, 230, 318)
-  expect(circle.startsWith('M20.0 0H20.0')).toBe(true)
+  expect(circle.startsWith('M30.0 0H30.0')).toBe(true)
   const full = menuShapePath(1, 0, 0, 230, 318)
   expect(full).toContain(`H${(230 - 14).toFixed(1)}`)
-  expect(ORB).toBe(40)
+  expect(ORB).toBe(60)
 })
 
 test('el contenido aparece cuando el cuadro ya casi tiene su tamaño', () => {

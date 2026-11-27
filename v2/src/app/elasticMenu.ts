@@ -1,10 +1,12 @@
-/** Diámetro del círculo del que sale el menú. */
-export const ORB = 40
+/** Diámetro del círculo del que sale el menú (50 % más grande que el original de 40 px). */
+export const ORB = 60
 /** Nivel elegido por el dueño en el mockup (1.0 = base). */
 export const MENU_INTENSITY = 0.4
 const SPRING_K = 170
 const SPRING_C = 8.2
 const MAX_BULGE = 26
+/** Radio de las esquinas del menú ya abierto. */
+const PANEL_RADIUS = 14
 
 export type Spring = { p: number; v: number }
 
@@ -31,7 +33,7 @@ export function menuShapePath(p: number, bx: number, by: number, panelW: number,
   const q = Math.max(0, p)
   const w = ORB + (panelW - ORB) * q
   const h = ORB + (panelH - ORB) * q
-  const r = 20 - 6 * Math.min(1, q)
+  const r = ORB / 2 - (ORB / 2 - PANEL_RADIUS) * Math.min(1, q)
   const f = (n: number) => n.toFixed(1)
   return (
     `M${f(r)} 0H${f(w - r)}Q${f(w)} 0 ${f(w)} ${f(r)}` +

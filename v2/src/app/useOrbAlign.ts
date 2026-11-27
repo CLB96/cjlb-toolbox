@@ -5,7 +5,7 @@ export const TOOL_HEAD_SELECTOR = '.gt-head, .gc-head, .bl-head, .cf-head, .vz-h
 
 /** Arriba de la cabecera de la herramienta una vez colapsado (coincide con --bar-slot en header.css). */
 const SLOT_TOP = 12
-const ORB_SIZE = 40
+const ORB_SIZE = 60
 const MIN_TOP = 4
 
 /**
