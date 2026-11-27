@@ -7,6 +7,7 @@ import { lowResScale, scalePointsBack } from '../../logic/lowRes'
 import { clampQuantity, newPiece, pieceColor } from '../../logic/pieces'
 import type { ContourPoint, ImagePoint } from '../../types'
 import { useOpencv } from '../../worker/useOpencv'
+import { Icon } from '../icons'
 import { DetectedPieces, type DetectedRow } from './DetectedPieces'
 
 type Mode = 'choose' | 'auto' | 'manual'
@@ -193,6 +194,7 @@ export function Step3Vectorize() {
           ))}
         </div>
         <Button variant="ghost" onClick={() => api.getState().setStep(2)}>
+          <Icon name="back" inline />
           {t('back')}
         </Button>
       </div>
@@ -357,6 +359,7 @@ export function Step3Vectorize() {
             setMulti(false)
           }}
         >
+          <Icon name="back" inline />
           {t('changeMode')}
         </Button>
       </aside>

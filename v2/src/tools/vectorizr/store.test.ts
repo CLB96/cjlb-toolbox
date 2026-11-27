@@ -326,6 +326,31 @@ describe('detección en baja resolución', () => {
   })
 })
 
+describe('borrar el dibujo de la pieza activa', () => {
+  it('vacía puntos, trazos y notches de la activa, deja las demás y deja el historial en un estado base', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().setContourPoints([pt('a'), pt('b'), pt('c')])
+    s().addNotch(newNotch(1, 1))
+    s().addPiece()
+    s().setContourPoints([pt('x'), pt('y')])
+    s().addNotch(newNotch(2, 2))
+    s().clearActivePiece()
+    expect(s().contourPoints).toEqual([])
+    expect(s().paths).toEqual([])
+    const active = s().pieces.find((p) => p.id === s().activePieceId)!
+    expect(active.notches).toEqual([])
+    expect(s().history).toHaveLength(1)
+    s().setContourPoints([pt('n')])
+    s().pushHistory()
+    s().undo()
+    expect(s().contourPoints).toEqual([])
+    const other = piecesNow(s()).find((p) => p.id !== s().activePieceId)!
+    expect(other.contourPoints).toHaveLength(3)
+    expect(other.notches).toHaveLength(1)
+  })
+})
+
 describe('notches en piezas', () => {
   it('addNotch, updateNotch y removeNotch actúan sobre la pieza activa', () => {
     const api = createVectorizrStore()

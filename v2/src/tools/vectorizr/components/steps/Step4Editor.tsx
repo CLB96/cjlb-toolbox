@@ -5,6 +5,7 @@ import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import type { ExportFormat } from '../../logic/exportPieces'
 import type { ContourPoint, SegmentType } from '../../types'
+import { Icon } from '../icons'
 import { EditorCanvas } from '../editor/EditorCanvas'
 import { ExportDialog } from '../editor/ExportDialog'
 import { PieceBar } from '../editor/PieceBar'
@@ -89,23 +90,26 @@ export function Step4Editor({ active }: { active: boolean }) {
     <div className="vz-step">
       <div className="vz-bar glass">
         <Button variant="ghost" onClick={() => api.getState().setStep(3)}>
+          <Icon name="back" inline />
           {t('backStep3')}
         </Button>
         <span className="vz-pill">{t('pathsCount', allPaths.length, totalPts)}</span>
         <Button variant="ghost" onClick={handleAddNewPath} disabled={contourPoints.length < 2} title={t('newPathTitle')}>
+          <Icon name="path" inline />
           {t('newPath')}
         </Button>
         <span className="vz-spacer" />
         <Button variant="ghost" onClick={() => setCenterTrigger((c) => c + 1)} title={t('fitTitle')}>
+          <Icon name="fit" inline />
           {t('fit')}
         </Button>
         <span className="vz-sep" />
         <button type="button" className="vz-ib" title={t('zoomOut')} aria-label={t('zoomOut')} onClick={() => setZoom(Math.max(0.1, zoom * 0.8))}>
-          −
+          <Icon name="zout" />
         </button>
         <span className="vz-pill">{Math.round(zoom * 100)}%</span>
         <button type="button" className="vz-ib" title={t('zoomIn')} aria-label={t('zoomIn')} onClick={() => setZoom(Math.min(10, zoom * 1.2))}>
-          +
+          <Icon name="zin" />
         </button>
         <button type="button" className="vz-ib vz-ib--txt" title={t('oneToOne')} onClick={() => setZoom(1)}>
           1:1
@@ -118,13 +122,16 @@ export function Step4Editor({ active }: { active: boolean }) {
           aria-label={t('rotateLeft')}
           onClick={() => rot((((imageRotation - 90) % 360) + 360) % 360)}
         >
-          ↺
+          <Icon name="rotl" />
         </button>
         <button type="button" className="vz-ib" title={t('rotateRight')} aria-label={t('rotateRight')} onClick={() => rot((imageRotation + 90) % 360)}>
-          ↻
+          <Icon name="rotr" />
         </button>
         {imageRotation !== 0 && <span className="vz-pill">{imageRotation}°</span>}
-        <Button onClick={() => setShowExport(true)}>{t('exportBtn')}</Button>
+        <Button onClick={() => setShowExport(true)}>
+          <Icon name="export" inline />
+          {t('exportBtn')}
+        </Button>
       </div>
 
       <PieceBar />
@@ -186,6 +193,7 @@ export function Step4Editor({ active }: { active: boolean }) {
                 setConfirmStart(true)
               }}
             >
+              <Icon name="home" inline />
               {t('goStart')}
             </Button>
           </div>

@@ -5,6 +5,7 @@ import { useVzT } from '../../i18n'
 import { computeScaleFactor } from '../../logic/scale'
 import type { ScaleUnit } from '../../types'
 import { fitZoom } from '../fit'
+import { Icon } from '../icons'
 
 type Pt = { x: number; y: number }
 type Rotated = { src: string; w: number; h: number }
@@ -167,6 +168,7 @@ export function Step2Scale() {
     <div className="vz-step">
       <div className="vz-bar glass">
         <Button variant="ghost" onClick={() => api.getState().setStep(1)}>
+          <Icon name="back" inline />
           {t('back')}
         </Button>
         <span className="vz-bar__hint">{!p1 ? t('scaleHint1') : !p2 ? t('scaleHint2') : t('scaleHint3')}</span>
@@ -178,7 +180,7 @@ export function Step2Scale() {
           aria-label={t('zoomOut')}
           onClick={() => setZoom((z) => Math.max(minZoom, z * 0.8))}
         >
-          −
+          <Icon name="zout" />
         </button>
         <span className="vz-pill">{Math.round(zoom * 100)}%</span>
         <button
@@ -188,7 +190,7 @@ export function Step2Scale() {
           aria-label={t('zoomIn')}
           onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z * 1.2))}
         >
-          +
+          <Icon name="zin" />
         </button>
         <button type="button" className="vz-ib vz-ib--txt" title={t('oneToOne')} onClick={() => setZoom(1)}>
           1:1
@@ -201,7 +203,7 @@ export function Step2Scale() {
           aria-label={t('rotateLeft')}
           onClick={() => setRotation((r) => r - 90)}
         >
-          ↺
+          <Icon name="rotl" />
         </button>
         <button
           type="button"
@@ -210,7 +212,7 @@ export function Step2Scale() {
           aria-label={t('rotateRight')}
           onClick={() => setRotation((r) => r + 90)}
         >
-          ↻
+          <Icon name="rotr" />
         </button>
         {rotation !== 0 && <span className="vz-pill">{norm(rotation)}°</span>}
       </div>

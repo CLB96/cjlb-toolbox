@@ -62,6 +62,8 @@ export interface VectorizrActions {
   removePiece(id: string): void
   renamePiece(id: string, name: string): void
   setPieceQuantity(id: string, q: number): void
+  /** Vacía el contorno, los trazos y los notches de la pieza activa (las demás no se tocan). */
+  clearActivePiece(): void
   addNotch(notch: Notch): void
   updateNotch(id: string, patch: Partial<Omit<Notch, 'id'>>): void
   removeNotch(id: string): void
@@ -215,6 +217,7 @@ export function createVectorizrStore(): VectorizrApi {
     },
 
     renamePiece: (id, name) => set({ pieces: get().pieces.map((p) => (p.id === id ? { ...p, name } : p)) }),
+    clearActivePiece: () => set({ contourPoints: [], paths: [], ...baseHistory([]), ...withActiveNotches(get(), () => []) }),
     addNotch: (notch) => set(withActiveNotches(get(), (list) => [...list, notch])),
     updateNotch: (id, patch) =>
       set(withActiveNotches(get(), (list) => list.map((n) => (n.id === id ? { ...n, ...patch, depth: clampDepth(patch.depth ?? n.depth) } : n)))),

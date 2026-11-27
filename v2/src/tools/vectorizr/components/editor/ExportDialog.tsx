@@ -7,6 +7,7 @@ import { useVzT } from '../../i18n'
 import { exportAllInOne, exportIndividual, type ExportFormat } from '../../logic/exportPieces'
 import { pieceLabel } from '../../logic/pieces'
 import { piecesNow } from '../../store'
+import { Icon } from '../icons'
 
 interface Props {
   open: boolean
@@ -104,6 +105,7 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
             ))}
           </div>
           <Button variant="ghost" onClick={() => setView('all')}>
+            <Icon name="back" inline />
             {t('back')}
           </Button>
         </div>

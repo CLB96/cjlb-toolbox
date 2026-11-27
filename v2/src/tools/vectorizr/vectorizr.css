@@ -4,6 +4,7 @@
   --vz-rose: #e11d48;
   --vz-orange: #ea580c;
   --vz-ok-fg: #06231a;
+  --vz-acc: #ffb4f2;
   --vz-canvas-h: max(470px, calc(100vh - 290px));
   display: grid;
   gap: 12px;
@@ -217,3 +218,17 @@
   .vz-tools { flex-direction: row; flex-wrap: wrap; }
   .vz-cards { grid-template-columns: 1fr; }
 }
+
+/* iconos (opción B): trazo del color del texto y detalle en color de acento */
+:root[data-theme='light'] .vz { --vz-acc: #9b3fe0; }
+.vz-ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.vz-ico .a { stroke: var(--vz-acc); }
+.vz-ico .f { fill: var(--vz-acc); stroke: none; }
+.vz-ico--inline { width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+.vz-ib .vz-ico { width: 18px; height: 18px; }
+.vz-ib.is-on .vz-ico .a, .btn--primary .vz-ico .a, .vz-tab.is-on .vz-ico .a { stroke: var(--btn-fg); }
+.vz-ib.is-on .vz-ico .f, .btn--primary .vz-ico .f { fill: var(--btn-fg); }
+.vz-tools__line { width: 70%; height: 1px; background: var(--edge); margin: 4px 0; }
+.vz-ib--danger:hover { border-color: var(--error); }
+.vz-ib--danger .vz-ico .a { stroke: var(--error); }
+.vz-tab .vz-ico { width: 14px; height: 14px; }

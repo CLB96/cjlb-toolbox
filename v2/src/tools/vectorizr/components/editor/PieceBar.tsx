@@ -1,6 +1,7 @@
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { clampQuantity, pieceColor, pieceLabel } from '../../logic/pieces'
+import { Icon } from '../icons'
 
 /** Piezas del trabajo: cuál se edita, pestañas para cambiar, nombre y cantidad de la activa. */
 export function PieceBar() {
@@ -31,6 +32,7 @@ export function PieceBar() {
           </span>
         ))}
         <button type="button" className="vz-tab vz-tab--add" onClick={() => s().addPiece()}>
+          <Icon name="piece" inline />
           {t('newPiece')}
         </button>
       </div>
