@@ -24,6 +24,7 @@ export const es = {
   'shell.tab.home': 'Inicio',
   'shell.tab.usage': 'Uso',
   'shell.theme.toggle': 'Cambiar tema',
+  'shell.menu': 'Menú',
   'shell.migrating': 'Esta herramienta está en migración.',
   'shell.counter': 'Contador',
   'shell.openCurrent': 'Abrir la herramienta actual',

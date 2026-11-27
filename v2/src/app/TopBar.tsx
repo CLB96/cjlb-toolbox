@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Tabs, type TabItem } from '../ui/Tabs'
 import { Button } from '../ui/Button'
 import { useTheme } from '../theme/useTheme'
@@ -6,6 +6,8 @@ import { useI18n } from '../i18n/useI18n'
 import { TOOLS } from '../tools/registry'
 import type { ToolDef } from '../tools/types'
 import type { Route } from './routes'
+import type { BarMode } from './useHeaderMode'
+import './header.css'
 
 type Props = {
   route: Route
@@ -13,11 +15,33 @@ type Props = {
   isAdmin?: boolean
   avatar?: ReactNode
   tools?: ToolDef[]
+  mode?: BarMode
 }
 
-export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOOLS }: Props) {
+export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOOLS, mode = 'full' }: Props) {
   const { t, lang, setLang } = useI18n()
   const { resolved, setMode } = useTheme()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const barRef = useRef<HTMLElement>(null)
+  const isCircle = mode === 'col'
+  const open = menuOpen && isCircle
+
+  // el menú del círculo se cierra con Escape, al tocar fuera o al elegir una herramienta
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   const items: TabItem[] = [
     { id: 'home', label: t('shell.tab.home') },
@@ -31,30 +55,48 @@ export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOO
   ]
 
   return (
-    <header className="topbar glass">
-      <img
-        className="topbar__logo"
-        src={resolved === 'dark' ? '/logo-dark.png' : '/logo-light.png'}
-        alt="CJLB"
-        height={32}
-      />
-      <Tabs items={items} value={route} onChange={(id) => onNavigate(id as Route)} />
-      <div className="topbar__actions">
-        <Button
-          variant="ghost"
-          aria-label={t('shell.lang.toggle')}
-          onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-        >
-          {lang === 'es' ? 'EN' : 'ES'}
-        </Button>
-        <Button
-          variant="ghost"
-          aria-label={t('shell.theme.toggle')}
-          onClick={() => setMode(resolved === 'dark' ? 'light' : 'dark')}
-        >
-          {resolved === 'dark' ? '☀' : '☾'}
-        </Button>
-        {avatar}
+    <header
+      ref={barRef}
+      className={`topbar glass topbar--${mode}${open ? ' topbar--open' : ''}`}
+      data-mode={mode}
+    >
+      <button
+        type="button"
+        className="topbar__orb"
+        aria-label={t('shell.menu')}
+        aria-haspopup="true"
+        aria-expanded={open}
+        disabled={!isCircle}
+        onClick={() => setMenuOpen((v) => !v)}
+      >
+        <img src={resolved === 'dark' ? '/logo-dark.png' : '/logo-light.png'} alt="CJLB" height={32} />
+      </button>
+      <div className="topbar__full">
+        <Tabs
+          items={items}
+          value={route}
+          onChange={(id) => {
+            setMenuOpen(false)
+            onNavigate(id as Route)
+          }}
+        />
+        <div className="topbar__actions">
+          <Button
+            variant="ghost"
+            aria-label={t('shell.lang.toggle')}
+            onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+          >
+            {lang === 'es' ? 'EN' : 'ES'}
+          </Button>
+          <Button
+            variant="ghost"
+            aria-label={t('shell.theme.toggle')}
+            onClick={() => setMode(resolved === 'dark' ? 'light' : 'dark')}
+          >
+            {resolved === 'dark' ? '☀' : '☾'}
+          </Button>
+          {avatar}
+        </div>
       </div>
     </header>
   )

@@ -26,6 +26,7 @@ export const en: Record<MessageKey, string> = {
   'shell.tab.home': 'Home',
   'shell.tab.usage': 'Usage',
   'shell.theme.toggle': 'Toggle theme',
+  'shell.menu': 'Menu',
   'shell.migrating': 'This tool is being migrated.',
   'shell.counter': 'Counter',
   'shell.openCurrent': 'Open the current tool',

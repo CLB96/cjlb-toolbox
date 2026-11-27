@@ -1,0 +1,160 @@
+/* Encabezado principal colapsable: barra completa al entrar a una herramienta y luego un círculo con el logo.
+   Estados (AppShell → data-bar): full · collapsing · col. La gelatina del círculo es el nivel "Media" del mockup. */
+.shell {
+  position: relative;
+  display: flow-root;
+  --bar-slot: 72px;
+  --spr: cubic-bezier(0.25, 1.9, 0.45, 0.85);
+  --spr-soft: cubic-bezier(0.3, 1.5, 0.45, 0.9);
+  --shr: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --pop: cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.shell[data-bar='col'][data-page='tool'] { --bar-slot: 12px; }
+.shell[data-bar='col'][data-page='plain'] { --bar-slot: 64px; }
+
+.shell .tool-host { margin-top: var(--bar-slot); }
+/* el contenido sube con transform (barato); al terminar se cambia el layout una sola vez */
+.shell[data-bar='collapsing'] .tool-host {
+  transform: translateY(-60px);
+  transition: transform 0.9s var(--spr-soft);
+}
+
+.shell .topbar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: 48px;
+  margin: 0;
+  padding: 8px 16px;
+  gap: 16px;
+  transition: width 0.9s var(--shr), height 0.5s var(--shr), padding 0.5s var(--shr), border-radius 0.5s var(--shr),
+    border-color 0.3s;
+}
+.shell .topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.shell .topbar--collapsing,
+.shell .topbar--col {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border-radius: 20px;
+  border-color: transparent;
+}
+.shell .topbar--collapsing::before,
+.shell .topbar--col::before { opacity: 1; }
+.shell .topbar--collapsing {
+  overflow: hidden;
+  animation: topbar-jelly 0.8s 0.55s ease-out;
+}
+
+.topbar__orb {
+  position: relative;
+  display: flow-root;
+  z-index: 1;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition: background-color 0.4s, transform 0.4s var(--pop);
+}
+.topbar__orb:disabled { opacity: 1; }
+.topbar__orb img { height: 32px; width: auto; object-fit: contain; transition: transform 0.5s var(--shr); }
+.topbar--collapsing .topbar__orb,
+.topbar--col .topbar__orb { background: var(--glass-solid); }
+.topbar--col .topbar__orb { cursor: pointer; }
+.topbar--collapsing .topbar__orb img,
+.topbar--col .topbar__orb img { transform: scale(0.8); }
+.topbar--col .topbar__orb:hover:not(:disabled) { transform: scale(1.12); }
+.topbar--col .topbar__orb:active:not(:disabled) { transform: scale(0.92); }
+
+.topbar__full {
+  position: relative;
+  display: flow-root;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.topbar--collapsing .topbar__full {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-30px);
+  transition: opacity 0.3s, transform 0.5s var(--shr), visibility 0s 0.3s;
+}
+
+/* círculo: las pestañas y los ajustes pasan a ser el menú que se abre debajo */
+.topbar--col .topbar__full {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  flex: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 200px;
+  padding: 10px;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  background: var(--glass-solid);
+  box-shadow: 0 12px 30px var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.88);
+  transform-origin: top left;
+  transition: opacity 0.2s, transform 0.5s var(--pop), visibility 0s 0.5s;
+}
+.topbar--col.topbar--open .topbar__full {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition: opacity 0.2s, transform 0.5s var(--pop), visibility 0s;
+}
+.topbar--col .tabs { flex-direction: column; overflow: visible; }
+.topbar--col .tab { text-align: left; }
+.topbar--col .topbar__actions { margin-left: 0; justify-content: space-between; }
+.topbar--col .user-menu__panel { position: static; margin-top: 6px; }
+
+/* la cabecera propia de cada herramienta sube a la fila del círculo */
+.shell[data-page='tool']:is([data-bar='collapsing'], [data-bar='col']) :is(.gt-head, .gc-head, .bl-head, .cf-head, .vz-head, .gf-header, .qn-header) {
+  margin-left: 52px;
+}
+.shell[data-page='tool'][data-bar='collapsing'] :is(.gt-head, .gc-head, .bl-head, .cf-head, .vz-head, .gf-header, .qn-header) {
+  transition: margin-left 0.9s var(--spr-soft);
+}
+
+@keyframes topbar-jelly {
+  0% { transform: scale(1, 1); }
+  20% { transform: scale(1.1, 0.91); }
+  42% { transform: scale(0.94, 1.07); }
+  64% { transform: scale(1.035, 0.97); }
+  84% { transform: scale(0.985, 1.015); }
+  100% { transform: scale(1, 1); }
+}
+
+@media (max-width: 640px) {
+  .shell .topbar { gap: 8px; }
+  .shell[data-page='tool']:is([data-bar='collapsing'], [data-bar='col']) :is(.gt-head, .gc-head, .bl-head, .cf-head, .vz-head, .gf-header, .qn-header) {
+    margin-left: 0;
+    margin-top: 48px;
+  }
+}

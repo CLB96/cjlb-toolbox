@@ -5,7 +5,8 @@ import type { ToolDef } from '../tools/types'
 import { useRoute } from './useRoute'
 import { TopBar } from './TopBar'
 import { ToolHost } from './ToolHost'
-import type { Route, ToolId } from './routes'
+import { isToolId, type Route, type ToolId } from './routes'
+import { useHeaderMode } from './useHeaderMode'
 import { flushTool } from '../persistence/flushRegistry'
 
 type Props = {
@@ -28,6 +29,8 @@ export function AppShell({ isAdmin = false, avatar, tools = TOOLS, onToolSwitch 
     [onToolSwitch],
   )
 
+  const mode = useHeaderMode(isToolId(route))
+
   useEffect(() => {
     if (route !== requested) navigate(route)
   }, [route, requested, navigate])
@@ -35,8 +38,10 @@ export function AppShell({ isAdmin = false, avatar, tools = TOOLS, onToolSwitch 
   return (
     <>
       <Starfield />
-      <TopBar route={route} onNavigate={navigate} isAdmin={isAdmin} avatar={avatar} tools={tools} />
-      <ToolHost route={route} tools={tools} isAdmin={isAdmin} onToolSwitch={handleSwitch} />
+      <div className="shell" data-bar={mode} data-page={isToolId(route) ? 'tool' : 'plain'}>
+        <TopBar route={route} onNavigate={navigate} isAdmin={isAdmin} avatar={avatar} tools={tools} mode={mode} />
+        <ToolHost route={route} tools={tools} isAdmin={isAdmin} onToolSwitch={handleSwitch} />
+      </div>
     </>
   )
 }
