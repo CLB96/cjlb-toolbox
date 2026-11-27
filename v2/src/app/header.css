@@ -28,7 +28,7 @@
   margin: 0;
   padding: 8px 16px;
   gap: 16px;
-  transition: width 0.9s var(--shr), height 0.5s var(--shr), padding 0.5s var(--shr), border-radius 0.5s var(--shr),
+  transition: width 0.9s var(--shr), height 0.5s var(--shr), top 0.5s var(--shr), padding 0.5s var(--shr), border-radius 0.5s var(--shr),
     border-color 0.3s;
 }
 .shell .topbar::before {
@@ -43,9 +43,10 @@
 }
 .shell .topbar--collapsing,
 .shell .topbar--col {
+  top: var(--orb-y, 12px);
   width: 40px;
   height: 40px;
-  padding: 4px;
+  padding: 3px;
   border-radius: 20px;
   border-color: transparent;
 }
