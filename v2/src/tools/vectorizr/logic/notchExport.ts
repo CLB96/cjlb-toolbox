@@ -1,5 +1,6 @@
 // Notches para exportar como capa aparte (opcional): dibujo de cada notch como líneas, en píxeles de imagen.
 import type { ImagePoint, Piece } from '../types'
+import { drillPolyline } from './drills'
 import { notchGeometry } from './notches'
 
 export interface Polyline {
@@ -8,8 +9,9 @@ export interface Polyline {
 }
 
 /** I: una línea; V: un triángulo cerrado; T: el palo y el travesaño como dos líneas. */
-export function notchPolylines(piece: Pick<Piece, 'contourPoints' | 'notches'>, scaleFactor: number): Polyline[] {
-  return piece.notches.flatMap((n): Polyline[] => {
+export function notchPolylines(piece: Pick<Piece, 'contourPoints' | 'notches' | 'drills'>, scaleFactor: number): Polyline[] {
+  const circles = (piece.drills ?? []).map((d) => drillPolyline(d, scaleFactor))
+  return [...circles, ...piece.notches.flatMap((n): Polyline[] => {
     const g = notchGeometry(n, piece.contourPoints, scaleFactor)
     if (!g) return []
     if (g.type === 'V' && g.a && g.b) return [{ points: [g.a, g.b, g.tip], closed: true }]
@@ -20,5 +22,5 @@ export function notchPolylines(piece: Pick<Piece, 'contourPoints' | 'notches'>, 
       ]
     }
     return [{ points: [g.base, g.tip], closed: false }]
-  })
+  })]
 }

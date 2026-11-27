@@ -1,12 +1,14 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { nearestOnContour, notchGeometry } from '../../logic/notches'
-import { activeNotches } from '../../store'
+import { drillRadiusPx } from '../../logic/drills'
+import { activeDrills, activeNotches } from '../../store'
 import type { ImagePoint } from '../../types'
 
 export type NotchMenuState =
   | { kind: 'add'; x: number; y: number; at: ImagePoint; segmentIndex: number }
   | { kind: 'notch'; x: number; y: number; id: string }
+  | { kind: 'drill'; x: number; y: number; id: string }
 
 /** Alcance del clic en píxeles de pantalla. */
 const REACH_PX = 10
@@ -42,6 +44,13 @@ export function useNotchMenu(
       const rect = container.getBoundingClientRect()
       const x = ev.clientX - rect.left
       const y = ev.clientY - rect.top
+      for (const d of activeDrills(s)) {
+        if (Math.hypot(d.x - p.x, d.y - p.y) <= Math.max(reach, drillRadiusPx(d, s.scaleFactor))) {
+          ev.preventDefault()
+          setMenu({ kind: 'drill', x, y, id: d.id })
+          return
+        }
+      }
       for (const n of activeNotches(s)) {
         const g = notchGeometry(n, s.contourPoints, s.scaleFactor)
         if (!g) continue

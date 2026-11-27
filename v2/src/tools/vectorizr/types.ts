@@ -72,6 +72,15 @@ export interface Notch {
   angle?: number
 }
 
+/** Drill: círculo de perforación centrado en (x, y), con su diámetro en mm. */
+export interface Drill {
+  id: string
+  x: number
+  y: number
+  /** Diámetro en mm (el radio se calcula). */
+  diameter: number
+}
+
 /** Una pieza de patrón: su contorno editable y los trazos guardados (agujeros, contornos interiores). */
 export interface Piece {
   id: string
@@ -80,4 +89,6 @@ export interface Piece {
   contourPoints: ContourPoint[]
   paths: ContourPoint[][]
   notches: Notch[]
+  /** Drills de la pieza; las piezas guardadas antes de existir no lo traen. */
+  drills?: Drill[]
 }

@@ -33,7 +33,7 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const pieces = open ? piecesNow(api.getState()) : []
   const totalPaths = pieces.reduce((n, p) => n + p.paths.length + (p.contourPoints.length > 1 ? 1 : 0), 0)
   const selected = pieces.filter((p) => !unchecked.has(p.id))
-  const hasNotches = pieces.some((p) => p.notches.length > 0)
+  const hasNotches = pieces.some((p) => p.notches.length > 0 || (p.drills?.length ?? 0) > 0)
 
   function close() {
     action.reset()

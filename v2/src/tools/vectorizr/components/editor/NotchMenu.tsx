@@ -1,6 +1,7 @@
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
-import { newNotch, withSegmentType } from '../../logic/notches'
+import { newDrill } from '../../logic/drills'
+import { newNotch, notchGeometry, withSegmentType } from '../../logic/notches'
 import { activeNotches } from '../../store'
 import type { NotchType, SegmentType } from '../../types'
 import type { NotchMenuState } from './useNotchMenu'
@@ -10,6 +11,7 @@ interface Props {
   onClose: () => void
   onSelectNotch: (id: string | null) => void
   onEditDepth: (id: string) => void
+  onEditDrill: (id: string) => void
 }
 
 const TYPES: NotchType[] = ['I', 'V', 'T']
@@ -19,11 +21,14 @@ const SEGMENTS: { type: SegmentType; label: 'segLine' | 'segBezier' }[] = [
 ]
 
 /** Menú contextual de notches (HTML sobre el lienzo): añadir, y sobre un notch voltear, tipo, profundidad y eliminar. */
-export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth }: Props) {
+export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth, onEditDrill }: Props) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const notch = useVectorizr((s) => (menu.kind === 'notch' ? activeNotches(s).find((n) => n.id === menu.id) : undefined))
   const segmentType = useVectorizr((s) => (menu.kind === 'add' ? s.contourPoints[menu.segmentIndex]?.type : undefined))
+  const contour = useVectorizr((s) => s.contourPoints)
+  const scaleFactor = useVectorizr((s) => s.scaleFactor)
+  const tip = notch ? notchGeometry(notch, contour, scaleFactor)?.tip : undefined
   const run = (action: () => void) => () => {
     action()
     onClose()
@@ -45,6 +50,17 @@ export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth }: Props) 
             })}
           >
             {t('addNotch')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={run(() => {
+              const d = newDrill(menu.at.x, menu.at.y)
+              s().addDrill(d)
+              onEditDrill(d.id)
+            })}
+          >
+            {t('addDrill')}
           </button>
           <hr />
           {SEGMENTS.map(({ type, label }) => (
@@ -89,6 +105,29 @@ export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth }: Props) 
           <hr />
           <button type="button" role="menuitem" onClick={run(() => onEditDepth(notch.id))}>
             {t('notchDepthMenu')}
+          </button>
+          {notch.type === 'I' && tip && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={run(() => {
+                const d = newDrill(tip.x, tip.y)
+                s().addDrill(d)
+                onEditDrill(d.id)
+              })}
+            >
+              {t('addDrillTip')}
+            </button>
+          )}
+        </>
+      )}
+      {menu.kind === 'drill' && (
+        <>
+          <button type="button" role="menuitem" onClick={run(() => onEditDrill(menu.id))}>
+            {t('drillSizeMenu')}
+          </button>
+          <button type="button" role="menuitem" onClick={run(() => s().removeDrill(menu.id))}>
+            {t('deleteNotch')}
           </button>
         </>
       )}

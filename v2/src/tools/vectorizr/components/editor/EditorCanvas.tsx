@@ -8,6 +8,8 @@ import { buildPath } from '../../logic/contourPath'
 import { pxToMm } from '../../logic/scale'
 import type { ImagePoint } from '../../types'
 import { fitZoom } from '../fit'
+import { DrillDialog } from './DrillDialog'
+import { DrillLayer } from './DrillLayer'
 import { HandleLayer } from './HandleLayer'
 import { NotchDepthDialog } from './NotchDepthDialog'
 import { NotchLayer } from './NotchLayer'
@@ -93,6 +95,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
   )
   const { menu, closeMenu } = useNotchMenu(containerRef, toImage, onSelectNotch)
   const [depthFor, setDepthFor] = useState<string | null>(null)
+  const [drillFor, setDrillFor] = useState<string | null>(null)
 
   // Medidas del contenedor (ResizeObserver si existe)
   useEffect(() => {
@@ -267,6 +270,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
             })}
             <HandleLayer />
             <NotchLayer selectedNotchId={selectedNotchId} onSelect={onSelectNotch} />
+            <DrillLayer onEdit={setDrillFor} />
             {m0 && <Circle x={m0.x} y={m0.y} radius={4 / zoom} fill="#fbbf24" listening={false} />}
             {m0 && m1 && (
               <>
@@ -287,8 +291,9 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
         </Layer>
       </Stage>
 
-      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} onEditDepth={setDepthFor} />}
+      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} onEditDepth={setDepthFor} onEditDrill={setDrillFor} />}
       <NotchDepthDialog notchId={depthFor} onClose={() => setDepthFor(null)} />
+      <DrillDialog drillId={drillFor} onClose={() => setDrillFor(null)} />
       {activeToolId === 'measure' && (
         <div className="vz-overlay vz-overlay--measure">
           {measurePts.length === 0 && t('measureStart')}
