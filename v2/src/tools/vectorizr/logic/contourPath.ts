@@ -6,22 +6,16 @@ const TENSION = 0.35
 /** Muestras por tramo Bezier al aplanar (DXF y PDF). */
 export const BEZIER_STEPS = 16
 
-/** Build an SVG path string supporting line and bezier segments (Catmull-Rom → cubic bezier). */
+/** Build an SVG path string supporting line and bezier segments (Catmull-Rom → cubic bezier, o las asas guardadas). */
 export function buildPath(pts: ContourPoint[], closed = true): string {
   if (pts.length < 2) return ''
-  const n = pts.length
   let d = `M ${pts[0].x} ${pts[0].y}`
-  const limit = closed ? n : n - 1
-  for (let i = 0; i < limit; i++) {
-    const curr = pts[i]
-    const next = pts[(i + 1) % n]
-    if (curr.type === 'bezier') {
-      const prev = pts[(i - 1 + n) % n]
-      const nn   = pts[(i + 2) % n]
-      const t = 0.35
-      d += ` C ${curr.x + (next.x - prev.x) * t} ${curr.y + (next.y - prev.y) * t} ${next.x - (nn.x - curr.x) * t} ${next.y - (nn.y - curr.y) * t} ${next.x} ${next.y}`
+  for (const seg of contourSegments(pts, closed)) {
+    if (seg.controls) {
+      const [c1, c2] = seg.controls
+      d += ` C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${seg.to.x} ${seg.to.y}`
     } else {
-      d += ` L ${next.x} ${next.y}`
+      d += ` L ${seg.to.x} ${seg.to.y}`
     }
   }
   if (closed) d += ' Z'
@@ -50,10 +44,16 @@ export function contourSegments(pts: ContourPoint[], closed = true): Segment[] {
     if (curr.type === 'bezier') {
       const prev = pts[(i - 1 + n) % n]
       const nn = pts[(i + 2) % n]
-      seg.controls = [
-        { x: curr.x + (next.x - prev.x) * TENSION, y: curr.y + (next.y - prev.y) * TENSION },
-        { x: next.x - (nn.x - curr.x) * TENSION, y: next.y - (nn.y - curr.y) * TENSION },
-      ]
+      // asas guardadas: desplazamientos desde cada extremo (así siguen al extremo cuando se mueve); si no, la curva automática
+      seg.controls = curr.handles
+        ? [
+            { x: curr.x + curr.handles.cp1.x, y: curr.y + curr.handles.cp1.y },
+            { x: next.x + curr.handles.cp2.x, y: next.y + curr.handles.cp2.y },
+          ]
+        : [
+            { x: curr.x + (next.x - prev.x) * TENSION, y: curr.y + (next.y - prev.y) * TENSION },
+            { x: next.x - (nn.x - curr.x) * TENSION, y: next.y - (nn.y - curr.y) * TENSION },
+          ]
     }
     out.push(seg)
   }
@@ -94,4 +94,21 @@ export function flattenContour(pts: ContourPoint[], closed = true): ImagePoint[]
     if (!isClosing) out.push(seg.to)
   }
   return out
+}
+
+/**
+ * Copia del contorno con un asa del tramo curvo `index` movida a (x, y). Parte de la curva actual (automática o ya
+ * ajustada) y guarda las dos asas como desplazamientos desde sus extremos. En un tramo recto no hace nada.
+ */
+export function withHandle(pts: ContourPoint[], index: number, which: 'cp1' | 'cp2', x: number, y: number): ContourPoint[] {
+  const seg = contourSegments(pts).find((s) => s.index === index)
+  if (!seg || !seg.controls) return pts
+  const [c1, c2] = seg.controls
+  const handles = {
+    cp1: { x: c1.x - seg.from.x, y: c1.y - seg.from.y },
+    cp2: { x: c2.x - seg.to.x, y: c2.y - seg.to.y },
+  }
+  const anchor = which === 'cp1' ? seg.from : seg.to
+  handles[which] = { x: x - anchor.x, y: y - anchor.y }
+  return pts.map((q, i) => (i === index ? { ...q, handles } : q))
 }

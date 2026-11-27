@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ContourPoint } from '../types'
-import { flattenContour } from './contourPath'
+import { buildPath, contourSegments, flattenContour, withHandle } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
 import { pointsToDxf } from './exportDxf'
@@ -228,5 +228,56 @@ describe('tramo del contorno bajo el clic', () => {
     expect(next.map((q) => q.type)).toEqual(['line', 'bezier', 'line', 'line'])
     expect(square.every((q) => q.type === 'line')).toBe(true)
     expect(withSegmentType(square, 9, 'bezier')).toEqual(square)
+  })
+})
+
+describe('asas de las curvas Bézier (qué tan marcada es la curva)', () => {
+  const base = () => [p(0, 0, 'bezier'), p(10, 0), p(10, 10), p(0, 10)]
+
+  it('sin asas guardadas la curva es la automática de siempre', () => {
+    const seg = contourSegments(base())[0]!
+    expect(seg.controls).toBeDefined()
+    expect(buildPath(base())).toContain(' C ')
+  })
+
+  it('con asas guardadas (desplazamientos desde cada extremo) los puntos de control las siguen', () => {
+    const pts = base()
+    pts[0] = { ...pts[0]!, handles: { cp1: { x: 2, y: -3 }, cp2: { x: -1, y: -4 } } }
+    const seg = contourSegments(pts)[0]!
+    expect(seg.controls).toEqual([{ x: 2, y: -3 }, { x: 9, y: -4 }])
+    expect(buildPath(pts)).toContain(' C 2 -3 9 -4 10 0')
+  })
+
+  it('withHandle mueve un asa: parte de la curva actual, no toca el otro extremo ni el original', () => {
+    const pts = base()
+    const auto = contourSegments(pts)[0]!.controls!
+    const next = withHandle(pts, 0, 'cp1', 3, -8)
+    expect(pts[0]!.handles).toBeUndefined()
+    const seg = contourSegments(next)[0]!
+    expect(seg.controls![0]).toEqual({ x: 3, y: -8 })
+    expect(seg.controls![1].x).toBeCloseTo(auto[1].x)
+    expect(seg.controls![1].y).toBeCloseTo(auto[1].y)
+  })
+
+  it('mover un extremo arrastra sus asas (están guardadas como desplazamientos)', () => {
+    const pts = withHandle(base(), 0, 'cp1', 3, -8)
+    const moved = pts.map((q) => (q.id === '10,0' ? { ...q, x: 20 } : q))
+    const c = contourSegments(moved)[0]!.controls!
+    expect(c[0]).toEqual({ x: 3, y: -8 })
+    const before = contourSegments(pts)[0]!.controls!
+    expect(c[1].x - before[1].x).toBeCloseTo(10)
+  })
+
+  it('withHandle no hace nada en un tramo recto o fuera de rango', () => {
+    const pts = base()
+    expect(withHandle(pts, 1, 'cp1', 5, 5)).toBe(pts)
+    expect(withHandle(pts, 9, 'cp1', 5, 5)).toBe(pts)
+  })
+
+  it('el aplanado (DXF, SVG, PDF) también sigue las asas', () => {
+    const plain = flattenContour(base())
+    const withHandles = flattenContour(withHandle(base(), 0, 'cp1', 0, -40))
+    expect(withHandles).toHaveLength(plain.length)
+    expect(withHandles[4]!.y).toBeLessThan(plain[4]!.y)
   })
 })

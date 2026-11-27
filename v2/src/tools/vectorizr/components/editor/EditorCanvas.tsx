@@ -8,6 +8,7 @@ import { buildPath } from '../../logic/contourPath'
 import { pxToMm } from '../../logic/scale'
 import type { ImagePoint } from '../../types'
 import { fitZoom } from '../fit'
+import { HandleLayer } from './HandleLayer'
 import { NotchDepthDialog } from './NotchDepthDialog'
 import { NotchLayer } from './NotchLayer'
 import { NotchMenu } from './NotchMenu'
@@ -264,6 +265,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
                 />
               )
             })}
+            <HandleLayer />
             <NotchLayer selectedNotchId={selectedNotchId} onSelect={onSelectNotch} />
             {m0 && <Circle x={m0.x} y={m0.y} radius={4 / zoom} fill="#fbbf24" listening={false} />}
             {m0 && m1 && (

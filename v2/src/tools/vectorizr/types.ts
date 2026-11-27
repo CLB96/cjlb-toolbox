@@ -5,6 +5,7 @@ export type ScaleUnit = 'mm' | 'cm' | 'm' | 'in'
 
 export type SegmentType = 'line' | 'bezier'
 
+/** Asas de un tramo curvo: desplazamientos desde el punto de inicio (cp1) y desde el punto siguiente (cp2). */
 export interface BezierHandles {
   cp1: { x: number; y: number }
   cp2: { x: number; y: number }
