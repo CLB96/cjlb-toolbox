@@ -55,7 +55,8 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
         const follow = (e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true
           if (e.evt?.ctrlKey || e.evt?.metaKey) {
-            const p = e.target.getRelativePointerPosition()
+            // el puntero se mide en el sistema del grupo (el del dibujo), no en el del círculo que se arrastra
+            const p = e.target.getParent()?.getRelativePointerPosition()
             const angle = p ? notchAngleToward(n, api.getState().contourPoints, p.x, p.y) : null
             if (angle !== null) api.getState().updateNotch(n.id, { angle })
             e.target.position({ x: g.base.x, y: g.base.y })
