@@ -1,4 +1,5 @@
 import { useShallow } from 'zustand/react/shallow'
+import { ExpandButton } from '../../../ui/ExpandButton'
 import { Button } from '../../../ui/Button'
 import { GlassPanel } from '../../../ui/GlassPanel'
 import { useCapa, useCapaApi } from '../CapaflowStoreProvider'
@@ -35,9 +36,7 @@ export function ProjectBar({ disabled, onNewPoint, onSummary, onZip, summaryBusy
             {p.result.pointName || INLINE.pointTitle(lang, p.id)}
           </button>
         ))}
-        <button type="button" className="cf-point cf-point--new" disabled={disabled} onClick={onNewPoint}>
-          {t('v2.newPoint')}
-        </button>
+        <ExpandButton className="cf-point cf-point--new" label={t('v2.newPoint')} disabled={disabled} onClick={onNewPoint} />
       </div>
       <div className="cf-head__actions">
         <input

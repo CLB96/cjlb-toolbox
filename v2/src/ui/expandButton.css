@@ -1,0 +1,37 @@
+/* Botón de crear (ver ExpandButton): círculo en reposo, pastilla con texto al abrirse. */
+.xb {
+  display: inline-grid;
+  grid-template-columns: auto 0fr;
+  align-items: center;
+  transition: grid-template-columns 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.xb.xb {
+  height: 32px;
+  padding: 0 9px;
+  border-radius: 16px;
+  white-space: nowrap;
+}
+.xb--open { grid-template-columns: auto 1fr; }
+.xb__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  line-height: 1;
+}
+.xb .vz-ico--inline { margin-right: 0; }
+.xb__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding-left: 6px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s, transform 0.4s;
+}
+.xb--open .xb__label {
+  opacity: 1;
+  transform: none;
+  padding-right: 4px;
+  transition-delay: 0.12s;
+}

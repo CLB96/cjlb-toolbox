@@ -1,4 +1,5 @@
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
+import { ExpandButton } from '../../../../ui/ExpandButton'
 import { useVzT } from '../../i18n'
 import { clampQuantity, pieceColor, pieceLabel } from '../../logic/pieces'
 import { Icon } from '../icons'
@@ -31,10 +32,7 @@ export function PieceBar() {
             )}
           </span>
         ))}
-        <button type="button" className="vz-tab vz-tab--add" onClick={() => s().addPiece()}>
-          <Icon name="piece" inline />
-          {t('newPiece')}
-        </button>
+        <ExpandButton className="vz-tab vz-tab--add" icon={<Icon name="piece" inline />} label={t('newPiece')} onClick={() => s().addPiece()} />
       </div>
       <span className="vz-spacer" />
       <input className="vz-piecebar__name" aria-label={t('pieceName')} value={active.name} onChange={(e) => s().renamePiece(active.id, e.target.value)} />
