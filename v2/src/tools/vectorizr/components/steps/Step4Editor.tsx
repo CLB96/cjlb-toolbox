@@ -4,6 +4,7 @@ import { Dialog } from '../../../../ui/Dialog'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import type { ExportFormat } from '../../logic/exportPieces'
+import { insertPointOnContour } from '../../logic/insertPoint'
 import type { ContourPoint } from '../../types'
 import { Icon } from '../icons'
 import { EditorCanvas } from '../editor/EditorCanvas'
@@ -63,7 +64,7 @@ export function Step4Editor({ active }: { active: boolean }) {
   const current = () => api.getState().contourPoints
 
   const updatePoint = (id: string, x: number, y: number) => edit(current().map((p) => (p.id === id ? { ...p, x, y } : p)))
-  const addPoint = (x: number, y: number) => edit([...current(), { id: Date.now().toString(), x, y, type: 'line' }])
+  const addPoint = (x: number, y: number) => edit(insertPointOnContour(current(), x, y, Date.now().toString()))
   const toggleSegmentType = (id: string) =>
     edit(current().map((p) => (p.id === id ? { ...p, type: p.type === 'line' ? 'bezier' : 'line' } : p)))
   function deletePoint(id: string) {

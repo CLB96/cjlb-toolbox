@@ -1,7 +1,7 @@
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { Circle, Group, Line } from 'react-konva'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
-import { nearestOnContour, notchGeometry } from '../../logic/notches'
+import { nearestOnContour, notchAngleToward, notchGeometry } from '../../logic/notches'
 import { activeNotches } from '../../store'
 
 interface Props {
@@ -51,9 +51,16 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
           onMouseEnter: (e: KonvaEventObject<MouseEvent>) => setCursor(e, 'pointer'),
           onMouseLeave: (e: KonvaEventObject<MouseEvent>) => setCursor(e, ''),
         }
-        /** Desliza el notch al punto más cercano del contorno mientras se arrastra. */
+        /** Desliza el notch al punto más cercano del contorno mientras se arrastra; con Ctrl se queda fijo y solo gira. */
         const follow = (e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true
+          if (e.evt?.ctrlKey || e.evt?.metaKey) {
+            const p = e.target.getRelativePointerPosition()
+            const angle = p ? notchAngleToward(n, api.getState().contourPoints, p.x, p.y) : null
+            if (angle !== null) api.getState().updateNotch(n.id, { angle })
+            e.target.position({ x: g.base.x, y: g.base.y })
+            return
+          }
           const hit = nearestOnContour(api.getState().contourPoints, e.target.x(), e.target.y())
           if (!hit) return
           api.getState().updateNotch(n.id, { x: hit.x, y: hit.y })

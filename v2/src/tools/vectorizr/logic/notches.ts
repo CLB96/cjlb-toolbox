@@ -84,16 +84,39 @@ export interface NotchShape {
   b?: ImagePoint
 }
 
+const DEG = Math.PI / 180
+
+/** Tangente y normal del tramo giradas `deg` grados. */
+function rotateHit(hit: ContourHit, deg: number) {
+  const c = Math.cos(deg * DEG)
+  const s = Math.sin(deg * DEG)
+  return { tx: hit.tx * c - hit.ty * s, ty: hit.tx * s + hit.ty * c, nx: hit.nx * c - hit.ny * s, ny: hit.nx * s + hit.ny * c }
+}
+
+/** Ángulo (grados, -180..180) para que el notch apunte hacia (x, y) sin moverse de su base. null si no hay contorno. */
+export function notchAngleToward(notch: Notch, points: ContourPoint[], x: number, y: number): number | null {
+  const hit = nearestOnContour(points, notch.x, notch.y)
+  if (!hit) return null
+  const dx = x - hit.x
+  const dy = y - hit.y
+  if (dx === 0 && dy === 0) return null
+  const sign = notch.flipped ? -1 : 1
+  const ux = dx * sign
+  const uy = dy * sign
+  return Math.atan2(hit.nx * uy - hit.ny * ux, hit.nx * ux + hit.ny * uy) / DEG
+}
+
 /** Forma del notch en píxeles de imagen; la profundidad (mm) se pasa a píxeles con la escala (mm/px). */
 export function notchGeometry(notch: Notch, points: ContourPoint[], scaleFactor: number): NotchShape | null {
   const hit = nearestOnContour(points, notch.x, notch.y)
   if (!hit) return null
   const sign = notch.flipped ? -1 : 1
+  const rot = rotateHit(hit, notch.angle ?? 0)
   const depth = clampDepth(notch.depth) / (scaleFactor > 0 ? scaleFactor : 1)
   const base = { x: hit.x, y: hit.y }
-  const tip = { x: hit.x + hit.nx * sign * depth, y: hit.y + hit.ny * sign * depth }
+  const tip = { x: hit.x + rot.nx * sign * depth, y: hit.y + rot.ny * sign * depth }
   const half = depth / 2
-  const along = (from: ImagePoint, k: number): ImagePoint => ({ x: from.x + hit.tx * half * k, y: from.y + hit.ty * half * k })
+  const along = (from: ImagePoint, k: number): ImagePoint => ({ x: from.x + rot.tx * half * k, y: from.y + rot.ty * half * k })
   if (notch.type === 'I') return { type: 'I', base, tip }
   if (notch.type === 'V') return { type: 'V', base, tip, a: along(base, -1), b: along(base, 1) }
   return { type: 'T', base, tip, a: along(tip, -1), b: along(tip, 1) }

@@ -68,6 +68,8 @@ export interface Notch {
   /** Profundidad en mm. */
   depth: number
   flipped: boolean
+  /** Giro en grados respecto a la normal del contorno (Ctrl + arrastrar); 0 o sin definir = perpendicular. */
+  angle?: number
 }
 
 /** Una pieza de patrón: su contorno editable y los trazos guardados (agujeros, contornos interiores). */
