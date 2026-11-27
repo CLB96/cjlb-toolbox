@@ -1,0 +1,21 @@
+/* Ripple de los botones secundarios (ver useButtonFx): un disco más oscuro nace donde tocas y se expande despacio. */
+.btn--ghost {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.fx-ripple {
+  position: absolute;
+  border-radius: 50%;
+  /* acento un 30 % más oscuro, con la opacidad subida un 30 % (0.35 → 0.455) */
+  background: color-mix(in srgb, var(--accent-1) 70%, #000);
+  opacity: 0.455;
+  transform: scale(0);
+  pointer-events: none;
+  animation: fx-ripple 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@keyframes fx-ripple {
+  to { transform: scale(1); opacity: 0; }
+}

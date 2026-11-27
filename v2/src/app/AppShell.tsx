@@ -8,6 +8,7 @@ import { ToolHost } from './ToolHost'
 import { isToolId, type Route, type ToolId } from './routes'
 import { useHeaderMode } from './useHeaderMode'
 import { useOrbAlign } from './useOrbAlign'
+import { useButtonFx } from '../ui/useButtonFx'
 import { flushTool } from '../persistence/flushRegistry'
 
 type Props = {
@@ -32,6 +33,7 @@ export function AppShell({ isAdmin = false, avatar, tools = TOOLS, onToolSwitch 
 
   const mode = useHeaderMode(isToolId(route))
   const shellRef = useRef<HTMLDivElement>(null)
+  useButtonFx()
   useOrbAlign(shellRef, isToolId(route) && mode !== 'full')
 
   useEffect(() => {
