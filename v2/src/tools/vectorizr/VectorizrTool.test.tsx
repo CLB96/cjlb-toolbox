@@ -659,4 +659,44 @@ describe('VectorizrTool', () => {
     expect(screen.getByRole('button', { name: 'Acercar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Alejar' })).toBeInTheDocument()
   })
+
+  describe('ajuste al cambiar el tamaño de la ventana', () => {
+    const observers: (() => void)[] = []
+    let size = { w: 800, h: 600 }
+    beforeEach(() => {
+      size = { w: 800, h: 600 }
+      observers.length = 0
+      vi.stubGlobal('ResizeObserver', class {
+        constructor(cb: () => void) { observers.push(cb) }
+        observe() {}
+        disconnect() {}
+      })
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => size.w)
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => size.h)
+    })
+    afterEach(() => vi.unstubAllGlobals())
+    const resizeTo = (w: number, h: number) => {
+      size = { w, h }
+      act(() => observers.forEach((cb) => cb()))
+    }
+
+    it('si no moviste la vista, la imagen se vuelve a ajustar al nuevo tamaño', async () => {
+      await seedStep4()
+      renderTool()
+      await inEditor()
+      expect(screen.getByText('Zoom: 173%')).toBeInTheDocument()
+      resizeTo(1600, 1200)
+      expect(screen.getByText('Zoom: 373%')).toBeInTheDocument()
+    })
+
+    it('si ya cambiaste el zoom a mano, el cambio de tamaño no lo toca', async () => {
+      await seedStep4()
+      renderTool()
+      await inEditor()
+      fireEvent.click(screen.getByRole('button', { name: 'Acercar' }))
+      const before = screen.getByText(/^Zoom: \d+%$/).textContent
+      resizeTo(1600, 1200)
+      expect(screen.getByText(/^Zoom: \d+%$/).textContent).toBe(before)
+    })
+  })
 })

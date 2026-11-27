@@ -76,6 +76,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
   onAddPointRef.current = onAddPoint
   const blockClickRef = useRef(false)
   const fittedRef = useRef(false)
+  const lastFitRef = useRef<{ zoom: number; x: number; y: number } | null>(null)
 
   /** Posición de un evento del ratón en coordenadas de imagen (con zoom, desplazamiento y rotación). */
   const toImage = useCallback(
@@ -102,19 +103,36 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
     return () => ro.disconnect()
   }, [])
 
-  // Ajuste y centrado: al entrar al paso (M16, bug #25) y con "⊡ Fit"
-  useEffect(() => {
+  /** Ajusta y centra la imagen en el lienzo; recuerda la vista resultante para saber si el usuario la movió después. */
+  const applyFit = () => {
     const { width, height } = stageSize
     const z = fitZoom(width, height, imageWidth, imageHeight, FIT_PADDING)
     if (!z) return
-    if (fittedRef.current && centerTrigger === 0) return
     fittedRef.current = true
     const newZoom = Math.min(ZOOM_MAX, Math.max(0.05, z))
+    const pos = { x: (width - imageWidth * newZoom) / 2, y: (height - imageHeight * newZoom) / 2 }
     const s = api.getState()
     s.setZoom(newZoom)
-    s.setStagePos({ x: (width - imageWidth * newZoom) / 2, y: (height - imageHeight * newZoom) / 2 })
+    s.setStagePos(pos)
+    lastFitRef.current = { zoom: newZoom, ...pos }
+  }
+
+  // Ajuste y centrado: al entrar al paso (M16, bug #25) y con "⊡ Fit"
+  useEffect(() => {
+    if (fittedRef.current && centerTrigger === 0) return
+    applyFit()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [centerTrigger, stageSize.width > 0 && stageSize.height > 0, imageWidth, imageHeight, api])
+
+  // Si cambia el tamaño del lienzo (otra pantalla, zoom del navegador) y el usuario no movió la vista, se reajusta sola
+  useEffect(() => {
+    const last = lastFitRef.current
+    if (!last) return
+    const s = api.getState()
+    const untouched = Math.abs(s.zoom - last.zoom) < 1e-6 && Math.abs(s.stagePos.x - last.x) < 0.5 && Math.abs(s.stagePos.y - last.y) < 0.5
+    if (untouched) applyFit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageSize.width, stageSize.height])
 
   useEffect(() => {
     if (activeToolId !== 'measure') setMeasurePts([])

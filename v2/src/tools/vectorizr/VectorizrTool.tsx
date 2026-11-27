@@ -13,11 +13,13 @@ import { disposeOpencvClient, preloadOpencv } from './worker/opencvClient'
 import { HelpPanel } from './components/HelpPanel'
 import { RotatePrompt, useOrientation } from './components/RotatePrompt'
 import { StepBar } from './components/StepBar'
+import { useFillViewport } from './components/useFillViewport'
 import { Step1Upload } from './components/steps/Step1Upload'
 import { Step2Scale } from './components/steps/Step2Scale'
 import { Step3Vectorize } from './components/steps/Step3Vectorize'
 import { Step4Editor } from './components/steps/Step4Editor'
 import './vectorizr.css'
+import './vectorizr-fit.css'
 
 const IDLE_FALLBACK_MS = 1500
 
@@ -46,6 +48,9 @@ function VectorizrBody({ toolId, active }: ToolProps) {
   const [historyOpen, setHistoryOpen] = useState(false)
 
   usePreloadOpencv(active)
+  const mainRef = useRef<HTMLElement>(null)
+  const fill = step >= 2
+  useFillViewport(mainRef, active && fill)
   // M9: el worker de OpenCV vive mientras la herramienta esté montada
   useEffect(() => () => disposeOpencvClient(), [])
 
@@ -70,7 +75,7 @@ function VectorizrBody({ toolId, active }: ToolProps) {
         </div>
       </GlassPanel>
 
-      <main className="vz-main">
+      <main ref={mainRef} className="vz-main" data-fill={active && fill ? 'true' : undefined}>
         {orientation === 'portrait' && step >= 3 && <RotatePrompt />}
         {step === 1 && <Step1Upload disabled={!restored} />}
         {step === 2 && <Step2Scale />}

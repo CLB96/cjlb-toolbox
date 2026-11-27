@@ -1,0 +1,47 @@
+/* Ajuste a la pantalla: en los pasos 2, 3 y 4 el área de trabajo ocupa el alto que queda de la ventana
+   (la variable --vz-fill la calcula useFillViewport), sea cual sea el monitor o el zoom del navegador. */
+.vz-main[data-fill='true'] {
+  height: var(--vz-fill, auto);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vz-main[data-fill='true'] > .vz-step,
+.vz-main[data-fill='true'] > .vz-work {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.vz-main[data-fill='true'] > .vz-step {
+  display: flex;
+  flex-direction: column;
+}
+.vz-main[data-fill='true'] > .vz-step > :not(.vz-ed):not(.vz-work) {
+  flex: none;
+}
+.vz-main[data-fill='true'] .vz-work,
+.vz-main[data-fill='true'] .vz-ed {
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+.vz-main[data-fill='true'] .vz-canvas,
+.vz-main[data-fill='true'] .vz-editor-canvas {
+  min-height: 0;
+  height: 100%;
+}
+.vz-main[data-fill='true'] .vz-side,
+.vz-main[data-fill='true'] .vz-props {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* pantallas bajas: barras y cabecera más compactas para dar más lugar al lienzo */
+@media (max-height: 900px) {
+  .vz { gap: 8px; }
+  .vz-head { padding: 8px 14px; }
+  .vz-bar { padding: 5px 8px; }
+  .vz-piecebar { padding: 5px 10px; }
+  .vz-main[data-fill='true'],
+  .vz-step { gap: 8px; }
+}
