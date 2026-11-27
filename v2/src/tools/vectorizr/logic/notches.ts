@@ -19,6 +19,11 @@ export function newNotch(x: number, y: number, type: NotchType = 'V'): Notch {
   return { id: `notch-${Date.now().toString(36)}-${counter}`, x, y, type, depth: DEFAULT_NOTCH_DEPTH, flipped: false }
 }
 
+/** Trazo al que está pegado el notch: uno guardado (`pathIndex`) o, sin índice, el trazo activo. */
+export function notchOwnerPoints(notch: Notch, contour: ContourPoint[], paths: ContourPoint[][] = []): ContourPoint[] {
+  return notch.pathIndex === undefined ? contour : (paths[notch.pathIndex] ?? [])
+}
+
 export interface ContourHit {
   x: number
   y: number

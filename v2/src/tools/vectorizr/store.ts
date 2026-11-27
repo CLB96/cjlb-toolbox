@@ -188,15 +188,35 @@ export function createVectorizrStore(): VectorizrApi {
     addNewPath: () => {
       const { contourPoints, paths } = get()
       if (contourPoints.length < 2) return
+      const id = get().activePieceId
       set({
         paths: [...paths, contourPoints.map((p) => ({ ...p }))],
         contourPoints: [],
         history: [],
         historyIndex: -1,
+        // los notches del trazo que se guarda se quedan pegados a él, no siguen al trazo nuevo
+        pieces: get().pieces.map((p) =>
+          p.id === id ? { ...p, notches: p.notches.map((n) => (n.pathIndex === undefined ? { ...n, pathIndex: paths.length } : n)) } : p,
+        ),
       })
     },
 
-    removePathAt: (index) => set({ paths: get().paths.filter((_, i) => i !== index) }),
+    removePathAt: (index) => {
+      const id = get().activePieceId
+      set({
+        paths: get().paths.filter((_, i) => i !== index),
+        pieces: get().pieces.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                notches: p.notches
+                  .filter((n) => n.pathIndex !== index)
+                  .map((n) => (n.pathIndex !== undefined && n.pathIndex > index ? { ...n, pathIndex: n.pathIndex - 1 } : n)),
+              }
+            : p,
+        ),
+      })
+    },
     setPaths: (paths, active = []) => set({ paths, contourPoints: active }),
 
     setPieces: (pieces, activeId) => {

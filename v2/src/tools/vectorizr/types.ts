@@ -70,6 +70,8 @@ export interface Notch {
   flipped: boolean
   /** Giro en grados respecto a la normal del contorno (Ctrl + arrastrar); 0 o sin definir = perpendicular. */
   angle?: number
+  /** Trazo guardado (índice en `paths`) al que pertenece; sin definir = el trazo activo. */
+  pathIndex?: number
 }
 
 /** Drill: círculo de perforación centrado en (x, y), con su diámetro en mm. */

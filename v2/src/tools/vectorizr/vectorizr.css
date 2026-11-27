@@ -146,6 +146,9 @@
 /* exportar */
 .vz-opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--glass-dense); }
 .vz-opt input { accent-color: var(--accent-1); }
+.vz-features { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.vz-features p { margin: 0; text-align: right; }
+.vz-opt--chip { width: fit-content; padding: 4px 10px; font-size: 0.85rem; }
 
 /* paso 4: piezas */
 .vz-piecebar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: var(--radius-lg); }

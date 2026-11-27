@@ -5,18 +5,24 @@
   align-items: center;
   transition: grid-template-columns 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
+/* doble clase: gana a estilos de contenedor como .vz-tab (display flex, padding propio) */
 .xb.xb {
+  display: inline-grid;
   height: 32px;
-  padding: 0 9px;
+  min-width: 32px;
+  padding: 0;
+  gap: 0;
   border-radius: 16px;
   white-space: nowrap;
 }
 .xb--open { grid-template-columns: auto 1fr; }
+/* el icono ocupa un cuadro de 32 px: en reposo el botón es un círculo con el icono al centro */
 .xb__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 14px;
+  width: 32px;
+  height: 32px;
   line-height: 1;
 }
 .xb .vz-ico--inline { margin-right: 0; }
@@ -24,14 +30,14 @@
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  padding-left: 6px;
+  padding: 0;
   opacity: 0;
   transform: translateX(-6px);
-  transition: opacity 0.25s, transform 0.4s;
+  transition: opacity 0.25s, transform 0.4s, padding 0.3s;
 }
 .xb--open .xb__label {
   opacity: 1;
   transform: none;
-  padding-right: 4px;
+  padding-right: 12px;
   transition-delay: 0.12s;
 }

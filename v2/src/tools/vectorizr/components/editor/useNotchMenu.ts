@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
-import { nearestOnContour, notchGeometry } from '../../logic/notches'
+import { nearestOnContour, notchGeometry, notchOwnerPoints } from '../../logic/notches'
 import { drillRadiusPx } from '../../logic/drills'
 import { activeDrills, activeNotches } from '../../store'
 import type { ImagePoint } from '../../types'
@@ -52,7 +52,7 @@ export function useNotchMenu(
         }
       }
       for (const n of activeNotches(s)) {
-        const g = notchGeometry(n, s.contourPoints, s.scaleFactor)
+        const g = notchGeometry(n, notchOwnerPoints(n, s.contourPoints, s.paths), s.scaleFactor)
         if (!g) continue
         const mid = { x: (g.base.x + g.tip.x) / 2, y: (g.base.y + g.tip.y) / 2 }
         if ([g.base, mid, g.tip].some((q) => Math.hypot(q.x - p.x, q.y - p.y) <= reach)) {

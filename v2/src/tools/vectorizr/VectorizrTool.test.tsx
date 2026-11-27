@@ -628,7 +628,7 @@ describe('VectorizrTool', () => {
       renderTool()
       await inEditor()
       fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
-      expect(screen.queryByRole('checkbox', { name: /Notches en otra capa/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('checkbox', { name: /Agregar features/ })).not.toBeInTheDocument()
     })
 
     it('apagada (por defecto) el DXF sale sin la capa; encendida la incluye', async () => {
@@ -636,7 +636,7 @@ describe('VectorizrTool', () => {
       renderTool()
       await inEditor()
       fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
-      const box = screen.getByRole('checkbox', { name: /Notches en otra capa/ })
+      const box = screen.getByRole('checkbox', { name: /Agregar features/ })
       expect(box).not.toBeChecked()
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '📐 DXF (AutoCAD / CNC)' }))
       await screen.findByRole('dialog', { name: '¡Exportación exitosa!' }, { timeout: 3000 })
@@ -645,7 +645,7 @@ describe('VectorizrTool', () => {
       expect(plain).not.toContain('NOTCHES')
       fireEvent.click(screen.getByRole('button', { name: 'Continuar editando' }))
       fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
-      fireEvent.click(screen.getByRole('checkbox', { name: /Notches en otra capa/ }))
+      fireEvent.click(screen.getByRole('checkbox', { name: /Agregar features/ }))
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '📐 DXF (AutoCAD / CNC)' }))
       await waitFor(async () => expect(await lastBlob()).toContain('NOTCHES'))
     })

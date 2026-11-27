@@ -29,6 +29,12 @@ describe('insertar punto en el contorno', () => {
     expect(sq).toHaveLength(4)
   })
 
+  it('con solo 2 puntos agrega al final donde se hizo clic, para poder armar una figura', () => {
+    const out = insertPointOnContour(sq.slice(0, 2), 50, 80, 'n')
+    expect(out.map((p) => p.id)).toEqual(['a', 'b', 'n'])
+    expect(out[2]).toMatchObject({ x: 50, y: 80 })
+  })
+
   it('sin tramos agrega al final', () => {
     expect(insertPointOnContour([], 5, 6, 'n')).toEqual([{ id: 'n', x: 5, y: 6, type: 'line' }])
   })

@@ -1,7 +1,7 @@
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { newDrill } from '../../logic/drills'
-import { newNotch, notchGeometry, withSegmentType } from '../../logic/notches'
+import { newNotch, notchGeometry, notchOwnerPoints, withSegmentType } from '../../logic/notches'
 import { activeNotches } from '../../store'
 import type { NotchType, SegmentType } from '../../types'
 import type { NotchMenuState } from './useNotchMenu'
@@ -27,8 +27,9 @@ export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth, onEditDri
   const notch = useVectorizr((s) => (menu.kind === 'notch' ? activeNotches(s).find((n) => n.id === menu.id) : undefined))
   const segmentType = useVectorizr((s) => (menu.kind === 'add' ? s.contourPoints[menu.segmentIndex]?.type : undefined))
   const contour = useVectorizr((s) => s.contourPoints)
+  const paths = useVectorizr((s) => s.paths)
   const scaleFactor = useVectorizr((s) => s.scaleFactor)
-  const tip = notch ? notchGeometry(notch, contour, scaleFactor)?.tip : undefined
+  const tip = notch ? notchGeometry(notch, notchOwnerPoints(notch, contour, paths), scaleFactor)?.tip : undefined
   const run = (action: () => void) => () => {
     action()
     onClose()

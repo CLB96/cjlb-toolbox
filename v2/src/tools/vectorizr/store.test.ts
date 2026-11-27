@@ -1,6 +1,7 @@
 import { createVectorizrStore, piecesNow, resetInto, restoreInto, snapshotOf, THRESHOLD_LIMITS, type VectorizrSnapshot } from './store'
 import type { ContourPoint } from './types'
 import { newNotch } from './logic/notches'
+import { notchPolylines } from './logic/notchExport'
 
 vi.mock('./logic/imageNormalize', () => ({
   loadImageFromBlob: vi.fn(async () => {
@@ -77,6 +78,37 @@ describe('store de VectoriZr (port de appStore)', () => {
     expect(s().contourPoints).toEqual([])
     expect(s().history).toEqual([])
     expect(s().historyIndex).toBe(-1)
+  })
+
+  it('los notches se quedan en el trazo donde se pusieron al crear uno nuevo', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().setContourPoints([pt('a', 0, 0), pt('b', 100, 0), pt('c', 100, 100), pt('d', 0, 100)])
+    const n = newNotch(50, 0, 'I')
+    s().addNotch(n)
+    s().addNewPath()
+    s().setContourPoints([pt('e', 500, 500), pt('f', 600, 500), pt('g', 600, 600)])
+    const stored = piecesNow(s())[0]!.notches[0]!
+    expect(stored.pathIndex).toBe(0)
+    expect(notchPolylines(piecesNow(s())[0]!, 1)[0]!.points[0]).toMatchObject({ x: 50, y: 0 })
+    // un notch nuevo sigue yendo al trazo activo
+    s().addNotch(newNotch(550, 500))
+    expect(piecesNow(s())[0]!.notches[1]!.pathIndex).toBeUndefined()
+  })
+
+  it('al quitar un trazo se van sus notches y los demás recorren su índice', () => {
+    const api = createVectorizrStore()
+    const s = () => api.getState()
+    s().setContourPoints([pt('a'), pt('b')])
+    s().addNotch(newNotch(0, 0))
+    s().addNewPath()
+    s().setContourPoints([pt('c'), pt('d')])
+    s().addNotch(newNotch(0, 0))
+    s().addNewPath()
+    s().removePathAt(0)
+    const notches = piecesNow(s())[0]!.notches
+    expect(notches).toHaveLength(1)
+    expect(notches[0]!.pathIndex).toBe(0)
   })
 
   it('addNewPath con menos de 2 puntos no hace nada', () => {

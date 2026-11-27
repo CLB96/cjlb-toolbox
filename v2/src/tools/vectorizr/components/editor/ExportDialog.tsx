@@ -65,13 +65,13 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const allOn = selected.length === pieces.length
 
   const notchOption = hasNotches && (
-    <>
-      <label className="vz-opt">
+    <div className="vz-features">
+      <label className="vz-opt vz-opt--chip" title={t('notchLayerHint')}>
         <input type="checkbox" checked={withNotches} onChange={(e) => setWithNotches(e.target.checked)} />
         {t('notchLayer')}
       </label>
       {withNotches && <p className="vz-muted vz-small">{t('notchLayerHint')}</p>}
-    </>
+    </div>
   )
 
   return (

@@ -1,7 +1,7 @@
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { Circle, Group, Line } from 'react-konva'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
-import { nearestOnContour, notchAngleToward, notchGeometry } from '../../logic/notches'
+import { nearestOnContour, notchAngleToward, notchGeometry, notchOwnerPoints } from '../../logic/notches'
 import { activeNotches } from '../../store'
 
 interface Props {
@@ -28,14 +28,16 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
   const api = useVectorizrApi()
   const notches = useVectorizr((s) => activeNotches(s))
   const contour = useVectorizr((s) => s.contourPoints)
+  const paths = useVectorizr((s) => s.paths)
   const scaleFactor = useVectorizr((s) => s.scaleFactor)
   const zoom = useVectorizr((s) => s.zoom)
 
   return (
     <>
       {notches.map((n) => {
-        const g = notchGeometry(n, contour, scaleFactor)
+        const g = notchGeometry(n, notchOwnerPoints(n, contour, paths), scaleFactor)
         if (!g) return null
+        const owner = () => notchOwnerPoints(n, api.getState().contourPoints, api.getState().paths)
         const selected = n.id === selectedNotchId
         const color = selected ? SELECTED : GHOST
         const select = (e: KonvaEventObject<MouseEvent>) => {
@@ -57,12 +59,12 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
           if (e.evt?.ctrlKey || e.evt?.metaKey) {
             // el puntero se mide en el sistema del grupo (el del dibujo), no en el del círculo que se arrastra
             const p = e.target.getParent()?.getRelativePointerPosition()
-            const angle = p ? notchAngleToward(n, api.getState().contourPoints, p.x, p.y) : null
+            const angle = p ? notchAngleToward(n, owner(), p.x, p.y) : null
             if (angle !== null) api.getState().updateNotch(n.id, { angle })
             e.target.position({ x: g.base.x, y: g.base.y })
             return
           }
-          const hit = nearestOnContour(api.getState().contourPoints, e.target.x(), e.target.y())
+          const hit = nearestOnContour(owner(), e.target.x(), e.target.y())
           if (!hit) return
           api.getState().updateNotch(n.id, { x: hit.x, y: hit.y })
           e.target.position({ x: hit.x, y: hit.y })
@@ -99,7 +101,7 @@ export function NotchLayer({ selectedNotchId, onSelect }: Props) {
               onDragEnd={(e) => {
                 follow(e)
                 // si el punto no cambió, react-konva no mueve el nodo: se devuelve a la base dibujada
-                const hit = nearestOnContour(api.getState().contourPoints, e.target.x(), e.target.y())
+                const hit = nearestOnContour(owner(), e.target.x(), e.target.y())
                 e.target.position({ x: hit?.x ?? g.base.x, y: hit?.y ?? g.base.y })
               }}
             />
