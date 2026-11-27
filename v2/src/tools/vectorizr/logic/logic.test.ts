@@ -8,7 +8,7 @@ import { allInOneArgs } from './exportPieces'
 import { pointsToSvg } from './exportSvg'
 import { notchPolylines } from './notchExport'
 import { lowResScale, scalePointsBack } from './lowRes'
-import { clampDepth, newNotch, notchGeometry, nearestOnContour } from './notches'
+import { clampDepth, newNotch, notchGeometry, nearestOnContour, withSegmentType } from './notches'
 import { clampQuantity, fileSafeName, pieceLabel, uniqueFileNames } from './pieces'
 
 const p = (x: number, y: number, type: ContourPoint['type'] = 'line'): ContourPoint => ({ id: `${x},${y}`, x, y, type })
@@ -206,5 +206,27 @@ describe('capa de notches en la exportación', () => {
     expect(plain).not.toContain('notches')
     expect(svg).toContain('<g id="notches"')
     expect((svg.match(/<path /g) ?? []).length).toBe((plain.match(/<path /g) ?? []).length + 2)
+  })
+})
+
+describe('tramo del contorno bajo el clic', () => {
+  const square = [p(0, 0), p(10, 0), p(10, 10), p(0, 10)]
+  it('nearestOnContour dice a qué tramo pertenece el punto (el tramo i va del punto i al siguiente)', () => {
+    expect(nearestOnContour(square, 5, -2)!.segmentIndex).toBe(0)
+    expect(nearestOnContour(square, 12, 5)!.segmentIndex).toBe(1)
+    expect(nearestOnContour(square, 5, 12)!.segmentIndex).toBe(2)
+    expect(nearestOnContour(square, -2, 5)!.segmentIndex).toBe(3)
+  })
+  it('con un tramo curvo, un punto sobre la curva se asigna a ese tramo', () => {
+    const curved = [p(0, 0, 'bezier'), p(10, 0), p(10, 10), p(0, 10)]
+    const flat = flattenContour(curved)
+    const onCurve = flat[5]!
+    expect(nearestOnContour(curved, onCurve.x, onCurve.y)!.segmentIndex).toBe(0)
+  })
+  it('withSegmentType cambia solo ese tramo y no toca el original', () => {
+    const next = withSegmentType(square, 1, 'bezier')
+    expect(next.map((q) => q.type)).toEqual(['line', 'bezier', 'line', 'line'])
+    expect(square.every((q) => q.type === 'line')).toBe(true)
+    expect(withSegmentType(square, 9, 'bezier')).toEqual(square)
   })
 })

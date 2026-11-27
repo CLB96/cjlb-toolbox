@@ -1,23 +1,29 @@
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
-import { newNotch } from '../../logic/notches'
+import { newNotch, withSegmentType } from '../../logic/notches'
 import { activeNotches } from '../../store'
-import type { NotchType } from '../../types'
+import type { NotchType, SegmentType } from '../../types'
 import type { NotchMenuState } from './useNotchMenu'
 
 interface Props {
   menu: NotchMenuState
   onClose: () => void
   onSelectNotch: (id: string | null) => void
+  onEditDepth: (id: string) => void
 }
 
 const TYPES: NotchType[] = ['I', 'V', 'T']
+const SEGMENTS: { type: SegmentType; label: 'segLine' | 'segBezier' }[] = [
+  { type: 'line', label: 'segLine' },
+  { type: 'bezier', label: 'segBezier' },
+]
 
 /** Menú contextual de notches (HTML sobre el lienzo): añadir, y sobre un notch voltear, tipo, profundidad y eliminar. */
-export function NotchMenu({ menu, onClose, onSelectNotch }: Props) {
+export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth }: Props) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const notch = useVectorizr((s) => (menu.kind === 'notch' ? activeNotches(s).find((n) => n.id === menu.id) : undefined))
+  const segmentType = useVectorizr((s) => (menu.kind === 'add' ? s.contourPoints[menu.segmentIndex]?.type : undefined))
   const run = (action: () => void) => () => {
     action()
     onClose()
@@ -28,17 +34,36 @@ export function NotchMenu({ menu, onClose, onSelectNotch }: Props) {
   return (
     <div className="vz-notch-menu" role="menu" style={{ left: menu.x, top: menu.y }}>
       {menu.kind === 'add' && (
-        <button
-          type="button"
-          role="menuitem"
-          onClick={run(() => {
-            const n = newNotch(menu.at.x, menu.at.y)
-            s().addNotch(n)
-            onSelectNotch(n.id)
-          })}
-        >
-          {t('addNotch')}
-        </button>
+        <>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={run(() => {
+              const n = newNotch(menu.at.x, menu.at.y)
+              s().addNotch(n)
+              onSelectNotch(n.id)
+            })}
+          >
+            {t('addNotch')}
+          </button>
+          <hr />
+          {SEGMENTS.map(({ type, label }) => (
+            <button
+              key={type}
+              type="button"
+              role="menuitemradio"
+              aria-checked={segmentType === type}
+              onClick={run(() => {
+                if (segmentType === type) return
+                s().setContourPoints(withSegmentType(s().contourPoints, menu.segmentIndex, type))
+                s().pushHistory()
+              })}
+            >
+              {segmentType === type ? '✓ ' : ''}
+              {t(label)}
+            </button>
+          ))}
+        </>
       )}
       {menu.kind === 'notch' && notch && (
         <>
@@ -62,7 +87,7 @@ export function NotchMenu({ menu, onClose, onSelectNotch }: Props) {
             </button>
           ))}
           <hr />
-          <button type="button" role="menuitem" onClick={run(() => onSelectNotch(notch.id))}>
+          <button type="button" role="menuitem" onClick={run(() => onEditDepth(notch.id))}>
             {t('notchDepthMenu')}
           </button>
         </>

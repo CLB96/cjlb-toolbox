@@ -30,8 +30,7 @@
   min-height: 0;
   height: 100%;
 }
-.vz-main[data-fill='true'] .vz-side,
-.vz-main[data-fill='true'] .vz-props {
+.vz-main[data-fill='true'] .vz-side {
   min-height: 0;
   overflow-y: auto;
 }
@@ -45,3 +44,6 @@
   .vz-main[data-fill='true'],
   .vz-step { gap: 8px; }
 }
+
+/* el editor ya no tiene panel de propiedades a la derecha: el lienzo ocupa todo el ancho */
+.vz-ed { grid-template-columns: 52px minmax(0, 1fr); }

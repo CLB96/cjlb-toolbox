@@ -66,6 +66,15 @@ function cubicAt(a: ImagePoint, c1: ImagePoint, c2: ImagePoint, b: ImagePoint, t
   return { x: w0 * a.x + w1 * c1.x + w2 * c2.x + w3 * b.x, y: w0 * a.y + w1 * c1.y + w2 * c2.y + w3 * b.y }
 }
 
+/** Puntos de un tramo: sus dos extremos si es recto, o la curva muestreada en BEZIER_STEPS partes si es Bezier. */
+export function segmentPolyline(seg: Segment): ImagePoint[] {
+  if (!seg.controls) return [seg.from, seg.to]
+  const pts: ImagePoint[] = [seg.from]
+  for (let k = 1; k < BEZIER_STEPS; k++) pts.push(cubicAt(seg.from, seg.controls[0], seg.controls[1], seg.to, k / BEZIER_STEPS))
+  pts.push(seg.to)
+  return pts
+}
+
 /**
  * Polilínea equivalente a lo que dibuja el canvas: los tramos rectos se quedan igual y cada tramo
  * Bezier se muestrea en BEZIER_STEPS partes. Sin Bezier devuelve exactamente los mismos puntos.

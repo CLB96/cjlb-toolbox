@@ -8,6 +8,7 @@ import { buildPath } from '../../logic/contourPath'
 import { pxToMm } from '../../logic/scale'
 import type { ImagePoint } from '../../types'
 import { fitZoom } from '../fit'
+import { NotchDepthDialog } from './NotchDepthDialog'
 import { NotchLayer } from './NotchLayer'
 import { NotchMenu } from './NotchMenu'
 import { useNotchMenu } from './useNotchMenu'
@@ -90,6 +91,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
     [api],
   )
   const { menu, closeMenu } = useNotchMenu(containerRef, toImage, onSelectNotch)
+  const [depthFor, setDepthFor] = useState<string | null>(null)
 
   // Medidas del contenedor (ResizeObserver si existe)
   useEffect(() => {
@@ -283,8 +285,8 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
         </Layer>
       </Stage>
 
-      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} />}
-      <div className="vz-overlay vz-overlay--zoom">{t('zoomHint', Math.round(zoom * 100))}</div>
+      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} onEditDepth={setDepthFor} />}
+      <NotchDepthDialog notchId={depthFor} onClose={() => setDepthFor(null)} />
       {activeToolId === 'measure' && (
         <div className="vz-overlay vz-overlay--measure">
           {measurePts.length === 0 && t('measureStart')}

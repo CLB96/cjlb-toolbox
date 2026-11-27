@@ -490,7 +490,7 @@ describe('VectorizrTool', () => {
     })
   })
 
-  describe('notches (paso 4)', () => {
+  describe('notches y tramos (paso 4)', () => {
     const canvas = () => document.querySelector('.vz-editor-canvas') as HTMLElement
     const rightClick = (x: number, y: number) => fireEvent.contextMenu(canvas(), { clientX: x, clientY: y })
     async function open() {
@@ -503,12 +503,21 @@ describe('VectorizrTool', () => {
       fireEvent.click(screen.getByRole('menuitem', { name: 'Añadir notch' }))
     }
 
-    it('clic derecho sobre el contorno ofrece Añadir notch y deja el notch seleccionado en el panel', async () => {
+    it('clic derecho sobre el contorno ofrece Añadir notch y elegir si ese tramo es recto o curvo', async () => {
       await open()
-      await addAtTop()
-      expect(screen.getByText('Notch seleccionado')).toBeInTheDocument()
-      expect((screen.getByLabelText('Profundidad (mm)') as HTMLInputElement).value).toBe('5')
-      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
+      rightClick(55, 12)
+      expect(screen.getByRole('menuitem', { name: 'Añadir notch' })).toBeInTheDocument()
+      expect(screen.getByRole('menuitemradio', { name: /Línea recta/ })).toHaveAttribute('aria-checked', 'true')
+      expect(screen.getByRole('menuitemradio', { name: /Curva \(Bézier\)/ })).toHaveAttribute('aria-checked', 'false')
+    })
+
+    it('elegir Curva cambia ese tramo: la curva se aleja de donde estaba la recta', async () => {
+      await open()
+      rightClick(55, 12)
+      fireEvent.click(screen.getByRole('menuitemradio', { name: /Curva \(Bézier\)/ }))
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+      rightClick(55, 12)
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 
     it('lejos del contorno no hay menú', async () => {
@@ -517,35 +526,59 @@ describe('VectorizrTool', () => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 
-    it('el menú de un notch permite voltear, cambiar el tipo y eliminar', async () => {
+    it('Añadir notch lo crea: el clic derecho sobre él abre su menú, con voltear, tipo y eliminar', async () => {
       await open()
       await addAtTop()
       rightClick(55, 10)
+      expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeInTheDocument()
       fireEvent.click(screen.getByRole('menuitemradio', { name: 'T-notch' }))
-      expect((screen.getByLabelText('Tipo') as HTMLSelectElement).value).toBe('T')
       rightClick(55, 10)
       expect(screen.getByRole('menuitemradio', { name: /T-notch/ })).toHaveAttribute('aria-checked', 'true')
       fireEvent.click(screen.getByRole('menuitem', { name: 'Voltear' }))
       rightClick(55, 10)
       fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar' }))
-      expect(screen.queryByText('Notch seleccionado')).not.toBeInTheDocument()
-      expect(screen.getByText('Notches: 0')).toBeInTheDocument()
+      rightClick(55, 12)
+      expect(screen.getByRole('menuitem', { name: 'Añadir notch' })).toBeInTheDocument()
     })
 
-    it('Supr o Retroceso borran el notch seleccionado', async () => {
+    it('Supr o Retroceso borran el notch seleccionado, no dentro de un campo', async () => {
       await open()
       await addAtTop()
-      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
       fireEvent.keyDown(document.body, { key: 'Delete' })
-      expect(screen.getByText('Notches: 0')).toBeInTheDocument()
-      expect(screen.queryByText('Notch seleccionado')).not.toBeInTheDocument()
+      rightClick(55, 12)
+      expect(screen.getByRole('menuitem', { name: 'Añadir notch' })).toBeInTheDocument()
     })
 
-    it('Supr dentro del campo de profundidad no borra el notch', async () => {
+    it('Profundidad… abre un diálogo; el valor se corrige y se conserva', async () => {
       await open()
       await addAtTop()
-      fireEvent.keyDown(screen.getByLabelText('Profundidad (mm)'), { key: 'Delete' })
-      expect(screen.getByText('Notches: 1')).toBeInTheDocument()
+      const openDepth = () => {
+        rightClick(55, 10)
+        fireEvent.click(screen.getByRole('menuitem', { name: 'Profundidad…' }))
+        return screen.getByRole('dialog', { name: 'Profundidad del notch' })
+      }
+      let dlg = openDepth()
+      const input = () => within(dlg).getByLabelText('Profundidad (mm)') as HTMLInputElement
+      expect(input().value).toBe('5')
+      fireEvent.change(input(), { target: { value: '8' } })
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Aceptar' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      dlg = openDepth()
+      expect(input().value).toBe('8')
+      fireEvent.change(input(), { target: { value: '' } })
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Aceptar' }))
+      dlg = openDepth()
+      expect(input().value).toBe('5')
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Cancelar' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    it('Escape cierra el menú', async () => {
+      await open()
+      rightClick(55, 12)
+      expect(screen.getByRole('menu')).toBeInTheDocument()
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 
     it('el clic derecho sobre el propio menú no lo cierra', async () => {
@@ -566,20 +599,13 @@ describe('VectorizrTool', () => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
 
-    it('la profundidad del panel se corrige a un valor válido y Escape cierra el menú', async () => {
+    it('ya no hay panel de propiedades a la derecha ni el rótulo de zoom del lienzo', async () => {
       await open()
-      await addAtTop()
-      const depth = screen.getByLabelText('Profundidad (mm)') as HTMLInputElement
-      fireEvent.change(depth, { target: { value: '8' } })
-      fireEvent.blur(depth)
-      expect(depth.value).toBe('8')
-      fireEvent.change(depth, { target: { value: '' } })
-      fireEvent.blur(depth)
-      expect(depth.value).toBe('5')
-      rightClick(55, 10)
-      expect(screen.getByRole('menu')).toBeInTheDocument()
-      fireEvent.keyDown(document, { key: 'Escape' })
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+      expect(screen.queryByText(/^Total:/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/^Longitud:/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Rueda = zoom/)).not.toBeInTheDocument()
+      expect(screen.queryByText('Sin selección')).not.toBeInTheDocument()
+      expect(screen.getByText('Herramienta: Seleccionar')).toBeInTheDocument()
     })
   })
 

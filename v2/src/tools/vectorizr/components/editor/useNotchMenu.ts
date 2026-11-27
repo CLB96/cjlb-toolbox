@@ -5,7 +5,7 @@ import { activeNotches } from '../../store'
 import type { ImagePoint } from '../../types'
 
 export type NotchMenuState =
-  | { kind: 'add'; x: number; y: number; at: ImagePoint }
+  | { kind: 'add'; x: number; y: number; at: ImagePoint; segmentIndex: number }
   | { kind: 'notch'; x: number; y: number; id: string }
 
 /** Alcance del clic en píxeles de pantalla. */
@@ -56,7 +56,7 @@ export function useNotchMenu(
       const hit = nearestOnContour(s.contourPoints, p.x, p.y)
       if (hit && hit.dist <= reach) {
         ev.preventDefault()
-        setMenu({ kind: 'add', x, y, at: { x: hit.x, y: hit.y } })
+        setMenu({ kind: 'add', x, y, at: { x: hit.x, y: hit.y }, segmentIndex: hit.segmentIndex })
         return
       }
       setMenu(null)

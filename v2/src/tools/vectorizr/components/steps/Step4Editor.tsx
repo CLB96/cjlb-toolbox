@@ -4,12 +4,11 @@ import { Dialog } from '../../../../ui/Dialog'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import type { ExportFormat } from '../../logic/exportPieces'
-import type { ContourPoint, SegmentType } from '../../types'
+import type { ContourPoint } from '../../types'
 import { Icon } from '../icons'
 import { EditorCanvas } from '../editor/EditorCanvas'
 import { ExportDialog } from '../editor/ExportDialog'
 import { PieceBar } from '../editor/PieceBar'
-import { PropertiesPanel } from '../editor/PropertiesPanel'
 import { StatusBar } from '../editor/StatusBar'
 import { Toolbar } from '../editor/Toolbar'
 import { isTyping, useEditorShortcuts } from '../editor/useEditorShortcuts'
@@ -64,7 +63,6 @@ export function Step4Editor({ active }: { active: boolean }) {
 
   const updatePoint = (id: string, x: number, y: number) => edit(current().map((p) => (p.id === id ? { ...p, x, y } : p)))
   const addPoint = (x: number, y: number) => edit([...current(), { id: Date.now().toString(), x, y, type: 'line' }])
-  const changeSegmentType = (id: string, type: SegmentType) => edit(current().map((p) => (p.id === id ? { ...p, type } : p)))
   const toggleSegmentType = (id: string) =>
     edit(current().map((p) => (p.id === id ? { ...p, type: p.type === 'line' ? 'bezier' : 'line' } : p)))
   function deletePoint(id: string) {
@@ -149,7 +147,6 @@ export function Step4Editor({ active }: { active: boolean }) {
           onToggleSegmentType={toggleSegmentType}
           centerTrigger={centerTrigger}
         />
-        <PropertiesPanel selectedId={selectedId} selectedNotchId={selectedNotchId} onSegmentTypeChange={changeSegmentType} />
       </div>
 
       <StatusBar />

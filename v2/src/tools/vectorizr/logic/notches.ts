@@ -1,7 +1,7 @@
 // Notches visuales: geometría pura. Un notch se guarda como un punto cualquiera (x, y) y se dibuja
 // siempre pegado al punto más cercano del contorno, apuntando hacia el interior de la pieza.
-import type { ContourPoint, ImagePoint, Notch, NotchType } from '../types'
-import { flattenContour } from './contourPath'
+import type { ContourPoint, ImagePoint, Notch, NotchType, SegmentType } from '../types'
+import { contourSegments, flattenContour, segmentPolyline } from './contourPath'
 
 export const DEFAULT_NOTCH_DEPTH = 5
 const MAX_NOTCH_DEPTH = 100
@@ -29,36 +29,50 @@ export interface ContourHit {
   nx: number
   ny: number
   dist: number
+  /** Tramo del contorno al que pertenece el punto: el tramo i va del punto i al siguiente. */
+  segmentIndex: number
 }
 
 /** Punto del contorno más cercano a (x, y); null si el contorno tiene menos de 2 puntos. */
 export function nearestOnContour(points: ContourPoint[], x: number, y: number): ContourHit | null {
   const flat = flattenContour(points)
-  const n = flat.length
-  if (n < 2) return null
+  if (flat.length < 2) return null
   let area = 0
-  let best: { px: number; py: number; tx: number; ty: number; dist: number } | null = null
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < flat.length; i++) {
     const a = flat[i]!
-    const b = flat[(i + 1) % n]!
+    const b = flat[(i + 1) % flat.length]!
     area += a.x * b.y - b.x * a.y
-    const dx = b.x - a.x
-    const dy = b.y - a.y
-    const len2 = dx * dx + dy * dy
-    if (len2 === 0) continue
-    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / len2))
-    const px = a.x + t * dx
-    const py = a.y + t * dy
-    const dist = Math.hypot(x - px, y - py)
-    if (!best || dist < best.dist) {
-      const len = Math.sqrt(len2)
-      best = { px, py, tx: dx / len, ty: dy / len, dist }
+  }
+  let best: { px: number; py: number; tx: number; ty: number; dist: number; segmentIndex: number } | null = null
+  for (const seg of contourSegments(points)) {
+    const line = segmentPolyline(seg)
+    for (let i = 0; i < line.length - 1; i++) {
+      const a = line[i]!
+      const b = line[i + 1]!
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const len2 = dx * dx + dy * dy
+      if (len2 === 0) continue
+      const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / len2))
+      const px = a.x + t * dx
+      const py = a.y + t * dy
+      const dist = Math.hypot(x - px, y - py)
+      if (!best || dist < best.dist) {
+        const len = Math.sqrt(len2)
+        best = { px, py, tx: dx / len, ty: dy / len, dist, segmentIndex: seg.index }
+      }
     }
   }
   if (!best) return null
   // con área positiva el interior queda a la izquierda del sentido de avance
   const [nx, ny] = area >= 0 ? [-best.ty, best.tx] : [best.ty, -best.tx]
-  return { x: best.px, y: best.py, tx: best.tx, ty: best.ty, nx, ny, dist: best.dist }
+  return { x: best.px, y: best.py, tx: best.tx, ty: best.ty, nx, ny, dist: best.dist, segmentIndex: best.segmentIndex }
+}
+
+/** Copia del contorno con el tipo del tramo `index` cambiado (el tramo i va del punto i al siguiente). */
+export function withSegmentType(points: ContourPoint[], index: number, type: SegmentType): ContourPoint[] {
+  if (index < 0 || index >= points.length) return points
+  return points.map((p, i) => (i === index ? { ...p, type } : p))
 }
 
 export interface NotchShape {
