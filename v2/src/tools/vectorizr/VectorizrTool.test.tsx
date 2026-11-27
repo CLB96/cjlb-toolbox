@@ -710,9 +710,9 @@ describe('VectorizrTool', () => {
       await seedStep4()
       renderTool()
       await inEditor()
-      expect(screen.getByText('Zoom: 173%')).toBeInTheDocument()
+      expect(await screen.findByText('Zoom: 173%')).toBeInTheDocument()
       resizeTo(1600, 1200)
-      expect(screen.getByText('Zoom: 373%')).toBeInTheDocument()
+      expect(await screen.findByText('Zoom: 373%')).toBeInTheDocument()
     })
 
     it('si ya cambiaste el zoom a mano, el cambio de tamaño no lo toca', async () => {
