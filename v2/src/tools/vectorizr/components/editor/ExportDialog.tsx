@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '../../../../ui/Button'
 import { Dialog } from '../../../../ui/Dialog'
 import { toast } from '../../../../ui/toastStore'
+import { useActionStatus } from '../../../../ui/useActionStatus'
 import { useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
 import { exportAllInOne, exportIndividual, type ExportFormat } from '../../logic/exportPieces'
@@ -17,6 +18,8 @@ interface Props {
 }
 
 const FORMATS: ExportFormat[] = ['DXF', 'SVG', 'PDF']
+/** La palomita se ve este rato antes de cerrar el diálogo. */
+const DONE_VISIBLE_MS = 600
 
 /** Diálogo de exportar: todo en un archivo (como siempre) o descarga individual por pieza. */
 export function ExportDialog({ open, onClose, onDone }: Props) {
@@ -25,6 +28,7 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const [view, setView] = useState<'all' | 'individual'>('all')
   const [unchecked, setUnchecked] = useState<ReadonlySet<string>>(new Set())
   const [withNotches, setWithNotches] = useState(false)
+  const action = useActionStatus()
 
   const pieces = open ? piecesNow(api.getState()) : []
   const totalPaths = pieces.reduce((n, p) => n + p.paths.length + (p.contourPoints.length > 1 ? 1 : 0), 0)
@@ -32,6 +36,7 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const hasNotches = pieces.some((p) => p.notches.length > 0)
 
   function close() {
+    action.reset()
     setView('all')
     setUnchecked(new Set())
     setWithNotches(false)
@@ -41,12 +46,17 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   async function run(format: ExportFormat, individual: boolean) {
     const { scaleFactor } = api.getState()
     try {
-      if (individual) await exportIndividual(format, selected, scaleFactor, withNotches)
-      else await exportAllInOne(format, pieces, scaleFactor, withNotches)
+      const ok = await action.run(`${individual ? 'ind' : 'all'}:${format}`, async () => {
+        if (individual) await exportIndividual(format, selected, scaleFactor, withNotches)
+        else await exportAllInOne(format, pieces, scaleFactor, withNotches)
+        return true
+      })
+      if (!ok) return
     } catch {
       toast('error', t('errExport'))
       return
     }
+    await new Promise((resolve) => setTimeout(resolve, DONE_VISIBLE_MS))
     close()
     onDone(format)
   }
@@ -70,11 +80,13 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
         <div className="vz-dialog-col">
           <p className="vz-muted vz-small">{t('exportDesc', totalPaths)}</p>
           {notchOption}
-          <Button onClick={() => void run('DXF', false)}>{t('exportDxf')}</Button>
-          <Button variant="ghost" onClick={() => void run('SVG', false)}>
+          <Button status={action.statusOf('all:DXF')} onClick={() => void run('DXF', false)}>
+            {t('exportDxf')}
+          </Button>
+          <Button variant="ghost" status={action.statusOf('all:SVG')} onClick={() => void run('SVG', false)}>
             {t('exportSvg')}
           </Button>
-          <Button variant="ghost" onClick={() => void run('PDF', false)}>
+          <Button variant="ghost" status={action.statusOf('all:PDF')} onClick={() => void run('PDF', false)}>
             {t('exportPdf')}
           </Button>
           {pieces.length > 1 && (
@@ -99,7 +111,13 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
           ))}
           <div className="vz-dialog-row">
             {FORMATS.map((f, i) => (
-              <Button key={f} variant={i === 0 ? 'primary' : 'ghost'} disabled={selected.length === 0} onClick={() => void run(f, true)}>
+              <Button
+                key={f}
+                variant={i === 0 ? 'primary' : 'ghost'}
+                status={action.statusOf(`ind:${f}`)}
+                disabled={selected.length === 0}
+                onClick={() => void run(f, true)}
+              >
                 {t('formatCount', f, selected.length)}
               </Button>
             ))}

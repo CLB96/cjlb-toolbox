@@ -21,6 +21,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
   const [password, setPassword] = useState('')
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null)
   const [busy, setBusy] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [requesting, setRequesting] = useState(false)
 
   async function run(action: () => Promise<void>, failKey: MessageKey) {
@@ -40,7 +41,8 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    void run(() => signInWithEmail(email, password), 'auth.invalidCredentials')
+    setSubmitting(true)
+    void run(() => signInWithEmail(email, password), 'auth.invalidCredentials').finally(() => setSubmitting(false))
   }
 
   if (requesting) {
@@ -93,7 +95,7 @@ export function LoginScreen({ signInWithGoogle, signInWithEmail, signUpWithEmail
                 {t(errorKey)}
               </p>
             )}
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" status={submitting ? 'loading' : 'idle'} disabled={busy && !submitting}>
               {t('auth.submit')}
             </Button>
             {signUpWithEmail && (
