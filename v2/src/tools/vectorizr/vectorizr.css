@@ -47,7 +47,7 @@
 .vz-pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--glass-dense); color: var(--fg-muted); white-space: nowrap; }
 /* en las barras, el porcentaje de zoom y los contadores siguen el estilo de los botones */
 .vz-bar .vz-pill {
-  display: inline-grid; place-items: center; min-width: 52px; height: 32px; padding: 0 10px;
+  display: inline-grid; place-items: center; height: 32px; padding: 0 7px; font-variant-numeric: tabular-nums;
   border-radius: var(--radius-sm); border: 1px solid var(--edge); background: var(--glass-dense);
   color: var(--fg); font: 500 13px var(--font-body);
 }
