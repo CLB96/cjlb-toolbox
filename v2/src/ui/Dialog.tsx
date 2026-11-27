@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 type Props = { open: boolean; onClose: () => void; title: string; children?: ReactNode }
 
@@ -36,9 +37,17 @@ export function Dialog({ open, onClose, title, children }: Props) {
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
   const downOnBackdrop = useRef(false)
+  const anchorRef = useRef<HTMLSpanElement>(null)
+  const [host, setHost] = useState<Element | null>(null)
+
+  // El diálogo se monta en la raíz de la herramienta (o en body): dentro de un panel con vidrio (backdrop-filter)
+  // 'fixed' se encierra en ese panel y el diálogo queda tapado por el contenido.
+  useLayoutEffect(() => {
+    setHost(open ? (anchorRef.current?.closest('[role="tabpanel"]') ?? document.body) : null)
+  }, [open])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !host) return
     const previous = document.activeElement as HTMLElement | null
     panelRef.current?.focus()
     const onKeyDown = (e: KeyboardEvent) => {
@@ -53,10 +62,9 @@ export function Dialog({ open, onClose, title, children }: Props) {
       document.removeEventListener('keydown', onKeyDown)
       previous?.focus?.()
     }
-  }, [open])
+  }, [open, host])
 
-  if (!open) return null
-  return (
+  const dialog = (
     <div
       className="dialog-backdrop"
       onMouseDown={(e) => {
@@ -82,5 +90,11 @@ export function Dialog({ open, onClose, title, children }: Props) {
         {children}
       </div>
     </div>
+  )
+  return (
+    <>
+      <span ref={anchorRef} hidden />
+      {open && host ? createPortal(dialog, host) : null}
+    </>
   )
 }
