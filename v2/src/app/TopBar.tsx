@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Tabs, type TabItem } from '../ui/Tabs'
-import { Button } from '../ui/Button'
+import { LangSwitch, ThemeSwitch } from '../ui/Switches'
 import { useTheme } from '../theme/useTheme'
 import { useI18n } from '../i18n/useI18n'
 import { TOOLS } from '../tools/registry'
@@ -20,8 +20,8 @@ type Props = {
 }
 
 export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOOLS, mode = 'full' }: Props) {
-  const { t, lang, setLang } = useI18n()
-  const { resolved, setMode } = useTheme()
+  const { t, lang } = useI18n()
+  const { resolved } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const barRef = useRef<HTMLElement>(null)
   const shapeRef = useRef<SVGSVGElement>(null)
@@ -97,20 +97,8 @@ export function TopBar({ route, onNavigate, isAdmin = false, avatar, tools = TOO
           }}
         />
         <div className="topbar__actions">
-          <Button
-            variant="ghost"
-            aria-label={t('shell.lang.toggle')}
-            onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-          >
-            {lang === 'es' ? 'EN' : 'ES'}
-          </Button>
-          <Button
-            variant="ghost"
-            aria-label={t('shell.theme.toggle')}
-            onClick={() => setMode(resolved === 'dark' ? 'light' : 'dark')}
-          >
-            {resolved === 'dark' ? '☀' : '☾'}
-          </Button>
+          <LangSwitch />
+          <ThemeSwitch />
           {avatar}
         </div>
       </div>
