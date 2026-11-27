@@ -45,6 +45,12 @@
 .vz-ib--txt { width: 38px; font-size: 11px; }
 .vz-ib.is-on { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: var(--btn-fg); border-color: transparent; }
 .vz-pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--glass-dense); color: var(--fg-muted); white-space: nowrap; }
+/* en las barras, el porcentaje de zoom y los contadores siguen el estilo de los botones */
+.vz-bar .vz-pill {
+  display: inline-grid; place-items: center; min-width: 52px; height: 32px; padding: 0 10px;
+  border-radius: var(--radius-sm); border: 1px solid var(--edge); background: var(--glass-dense);
+  color: var(--fg); font: 500 13px var(--font-body);
+}
 
 /* área de trabajo + panel lateral */
 .vz-work { display: grid; grid-template-columns: 1fr 260px; gap: 12px; min-height: var(--vz-canvas-h); }
