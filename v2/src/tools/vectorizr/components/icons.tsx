@@ -2,7 +2,7 @@
 // Dibujados para esta herramienta en rejilla de 24 px; el color lo ponen las clases .vz-ico en vectorizr.css.
 
 export type IconName =
-  | 'select' | 'edit' | 'segment' | 'add' | 'eraser' | 'trash' | 'measure' | 'zoom'
+  | 'select' | 'edit' | 'segment' | 'add' | 'eraser' | 'trash' | 'measure'
   | 'undo' | 'redo' | 'back' | 'fit' | 'zout' | 'zin' | 'rotl' | 'rotr'
   | 'path' | 'piece' | 'export' | 'home'
 
@@ -34,7 +34,6 @@ const DEFS: Record<IconName, Def> = {
     main: ['M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z'],
     acc: ['m14.5 12.5 2-2', 'm11.5 9.5 2-2', 'm8.5 6.5 2-2', 'm17.5 15.5 2-2'],
   },
-  zoom: { main: ['m21 21-4.3-4.3'], circ: [[11, 11, 7]], acc: ['M11 8v6', 'M8 11h6'] },
   undo: { main: ['M9 14 4 9l5-5'], acc: ['M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11'] },
   redo: { main: ['m15 14 5-5-5-5'], acc: ['M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13'] },
   back: { main: ['m12 19-7-7 7-7'], acc: ['M19 12H5'] },

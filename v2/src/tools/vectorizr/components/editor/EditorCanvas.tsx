@@ -52,7 +52,6 @@ const CURSORS: Partial<Record<string, string>> = {
   'delete-point': 'cell',
   'segment-type': 'pointer',
   measure: 'crosshair',
-  zoom: 'zoom-in',
 }
 
 export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNotch, onPointMove, onAddPoint, onDeletePoint, onToggleSegmentType, centerTrigger }: Props) {
@@ -193,7 +192,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
         y={stagePos.y}
         scaleX={zoom}
         scaleY={zoom}
-        draggable={activeToolId === 'select' || activeToolId === 'zoom'}
+        draggable={activeToolId === 'select'}
         onClick={handleStageClick}
         onDragEnd={(e) => {
           if (e.target === e.target.getStage()) api.getState().setStagePos({ x: e.target.x(), y: e.target.y() })

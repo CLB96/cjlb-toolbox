@@ -14,7 +14,6 @@ const TOOLS: { id: ToolId; icon: IconName; label: VzKey }[] = [
   { id: 'add-point', icon: 'add', label: 'toolAdd' },
   { id: 'delete-point', icon: 'eraser', label: 'toolDelete' },
   { id: 'measure', icon: 'measure', label: 'toolMeasure' },
-  { id: 'zoom', icon: 'zoom', label: 'toolZoom' },
 ]
 
 /** Teclas de herramienta (EditorCanvas.tsx:130-143). */
@@ -24,7 +23,6 @@ export const TOOL_KEYS: Record<string, ToolId> = {
   a: 'add-point',
   d: 'delete-point',
   m: 'measure',
-  z: 'zoom',
 }
 
 export function Toolbar() {

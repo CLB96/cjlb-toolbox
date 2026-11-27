@@ -646,4 +646,17 @@ describe('VectorizrTool', () => {
       expect(screen.getByText('Puntos: 0')).toBeInTheDocument()
     })
   })
+
+  it('la barra de herramientas ya no tiene el botón de zoom (queda en la barra superior) ni la tecla Z', async () => {
+    await seedStep4()
+    renderTool()
+    await inEditor()
+    const bar = screen.getByRole('toolbar')
+    expect(within(bar).queryByRole('button', { name: /Zoom/ })).not.toBeInTheDocument()
+    expect(within(bar).getAllByRole('button')).toHaveLength(6 + 2 + 1)
+    fireEvent.keyDown(window, { key: 'z' })
+    expect(screen.getByText('Herramienta: Seleccionar')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Acercar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Alejar' })).toBeInTheDocument()
+  })
 })

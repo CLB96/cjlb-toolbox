@@ -132,7 +132,6 @@ const es = {
   toolAdd: 'Agregar punto (A)',
   toolDelete: 'Eliminar punto (D)',
   toolMeasure: 'Medir distancia — 2 clicks para medir',
-  toolZoom: 'Zoom (Z)',
   undo: 'Deshacer (Ctrl+Z)',
   redo: 'Rehacer (Ctrl+Y)',
   // Propiedades
@@ -156,7 +155,7 @@ const es = {
   measureStart: 'Haz click en el punto inicial',
   measureEnd: 'Haz click en el punto final',
   measureDist: (d: A) => `Distancia: ${d} mm · Click para nueva medición`,
-  keysHint: 'S Selec · E Editar · A Agregar · D Borrar · M Medir · Z Zoom',
+  keysHint: 'S Selec · E Editar · A Agregar · D Borrar · M Medir',
   // Manual
   tabFlow: '🚀 Flujo',
   tabTools: '🛠 Herramientas',
@@ -301,7 +300,6 @@ const en: Dict = {
   toolAdd: 'Add point (A)',
   toolDelete: 'Delete point (D)',
   toolMeasure: 'Measure distance — 2 clicks to measure',
-  toolZoom: 'Zoom (Z)',
   undo: 'Undo (Ctrl+Z)',
   redo: 'Redo (Ctrl+Y)',
   selectedPoint: 'Selected point',
@@ -322,7 +320,7 @@ const en: Dict = {
   measureStart: 'Click the start point',
   measureEnd: 'Click the end point',
   measureDist: (d: A) => `Distance: ${d} mm · Click for a new measurement`,
-  keysHint: 'S Select · E Edit · A Add · D Delete · M Measure · Z Zoom',
+  keysHint: 'S Select · E Edit · A Add · D Delete · M Measure',
   tabFlow: '🚀 Flow',
   tabTools: '🛠 Tools',
   tabKeys: '⌨️ Shortcuts',
@@ -366,7 +364,6 @@ const TOOL_NAMES: Record<Lang, Record<ToolId, string>> = {
     'add-point': 'Agregar punto',
     'delete-point': 'Eliminar punto',
     measure: 'Medir distancia',
-    zoom: 'Zoom',
   },
   en: {
     select: 'Select',
@@ -375,7 +372,6 @@ const TOOL_NAMES: Record<Lang, Record<ToolId, string>> = {
     'add-point': 'Add point',
     'delete-point': 'Delete point',
     measure: 'Measure distance',
-    zoom: 'Zoom',
   },
 }
 
@@ -439,7 +435,7 @@ export const HELP: Record<Lang, HelpContent> = {
       section: 'Atajos de teclado y ratón',
       mouse: [
         ['Rueda del mouse', 'Zoom centrado en el cursor'],
-        ['Click + arrastrar', 'Mover la vista (en modo seleccionar o zoom)'],
+        ['Click + arrastrar', 'Mover la vista (en modo seleccionar)'],
         ['Click en punto', 'Seleccionar punto'],
         ['Arrastrar punto', 'Mover punto (seleccionar o editar)'],
         ['Ctrl + Z', 'Deshacer'],
@@ -452,7 +448,6 @@ export const HELP: Record<Lang, HelpContent> = {
         ['A', 'Agregar punto'],
         ['D', 'Eliminar punto'],
         ['M', 'Medir distancia'],
-        ['Z', 'Zoom'],
       ],
       buttonSection: 'Botones del editor',
       buttons: [
@@ -506,7 +501,7 @@ export const HELP: Record<Lang, HelpContent> = {
       section: 'Keyboard and mouse shortcuts',
       mouse: [
         ['Mouse wheel', 'Zoom centered on the cursor'],
-        ['Click + drag', 'Move the view (in select or zoom mode)'],
+        ['Click + drag', 'Move the view (in select mode)'],
         ['Click on point', 'Select point'],
         ['Drag point', 'Move point (select or edit)'],
         ['Ctrl + Z', 'Undo'],
@@ -519,7 +514,6 @@ export const HELP: Record<Lang, HelpContent> = {
         ['A', 'Add point'],
         ['D', 'Delete point'],
         ['M', 'Measure distance'],
-        ['Z', 'Zoom'],
       ],
       buttonSection: 'Editor buttons',
       buttons: [
