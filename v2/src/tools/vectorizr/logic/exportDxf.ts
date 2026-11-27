@@ -3,6 +3,9 @@
 import type { ContourPoint } from '../types'
 import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
+import type { Polyline } from './notchExport'
+
+export const NOTCH_LAYER = 'NOTCHES'
 
 function polylineBlock(points: ContourPoint[], scaleFactor: number, layer = '0'): string[] {
   if (points.length < 2) return []
@@ -21,10 +24,31 @@ function polylineBlock(points: ContourPoint[], scaleFactor: number, layer = '0')
   return lines
 }
 
+/** Líneas sueltas (notches) en su propia capa; abiertas o cerradas. */
+function marksBlock(marks: Polyline[], scaleFactor: number, layer: string): string[] {
+  const lines: string[] = []
+  const add = (code: number, value: string | number) => {
+    lines.push(String(code)); lines.push(String(value))
+  }
+  for (const mark of marks) {
+    if (mark.points.length < 2) continue
+    add(0, 'POLYLINE'); add(8, layer); add(66, 1); add(70, mark.closed ? 1 : 0)
+    for (const pt of mark.points) {
+      add(0, 'VERTEX'); add(8, layer)
+      add(10, (pt.x * scaleFactor).toFixed(6))
+      add(20, (pt.y * scaleFactor).toFixed(6))
+      add(30, '0.0')
+    }
+    add(0, 'SEQEND')
+  }
+  return lines
+}
+
 export function pointsToDxf(
   active: ContourPoint[],
   scaleFactor: number,
   extraPaths: ContourPoint[][] = [],
+  marks: Polyline[] = [],
 ): string {
   const lines: string[] = []
   const add = (code: number, value: string | number) => {
@@ -43,6 +67,8 @@ export function pointsToDxf(
   })
   // Active path
   polylineBlock(active, scaleFactor, '0').forEach(l => lines.push(l))
+  // Notches (opcional): capa aparte
+  marksBlock(marks, scaleFactor, NOTCH_LAYER).forEach(l => lines.push(l))
 
   add(0, 'ENDSEC')
   add(0, 'EOF')
@@ -54,7 +80,8 @@ export function downloadDxf(
   scaleFactor: number,
   extraPaths: ContourPoint[][] = [],
   filename = 'vectorizr.dxf',
+  marks: Polyline[] = [],
 ): void {
-  const content = pointsToDxf(active, scaleFactor, extraPaths)
+  const content = pointsToDxf(active, scaleFactor, extraPaths, marks)
   downloadBlob(new Blob([content], { type: 'application/dxf' }), filename)
 }

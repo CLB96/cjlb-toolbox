@@ -4,6 +4,7 @@
 import type { ContourPoint } from '../types'
 import { contourSegments, flattenContour } from './contourPath'
 import { downloadBlob } from './download'
+import type { Polyline } from './notchExport'
 
 const EMPTY_SVG = '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
 
@@ -27,10 +28,12 @@ export function pointsToSvg(
   active: ContourPoint[],
   scaleFactor: number,
   extraPaths: ContourPoint[][] = [],
+  marks: Polyline[] = [],
 ): string {
   const allPaths = [...extraPaths, ...(active.length >= 2 ? [active] : [])]
   // Caja con lo que se dibuja (curvas incluidas) para no recortar nada.
-  const allPoints = allPaths.flatMap((pts) => flattenContour(pts))
+  const usableMarks = marks.filter((m) => m.points.length >= 2)
+  const allPoints = [...allPaths.flatMap((pts) => flattenContour(pts)), ...usableMarks.flatMap((m) => m.points)]
   if (allPoints.length === 0) return EMPTY_SVG
 
   const xs = allPoints.map(p => p.x * scaleFactor)
@@ -45,7 +48,13 @@ export function pointsToSvg(
     .map(pts => `  <path d="${pathD(pts, scaleFactor)}" fill="none" stroke="#000000" stroke-width="0.5"/>`)
     .join('\n')
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(3)} ${minY.toFixed(3)} ${w} ${h}" width="${w}mm" height="${h}mm">\n${pathTags}\n</svg>`
+  const f = (v: number) => (v * scaleFactor).toFixed(3)
+  const markTags = usableMarks
+    .map((m) => `    <path d="M ${m.points.map((q) => `${f(q.x)} ${f(q.y)}`).join(' L ')}${m.closed ? ' Z' : ''}"/>`)
+    .join('\n')
+  const notchGroup = markTags ? `\n  <g id="notches" fill="none" stroke="#c2410c" stroke-width="0.5">\n${markTags}\n  </g>` : ''
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(3)} ${minY.toFixed(3)} ${w} ${h}" width="${w}mm" height="${h}mm">\n${pathTags}${notchGroup}\n</svg>`
 }
 
 export function downloadSvg(
@@ -53,7 +62,8 @@ export function downloadSvg(
   scaleFactor: number,
   extraPaths: ContourPoint[][] = [],
   filename = 'vectorizr.svg',
+  marks: Polyline[] = [],
 ): void {
-  const content = pointsToSvg(active, scaleFactor, extraPaths)
+  const content = pointsToSvg(active, scaleFactor, extraPaths, marks)
   downloadBlob(new Blob([content], { type: 'image/svg+xml' }), filename)
 }

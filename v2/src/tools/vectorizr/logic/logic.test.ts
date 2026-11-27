@@ -3,7 +3,10 @@ import type { ContourPoint } from '../types'
 import { flattenContour } from './contourPath'
 import { downloadBlob } from './download'
 import { choosePdfPage, layoutPdf, PDF_MARGIN } from './exportPdf'
+import { pointsToDxf } from './exportDxf'
 import { allInOneArgs } from './exportPieces'
+import { pointsToSvg } from './exportSvg'
+import { notchPolylines } from './notchExport'
 import { lowResScale, scalePointsBack } from './lowRes'
 import { clampDepth, newNotch, notchGeometry, nearestOnContour } from './notches'
 import { clampQuantity, fileSafeName, pieceLabel, uniqueFileNames } from './pieces'
@@ -166,5 +169,42 @@ describe('notches (geometría)', () => {
   })
   it('clampDepth corrige valores vacíos, cero, negativos o enormes', () => {
     expect(['', 0, -3, 'x', 2.5, '7', 500].map(clampDepth)).toEqual([5, 5, 5, 5, 2.5, 7, 100])
+  })
+})
+
+describe('capa de notches en la exportación', () => {
+  const square = [p(0, 0), p(10, 0), p(10, 10), p(0, 10)]
+  const notch = (type: 'I' | 'V' | 'T') => ({ ...newNotch(5, 0, type), depth: 4 })
+  const piece = (types: ('I' | 'V' | 'T')[]) => ({ contourPoints: square, notches: types.map(notch) })
+
+  it('notchPolylines: I es una línea, V un triángulo cerrado y T dos líneas', () => {
+    expect(notchPolylines(piece(['I']), 1)).toEqual([{ points: [{ x: 5, y: 0 }, { x: 5, y: 4 }], closed: false }])
+    const v = notchPolylines(piece(['V']), 1)
+    expect(v).toHaveLength(1)
+    expect(v[0]!.closed).toBe(true)
+    expect(v[0]!.points).toHaveLength(3)
+    const t = notchPolylines(piece(['T']), 1)
+    expect(t.map((l) => l.points.length)).toEqual([2, 2])
+    expect(notchPolylines({ contourPoints: [p(0, 0)], notches: [notch('V')] }, 1)).toEqual([])
+  })
+
+  it('el DXF sin notches queda idéntico y con notches añade la capa NOTCHES', () => {
+    const plain = pointsToDxf(square, 1, [])
+    expect(pointsToDxf(square, 1, [], [])).toBe(plain)
+    const marks = notchPolylines(piece(['V', 'I']), 1)
+    const dxf = pointsToDxf(square, 1, [], marks)
+    expect(plain).not.toContain('NOTCHES')
+    expect(dxf).toContain('NOTCHES')
+    expect(dxf.startsWith(plain.slice(0, plain.indexOf('ENDSEC', plain.indexOf('ENTITIES'))))).toBe(true)
+    expect((dxf.match(/POLYLINE/g) ?? []).length - (plain.match(/POLYLINE/g) ?? []).length).toBe(2)
+  })
+
+  it('el SVG sin notches queda idéntico y con notches añade el grupo notches', () => {
+    const plain = pointsToSvg(square, 1, [])
+    expect(pointsToSvg(square, 1, [], [])).toBe(plain)
+    const svg = pointsToSvg(square, 1, [], notchPolylines(piece(['T']), 1))
+    expect(plain).not.toContain('notches')
+    expect(svg).toContain('<g id="notches"')
+    expect((svg.match(/<path /g) ?? []).length).toBe((plain.match(/<path /g) ?? []).length + 2)
   })
 })

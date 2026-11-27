@@ -23,22 +23,25 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const api = useVectorizrApi()
   const [view, setView] = useState<'all' | 'individual'>('all')
   const [unchecked, setUnchecked] = useState<ReadonlySet<string>>(new Set())
+  const [withNotches, setWithNotches] = useState(false)
 
   const pieces = open ? piecesNow(api.getState()) : []
   const totalPaths = pieces.reduce((n, p) => n + p.paths.length + (p.contourPoints.length > 1 ? 1 : 0), 0)
   const selected = pieces.filter((p) => !unchecked.has(p.id))
+  const hasNotches = pieces.some((p) => p.notches.length > 0)
 
   function close() {
     setView('all')
     setUnchecked(new Set())
+    setWithNotches(false)
     onClose()
   }
 
   async function run(format: ExportFormat, individual: boolean) {
     const { scaleFactor } = api.getState()
     try {
-      if (individual) await exportIndividual(format, selected, scaleFactor)
-      else await exportAllInOne(format, pieces, scaleFactor)
+      if (individual) await exportIndividual(format, selected, scaleFactor, withNotches)
+      else await exportAllInOne(format, pieces, scaleFactor, withNotches)
     } catch {
       toast('error', t('errExport'))
       return
@@ -50,11 +53,22 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
   const toggle = (id: string) => setUnchecked((u) => new Set(u.has(id) ? [...u].filter((x) => x !== id) : [...u, id]))
   const allOn = selected.length === pieces.length
 
+  const notchOption = hasNotches && (
+    <>
+      <label className="vz-opt">
+        <input type="checkbox" checked={withNotches} onChange={(e) => setWithNotches(e.target.checked)} />
+        {t('notchLayer')}
+      </label>
+      {withNotches && <p className="vz-muted vz-small">{t('notchLayerHint')}</p>}
+    </>
+  )
+
   return (
     <Dialog open={open} onClose={close} title={t('exportTitle', totalPaths)}>
       {view === 'all' ? (
         <div className="vz-dialog-col">
           <p className="vz-muted vz-small">{t('exportDesc', totalPaths)}</p>
+          {notchOption}
           <Button onClick={() => void run('DXF', false)}>{t('exportDxf')}</Button>
           <Button variant="ghost" onClick={() => void run('SVG', false)}>
             {t('exportSvg')}
@@ -71,6 +85,7 @@ export function ExportDialog({ open, onClose, onDone }: Props) {
       ) : (
         <div className="vz-dialog-col">
           <p className="vz-muted vz-small">{t('individualDesc')}</p>
+          {notchOption}
           <label className="vz-opt">
             <input type="checkbox" checked={allOn} onChange={() => setUnchecked(allOn ? new Set(pieces.map((p) => p.id)) : new Set())} />
             {t('selectAll')}

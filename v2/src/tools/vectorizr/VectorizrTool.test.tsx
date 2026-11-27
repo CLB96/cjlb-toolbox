@@ -582,4 +582,46 @@ describe('VectorizrTool', () => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     })
   })
+
+  describe('capa de notches al exportar', () => {
+    const withNotch = () => ({
+      id: 'a', name: 'Frente', quantity: 1, contourPoints: square, paths: [],
+      notches: [{ id: 'n1', x: 55, y: 10, type: 'V' as const, depth: 5, flipped: false }],
+    })
+    const lastBlob = async () => {
+      const blob = vi.mocked(URL.createObjectURL).mock.calls.slice(-1)[0]![0] as Blob
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.readAsText(blob)
+      })
+    }
+
+    it('sin notches no aparece la opción', async () => {
+      await seedStep4()
+      renderTool()
+      await inEditor()
+      fireEvent.click(screen.getByRole('button', { name: '↓ Exportar' }))
+      expect(screen.queryByRole('checkbox', { name: /Notches en otra capa/ })).not.toBeInTheDocument()
+    })
+
+    it('apagada (por defecto) el DXF sale sin la capa; encendida la incluye', async () => {
+      await seedStep4({ pieces: [withNotch()], activePieceId: 'a' })
+      renderTool()
+      await inEditor()
+      fireEvent.click(screen.getByRole('button', { name: '↓ Exportar' }))
+      const box = screen.getByRole('checkbox', { name: /Notches en otra capa/ })
+      expect(box).not.toBeChecked()
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '📐 DXF (AutoCAD / CNC)' }))
+      await screen.findByRole('dialog', { name: '¡Exportación exitosa!' })
+      const plain = await lastBlob()
+      expect(plain).toContain('POLYLINE')
+      expect(plain).not.toContain('NOTCHES')
+      fireEvent.click(screen.getByRole('button', { name: 'Continuar editando' }))
+      fireEvent.click(screen.getByRole('button', { name: '↓ Exportar' }))
+      fireEvent.click(screen.getByRole('checkbox', { name: /Notches en otra capa/ }))
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '📐 DXF (AutoCAD / CNC)' }))
+      await waitFor(async () => expect(await lastBlob()).toContain('NOTCHES'))
+    })
+  })
 })

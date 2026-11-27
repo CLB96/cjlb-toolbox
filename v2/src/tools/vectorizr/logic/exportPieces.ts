@@ -3,6 +3,7 @@ import type { ContourPoint, Piece } from '../types'
 import { downloadDxf } from './exportDxf'
 import { downloadPdf } from './exportPdf'
 import { downloadSvg } from './exportSvg'
+import { notchPolylines } from './notchExport'
 import { pieceLabel, uniqueFileNames } from './pieces'
 
 export type ExportFormat = 'DXF' | 'SVG' | 'PDF'
@@ -21,21 +22,24 @@ export function allInOneArgs(pieces: Piece[]): { active: ContourPoint[]; extra: 
   return { active: first.contourPoints, extra }
 }
 
-export async function exportAllInOne(format: ExportFormat, pieces: Piece[], scaleFactor: number): Promise<void> {
+/** El PDF no tiene capas: la opción de notches solo cuenta para DXF y SVG. */
+export async function exportAllInOne(format: ExportFormat, pieces: Piece[], scaleFactor: number, withNotches = false): Promise<void> {
   const { active, extra } = allInOneArgs(pieces)
   const filename = EXPORT_FILENAMES[format]
-  if (format === 'DXF') downloadDxf(active, scaleFactor, extra, filename)
-  else if (format === 'SVG') downloadSvg(active, scaleFactor, extra, filename)
+  const marks = withNotches ? pieces.flatMap((p) => notchPolylines(p, scaleFactor)) : []
+  if (format === 'DXF') downloadDxf(active, scaleFactor, extra, filename, marks)
+  else if (format === 'SVG') downloadSvg(active, scaleFactor, extra, filename, marks)
   else await downloadPdf(active, scaleFactor, extra, filename)
 }
 
 /** Un archivo por pieza, con el nombre de la pieza. Se detiene en el primer fallo. */
-export async function exportIndividual(format: ExportFormat, pieces: Piece[], scaleFactor: number): Promise<void> {
+export async function exportIndividual(format: ExportFormat, pieces: Piece[], scaleFactor: number, withNotches = false): Promise<void> {
   const ext = format.toLowerCase() as 'dxf' | 'svg' | 'pdf'
   const names = uniqueFileNames(pieces.map((p, i) => pieceLabel(p, i)), ext)
   for (const [i, piece] of pieces.entries()) {
-    if (format === 'DXF') downloadDxf(piece.contourPoints, scaleFactor, piece.paths, names[i])
-    else if (format === 'SVG') downloadSvg(piece.contourPoints, scaleFactor, piece.paths, names[i])
+    const marks = withNotches ? notchPolylines(piece, scaleFactor) : []
+    if (format === 'DXF') downloadDxf(piece.contourPoints, scaleFactor, piece.paths, names[i], marks)
+    else if (format === 'SVG') downloadSvg(piece.contourPoints, scaleFactor, piece.paths, names[i], marks)
     else await downloadPdf(piece.contourPoints, scaleFactor, piece.paths, names[i])
   }
 }
