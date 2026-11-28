@@ -19,7 +19,7 @@ interface Props {
   onRelease: () => void
 }
 
-/** Controles del detector: método, umbrales de Canny (semi automático) y Detalle (automático). */
+/** Controles del detector: método, umbrales de Canny (semi automático) y Detalle (los dos métodos). */
 export function DetectTuning(p: Props) {
   const { t } = useVzT()
   return (
@@ -64,9 +64,9 @@ export function DetectTuning(p: Props) {
           </label>
         </>
       )}
-      {p.method === 0 && (
+      {p.method === 0 && <p className="vz-muted vz-small">{t('autoHelp')}</p>}
+      {(
         <>
-          <p className="vz-muted vz-small">{t('autoHelp')}</p>
           <label className="vz-field vz-rise-in">
             <span className="vz-slider-label">
               <span>{t('detailLabel')}</span>

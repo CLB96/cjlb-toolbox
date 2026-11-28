@@ -28,6 +28,6 @@ Del 29 al 31 de octubre de 2026 se rehízo el toolbox: de cinco páginas HTML su
 | Bondline | Portado y publicado; mejoras aplicadas (incluidas 8, 9, 10, 12, 18) |
 | Gantt | Portado y publicado (hasta 5 Gantts por usuario, sin JSONBin); mejoras aplicadas |
 | CapaFlow | Portado y publicado; PNG en diseño Nebulosa; mejoras aplicadas (PPM por cola, sin Cmk, confianza conectada, etc.) |
-| VectoriZr | Portado y publicado |
+| VectoriZr | Portado y publicado; el 2026-11-27 se mejoró el paso 3 (detección automática con Detalle y Color de la pieza, y el panel Editar imagen: recortar, ignorar zona con pincel o lazo, brillo y contraste, ver lo que detecta, zoom y giro) |
 
 Los planes, inventarios, mockups y documentos de mejoras que se usaron en el camino se borraron el 2026-10-31 y el 2026-11-02, junto con las páginas del sitio anterior. Siguen en el historial de git (commits anteriores a esa fecha) por si se necesitan.

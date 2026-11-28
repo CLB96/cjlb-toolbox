@@ -11,8 +11,10 @@ export interface Crop {
 
 export interface Stroke {
   points: ImagePoint[]
-  /** Grosor del pincel en píxeles de la foto. */
+  /** Grosor del pincel en píxeles de la foto (en un lazo, el del contorno). */
   size: number
+  /** true: lazo; el trazo se cierra y se rellena por dentro (todo lo de adentro se ignora). */
+  fill?: boolean
 }
 
 export interface ImagePrep {

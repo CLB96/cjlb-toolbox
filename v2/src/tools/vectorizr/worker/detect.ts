@@ -24,11 +24,11 @@ function cannyContours(cv: Cv, blurred: Mat, t1: number, t2: number, keep: Mat =
   }
 }
 
-function detectCanny(cv: Cv, blurred: Mat, minArea: number, t1: number, t2: number, keep: Mat = null): ImagePoint[] {
+function detectCanny(cv: Cv, blurred: Mat, minArea: number, t1: number, t2: number, keep: Mat = null, epsilon = EPSILON_RATIO): ImagePoint[] {
   const contours = cannyContours(cv, blurred, t1, t2, keep)
   try {
     const idx = findLargestContour(cv, contours, minArea)
-    return idx >= 0 ? approxPoints(cv, contours, idx) : []
+    return idx >= 0 ? approxPoints(cv, contours, idx, epsilon) : []
   } finally {
     contours.delete()
   }
@@ -97,13 +97,13 @@ export function detectAll(cv: Cv, input: DetectInput): ImagePoint[][] {
   const gray = new cv.Mat()
   const blurred = new cv.Mat()
   const keep = input.ignoreTransparent ? keepMask(cv, imageData) : null
-  const { blur, epsilon } = detailParams(input.detail)
+  const { blur, epsilon, cannyEpsilon } = detailParams(input.detail)
   try {
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
     cv.GaussianBlur(gray, blurred, new cv.Size(blur, blur), 0)
     if (method === 1) {
       const contours = cannyContours(cv, blurred, threshold1, threshold2, keep)
-      try { return allPoints(cv, contours, minArea) } finally { contours.delete() }
+      try { return allPoints(cv, contours, minArea, cannyEpsilon) } finally { contours.delete() }
     }
     const found = allOtsu(cv, blurred, minArea, keep, epsilon, input.polarity)
     if (found) return found
@@ -122,12 +122,12 @@ export function detect(cv: Cv, input: DetectInput): ImagePoint[] {
   const gray = new cv.Mat()
   const blurred = new cv.Mat()
   const keep = input.ignoreTransparent ? keepMask(cv, imageData) : null
-  const { blur, epsilon } = detailParams(input.detail)
+  const { blur, epsilon, cannyEpsilon } = detailParams(input.detail)
   try {
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
     cv.GaussianBlur(gray, blurred, new cv.Size(blur, blur), 0)
     return method === 1
-      ? detectCanny(cv, blurred, minArea, threshold1, threshold2, keep)
+      ? detectCanny(cv, blurred, minArea, threshold1, threshold2, keep, cannyEpsilon)
       : detectOtsu(cv, blurred, minArea, keep, epsilon, input.polarity)
   } finally {
     src.delete(); gray.delete(); blurred.delete(); keep?.delete()

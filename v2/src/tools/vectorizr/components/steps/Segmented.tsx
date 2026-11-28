@@ -3,6 +3,8 @@ import type { CSSProperties } from 'react'
 interface Option<T extends string | number> {
   value: T
   label: string
+  /** Texto al pasar el mouse (por ejemplo, el atajo de teclado). */
+  title?: string
 }
 
 interface Props<T extends string | number> {
@@ -24,7 +26,7 @@ export function Segmented<T extends string | number>({ options, value, onChange,
     <div className="vz-seg" role="group" aria-label={label} style={style} data-none={index < 0 ? '' : undefined}>
       <span className="vz-seg__pill" aria-hidden="true" />
       {options.map((o) => (
-        <button key={String(o.value)} type="button" data-jelly className={o.value === value ? 'is-on' : ''} aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
+        <button key={String(o.value)} type="button" data-jelly className={o.value === value ? 'is-on' : ''} aria-pressed={o.value === value} title={o.title} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}

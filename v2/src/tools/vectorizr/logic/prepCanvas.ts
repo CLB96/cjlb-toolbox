@@ -12,6 +12,11 @@ function paintStrokes(ctx: CanvasRenderingContext2D, strokes: Stroke[], color: s
     ctx.beginPath()
     s.points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
     if (s.points.length === 1) ctx.lineTo(s.points[0]!.x + 0.01, s.points[0]!.y)
+    if (s.fill) {
+      ctx.fillStyle = color
+      ctx.closePath()
+      ctx.fill()
+    }
     ctx.stroke()
   }
 }
@@ -57,12 +62,16 @@ export interface OverlayOptions {
   handles: boolean
   /** Tamaño de los agarres en píxeles de la foto. */
   handleSize: number
+  /** Zona ignorada que se resalta (al pasar el mouse por su botón); null = ninguna. */
+  highlight?: number | null
 }
 
 /** Dibuja encima de la foto lo que el recorte y los borrados dejan fuera. No cambia la imagen. */
 export function drawPrepOverlay(ctx: CanvasRenderingContext2D, width: number, height: number, prep: ImagePrep, o: OverlayOptions) {
   ctx.save()
   paintStrokes(ctx, prep.strokes, 'rgba(226,75,74,0.5)')
+  const hot = o.highlight == null ? undefined : prep.strokes[o.highlight]
+  if (hot) paintStrokes(ctx, [hot], 'rgba(255,208,64,0.85)')
   const c = prep.crop
   if (c) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'

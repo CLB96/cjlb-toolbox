@@ -10,6 +10,7 @@ interface Props {
   menu: NotchMenuState
   onClose: () => void
   onSelectNotch: (id: string | null) => void
+  onSelectDrill: (id: string | null) => void
   onEditDepth: (id: string) => void
   onEditDrill: (id: string) => void
 }
@@ -21,7 +22,7 @@ const SEGMENTS: { type: SegmentType; label: 'segLine' | 'segBezier' }[] = [
 ]
 
 /** Menú contextual de notches (HTML sobre el lienzo): añadir, y sobre un notch voltear, tipo, profundidad y eliminar. */
-export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth, onEditDrill }: Props) {
+export function NotchMenu({ menu, onClose, onSelectNotch, onSelectDrill, onEditDepth, onEditDrill }: Props) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const notch = useVectorizr((s) => (menu.kind === 'notch' ? activeNotches(s).find((n) => n.id === menu.id) : undefined))
@@ -58,6 +59,7 @@ export function NotchMenu({ menu, onClose, onSelectNotch, onEditDepth, onEditDri
             onClick={run(() => {
               const d = newDrill(menu.at.x, menu.at.y)
               s().addDrill(d)
+              onSelectDrill(d.id)
               onEditDrill(d.id)
             })}
           >

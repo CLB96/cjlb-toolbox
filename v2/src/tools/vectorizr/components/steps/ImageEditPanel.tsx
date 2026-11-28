@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Button } from '../../../../ui/Button'
 import { ElasticSlider } from '../../../../ui/ElasticSlider'
 import { useVzT, type VzKey } from '../../i18n'
 import { ADJUST_MAX, ADJUST_MIN } from '../../logic/prepImage'
 import type { Polarity } from './DetectTuning'
 import { Segmented } from './Segmented'
-import type { useImagePrep, PrepTool } from './useImagePrep'
+import type { EraseMode, useImagePrep, PrepTool } from './useImagePrep'
 
 type Edit = ReturnType<typeof useImagePrep>
 
@@ -19,15 +19,17 @@ interface Props {
   edited: boolean
   polarity: Polarity
   onPolarity: (p: Polarity) => void
+  /** El color de la pieza solo cambia el método automático. */
+  showPolarity?: boolean
 }
 
 /**
  * Botón colapsable «Editar imagen». De arriba abajo: Recortar e Ignorar zona, color de la pieza, brillo y contraste,
  * ver lo que detecta y, al final, deshacer y foto completa.
  */
-export function ImageEditPanel({ edit, edited, polarity, onPolarity }: Props) {
+export function ImageEditPanel({ edit, edited, polarity, onPolarity, showPolarity = true }: Props) {
   const { t } = useVzT()
-  const [open, setOpen] = useState(false)
+  const { open, setOpen } = edit
   const fold = useRef<HTMLDivElement>(null)
   // Cerrado no se puede enfocar ni tabular (inert), aunque siga montado para animar el plegado
   useEffect(() => {
@@ -53,17 +55,57 @@ export function ImageEditPanel({ edit, edited, polarity, onPolarity }: Props) {
         <div className="vz-fold__inner">
           <div className="vz-edit__body">
             <Segmented
-              options={TOOLS.map((x) => ({ value: x.id, label: t(x.label) }))}
+              options={TOOLS.map((x) => ({ value: x.id, label: t(x.label), title: `${t(x.label)} (${x.id === 'crop' ? 'C' : 'I'})` }))}
               value={edit.tool === 'none' ? null : edit.tool}
               onChange={(id) => edit.setTool(edit.tool === id ? 'none' : id)}
             />
+            {edit.tool === 'erase' && (
+              <Segmented
+                label={t('editErase')}
+                options={[
+                  { value: 'brush' as EraseMode, label: t('editBrushMode'), title: `${t('editBrushMode')} (I)` },
+                  { value: 'lasso' as EraseMode, label: t('editLassoMode'), title: `${t('editLassoMode')} (L)` },
+                ]}
+                value={edit.eraseMode}
+                onChange={edit.setEraseMode}
+              />
+            )}
             {active && (
-              <p key={active.id} className="vz-muted vz-small vz-rise-in">
-                {t(active.hint)}
+              <p key={`${active.id}-${edit.eraseMode}`} className="vz-muted vz-small vz-rise-in">
+                {t(active.id === 'erase' && edit.eraseMode === 'lasso' ? 'editLassoHint' : active.hint)}
               </p>
             )}
+            {edit.prep.strokes.length > 0 && (
+              <div className="vz-zones vz-rise-in">
+                <span className="vz-muted vz-small">{t('editZones')}</span>
+                <div className="vz-zones__chips">
+                  {edit.prep.strokes.map((s, i) => (
+                    <span
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={i}
+                      className="vz-path-chip vz-zone"
+                      onMouseEnter={() => edit.setHighlight(i)}
+                      onMouseLeave={() => edit.setHighlight(null)}
+                    >
+                      <span className="vz-accent">{t(s.fill ? 'editZoneLasso' : 'editZoneBrush', i + 1)}</span>
+                      <button
+                        type="button"
+                        data-jelly
+                        title={t('editZoneRemove', i + 1)}
+                        aria-label={t('editZoneRemove', i + 1)}
+                        onFocus={() => edit.setHighlight(i)}
+                        onBlur={() => edit.setHighlight(null)}
+                        onClick={() => edit.removeStroke(i)}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <p className="vz-muted vz-small">{t('editZoomHint')}</p>
-            {edit.tool === 'erase' && (
+            {edit.tool === 'erase' && edit.eraseMode === 'brush' && (
               <label className="vz-field vz-rise-in">
                 <span className="vz-slider-label">
                   <span>{t('editBrush')}</span>
@@ -71,22 +113,24 @@ export function ImageEditPanel({ edit, edited, polarity, onPolarity }: Props) {
                 <ElasticSlider min={1} max={20} value={edit.brush} onChange={(e) => edit.setBrush(Number(e.target.value))} />
               </label>
             )}
-            <div className="vz-field">
-              <span className="vz-slider-label">
-                <span>{t('polarityLabel')}</span>
-              </span>
-              <Segmented
-                label={t('polarityLabel')}
-                options={[
-                  { value: 'auto' as Polarity, label: t('polarityAuto') },
-                  { value: 'dark' as Polarity, label: t('polarityDark') },
-                  { value: 'light' as Polarity, label: t('polarityLight') },
-                ]}
-                value={polarity}
-                onChange={onPolarity}
-              />
-              <span className="vz-muted vz-small">{t('polarityHint')}</span>
-            </div>
+            {showPolarity && (
+              <div className="vz-field">
+                <span className="vz-slider-label">
+                  <span>{t('polarityLabel')}</span>
+                </span>
+                <Segmented
+                  label={t('polarityLabel')}
+                  options={[
+                    { value: 'auto' as Polarity, label: t('polarityAuto') },
+                    { value: 'dark' as Polarity, label: t('polarityDark') },
+                    { value: 'light' as Polarity, label: t('polarityLight') },
+                  ]}
+                  value={polarity}
+                  onChange={onPolarity}
+                />
+                <span className="vz-muted vz-small">{t('polarityHint')}</span>
+              </div>
+            )}
             {(['brightness', 'contrast'] as const).map((key) => (
               <label key={key} className="vz-field">
                 <span className="vz-slider-label">
@@ -109,7 +153,7 @@ export function ImageEditPanel({ edit, edited, polarity, onPolarity }: Props) {
             </label>
             {edit.showMask && <p className="vz-muted vz-small vz-rise-in">{t('editMaskHint')}</p>}
             <div className="vz-edit__row">
-              <Button variant="ghost" onClick={edit.undo} disabled={!edit.canUndo}>
+              <Button variant="ghost" onClick={edit.undo} disabled={!edit.canUndo} title="Ctrl+Z">
                 {t('editUndo')}
               </Button>
               <Button variant="ghost" onClick={edit.fullPhoto} disabled={!edited}>

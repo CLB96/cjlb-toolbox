@@ -70,6 +70,8 @@ export function HelpPanel() {
             <Section text={h.flow.section} />
             <p className="vz-help__intro">{h.flow.intro}</p>
             <Rows rows={h.flow.rows} />
+            <Section text={h.step3.section} />
+            <Rows rows={h.step3.rows} />
           </>
         )}
         {tab === 'tools' && (
@@ -88,6 +90,8 @@ export function HelpPanel() {
             <Keys pairs={h.keys.tools} />
             <Section text={h.keys.buttonSection} />
             <Keys pairs={h.keys.buttons} />
+            <Section text={h.keys.imageSection} />
+            <Keys pairs={h.keys.image} />
           </>
         )}
         {tab === 'tips' && (

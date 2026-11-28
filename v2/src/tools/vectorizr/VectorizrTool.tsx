@@ -79,7 +79,7 @@ function VectorizrBody({ toolId, active }: ToolProps) {
         {orientation === 'portrait' && step >= 3 && <RotatePrompt />}
         {step === 1 && <Step1Upload disabled={!restored} />}
         {step === 2 && <Step2Scale />}
-        {step === 3 && <Step3Vectorize />}
+        {step === 3 && <Step3Vectorize active={active} />}
         {step === 4 && <Step4Editor active={active} />}
       </main>
 

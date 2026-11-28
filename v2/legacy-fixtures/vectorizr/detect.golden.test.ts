@@ -165,6 +165,12 @@ describe('detect vs legacy worker', () => {
       expect(count(3)).toBeGreaterThanOrEqual(count(1))
     })
 
+    it('en Semi automático (Canny) también: más detalle capta más puntos y el 3 es el de siempre', () => {
+      const canny = (detail?: number) => detect(cv, { imageData: toothed(), ...PARAMS[1][1], ...(detail === undefined ? {} : { detail }) }).length
+      expect(canny(3)).toBe(canny())
+      expect(canny(5)).toBeGreaterThan(canny(1))
+    })
+
     it('un valor fuera de rango usa el de siempre', () => {
       expect(count(99)).toBe(count())
     })

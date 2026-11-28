@@ -17,14 +17,16 @@ import { ImageEditPanel } from './ImageEditPanel'
 import { ThresholdGuide } from './ThresholdGuide'
 import { ZoomBar } from './ZoomBar'
 import { useCanvasZoom } from './useCanvasZoom'
+import { useImageEditShortcuts } from './useImageEditShortcuts'
 import { useImagePrep } from './useImagePrep'
+import { useRotationPulse } from './useRotationPulse'
 import { useRoutedPointer } from './useRoutedPointer'
 
 type Mode = 'choose' | 'auto' | 'manual'
 
 const toContour = (pts: ImagePoint[]): ContourPoint[] => pts.map((p, i) => ({ id: String(i), x: p.x, y: p.y, type: 'line' }))
 
-export function Step3Vectorize() {
+export function Step3Vectorize({ active = true }: { active?: boolean }) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const image = useVectorizr((s) => s.image)
@@ -56,6 +58,7 @@ export function Step3Vectorize() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
   const zoom = useCanvasZoom(frameRef, mode !== 'choose')
+  useImageEditShortcuts(active && mode === 'auto', edit)
   const routed = useRoutedPointer(edit.handlers, zoom.handlers, edit.tool !== 'none')
   const zoomScale = zoom.scale
   const requestRef = useRef(0)
@@ -147,16 +150,7 @@ export function Step3Vectorize() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edit.showMask, mode])
 
-  // Al girar la foto, un pequeño destello que acompaña el cambio (no corre con «reducir movimiento»)
-  const firstRotation = useRef(true)
-  useEffect(() => {
-    if (firstRotation.current) {
-      firstRotation.current = false
-      return
-    }
-    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!reduced) canvasRef.current?.animate?.([{ opacity: 0.2 }, { opacity: 1 }], { duration: 380, easing: 'cubic-bezier(0.3, 1.2, 0.5, 1)' })
-  }, [rotation])
+  useRotationPulse(canvasRef, rotation)
 
   // Tras cada edición de la foto (recorte o borrado) se vuelve a detectar solo
   useEffect(() => {
@@ -184,7 +178,7 @@ export function Step3Vectorize() {
       ctx.drawImage(image.image, 0, 0)
     }
     if ((mode === 'auto' && isPrepped(prep)) || edit.tool === 'crop') {
-      drawPrepOverlay(ctx, imageWidth, imageHeight, prep, { handles: edit.tool === 'crop', handleSize: Math.max(10, imageWidth / 70) / zoomScale })
+      drawPrepOverlay(ctx, imageWidth, imageHeight, prep, { handles: edit.tool === 'crop', handleSize: Math.max(10, imageWidth / 70) / zoomScale, highlight: edit.highlight })
     }
     if (mode === 'auto' && multi) {
       const lw = Math.max(1.5, imageWidth / 700)
@@ -214,7 +208,7 @@ export function Step3Vectorize() {
       ctx.fillStyle = i === 0 && pts.length > 1 ? '#ea580c' : '#e11d48'
       ctx.fill()
     })
-  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight, zoomScale, prep, edit.tool, maskView, edit.showMask, rotation, view.w, view.h])
+  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight, zoomScale, prep, edit.tool, maskView, edit.showMask, rotation, view.w, view.h, edit.highlight])
 
   function confirmPoints(pts: ImagePoint[]) {
     const s = api.getState()
@@ -369,6 +363,7 @@ export function Step3Vectorize() {
             edit={edit}
             edited={isPrepped(prep)}
             polarity={polarity}
+            showPolarity={method === 0}
             onPolarity={(p) => {
               polarityRef.current = p
               setPolarity(p)

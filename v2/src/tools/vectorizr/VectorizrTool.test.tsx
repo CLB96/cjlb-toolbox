@@ -339,6 +339,27 @@ describe('VectorizrTool', () => {
     expect(dlg).toHaveTextContent('Teclas rápidas — herramientas')
   })
 
+  it('el manual explica Editar imagen y sus atajos, en español y en inglés', async () => {
+    renderTool()
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: '📖 Manual de usuario' }))
+    const dlg = screen.getByRole('dialog', { name: 'Manual de usuario' })
+    expect(dlg).toHaveTextContent('Paso 3 — Editar imagen')
+    for (const t of ['Recortar', 'Ignorar zona', 'Color de la pieza', 'Brillo y contraste', 'Ver lo que detecta', 'Detalle', 'Girar y acercar']) {
+      expect(within(dlg).getAllByText(t).length).toBeGreaterThan(0)
+    }
+    fireEvent.click(within(dlg).getByRole('tab', { name: '⌨️ Atajos' }))
+    expect(dlg).toHaveTextContent('Teclas rápidas — Editar imagen (paso 3)')
+    expect(dlg).toHaveTextContent('Borrar el notch o el DRILL seleccionado')
+    fireEvent.click(within(dlg).getByRole('tab', { name: '💡 Consejos' }))
+    expect(dlg).toHaveTextContent('Regla pegada a la pieza')
+    act(() => setLangRef!('en'))
+    fireEvent.click(within(dlg).getByRole('tab', { name: /Shortcuts/ }))
+    expect(dlg).toHaveTextContent('Shortcuts — Edit image (step 3)')
+    fireEvent.click(within(dlg).getByRole('tab', { name: /Flow/ }))
+    expect(dlg).toHaveTextContent('Step 3 — Edit image')
+  })
+
   it('precarga OpenCV al estar activa y libera el worker al desmontar (M9, M10)', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] })
     const { unmount } = renderTool()
@@ -524,10 +545,18 @@ describe('VectorizrTool', () => {
       expect(detect.mock.calls[1]![1]).toMatchObject({ detail: 5 })
     })
 
-    it('Detalle solo aparece con el método automático', async () => {
+    it('Detalle sirve en los dos métodos y Color de la pieza solo en el automático', async () => {
       await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      expect(screen.getByRole('button', { name: 'Oscura' })).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: 'Semi automático' }))
-      expect(screen.queryByRole('slider', { name: /Detalle/ })).not.toBeInTheDocument()
+      const slider = screen.getByRole('slider', { name: /Detalle/ })
+      expect(slider).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Oscura' })).not.toBeInTheDocument()
+      fireEvent.change(slider, { target: { value: '4' } })
+      fireEvent.pointerUp(slider)
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(2))
+      expect(detect.mock.calls[1]![1]).toMatchObject({ method: 1, detail: 4 })
     })
 
     it('el panel ordena: herramientas, color de la pieza, brillo y contraste, ver lo que detecta y al final deshacer', async () => {
@@ -572,6 +601,12 @@ describe('VectorizrTool', () => {
       await openAuto()
       fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
       expect(screen.getByText(/Rueda del mouse: acercar/)).toBeInTheDocument()
+    })
+
+    it('sin zonas ignoradas no hay lista de zonas', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      expect(screen.queryByText('Zonas ignoradas')).not.toBeInTheDocument()
     })
 
     it('Color de la pieza (dentro de Editar imagen): Oscura o Clara fuerza la polaridad; Auto no manda nada', async () => {
@@ -681,6 +716,24 @@ describe('VectorizrTool', () => {
       fireEvent.keyDown(document.body, { key: 'Delete' })
       rightClick(55, 12)
       expect(screen.getByRole('menuitem', { name: 'Añadir notch' })).toBeInTheDocument()
+    })
+
+    it('Supr borra el drill seleccionado (el recién creado) aunque ya se haya cerrado su diálogo', async () => {
+      await open()
+      rightClick(55, 12)
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Añadir DRILL' }))
+      const dlg = await screen.findByRole('dialog', { name: 'DRILL' })
+      fireEvent.click(within(dlg).getByRole('button', { name: 'Aceptar' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      const features = () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Exportar' }))
+        const found = screen.queryByRole('checkbox', { name: /Agregar features/ }) !== null
+        fireEvent.keyDown(document, { key: 'Escape' })
+        return found
+      }
+      expect(features()).toBe(true)
+      fireEvent.keyDown(document.body, { key: 'Delete' })
+      expect(features()).toBe(false)
     })
 
     it('Profundidad… abre un diálogo; el valor se corrige y se conserva', async () => {

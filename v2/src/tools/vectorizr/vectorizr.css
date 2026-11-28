@@ -299,3 +299,9 @@
   .vz-fold, .vz-chev { transition: none; }
   .vz-fold[data-open='true'] .vz-edit__body > *, .vz-rise-in { animation: none; }
 }
+
+/* Zonas ignoradas: una pastilla por zona, con su ✕ para quitarla sola */
+.vz-zones { display: flex; flex-direction: column; gap: 6px; }
+.vz-zones__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vz-zone { transition: border-color 0.2s, background 0.2s, transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.vz-zone:hover, .vz-zone:focus-within { border-color: #ffd040; transform: translateY(-1px); }

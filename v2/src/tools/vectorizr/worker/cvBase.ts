@@ -76,10 +76,10 @@ export function externalContours(cv: Cv, binary: Mat): Mat {
   }
 }
 
-/** Desenfoque y simplificación del contorno según «Detalle» (1-5); sin valor o fuera de rango, el de siempre. */
-export function detailParams(detail: number | undefined): { blur: number; epsilon: number } {
+/** Desenfoque y simplificación del contorno según «Detalle» (1-5, en los dos métodos); sin valor o fuera de rango, el de siempre. */
+export function detailParams(detail: number | undefined): { blur: number; epsilon: number; cannyEpsilon: number } {
   const i = Number.isInteger(detail) && detail! >= 1 && detail! <= 5 ? detail! - 1 : DETAIL_DEFAULT - 1
-  return { blur: DETAIL_BLUR[i]!, epsilon: OTSU_EPSILON_RATIO * DETAIL_EPSILON[i]! }
+  return { blur: DETAIL_BLUR[i]!, epsilon: OTSU_EPSILON_RATIO * DETAIL_EPSILON[i]!, cannyEpsilon: EPSILON_RATIO * DETAIL_EPSILON[i]! }
 }
 
 /** Deja en 0 lo que la máscara `keep` descarta (zona que el usuario pidió ignorar). Sin máscara no hace nada. */

@@ -59,7 +59,7 @@ const es = {
   detectAgain: 'Volver a detectar',
   clearDrawing: 'Borrar todo el dibujo',
   clearTitle: 'Borrar dibujo',
-  clearAsk: (name: A) => `¿Borrar todos los puntos, trazos y notches de «${name}»? No se puede deshacer.`,
+  clearAsk: (name: A) => `¿Borrar todos los puntos, trazos, notches y drills de «${name}»? No se puede deshacer.`,
   clearConfirm: 'Borrar',
   notchLayer: 'Agregar features',
   notchLayerHint: 'Dibuja los notches y los drills en la capa NOTCHES del DXF o en el grupo notches del SVG. El PDF no los incluye.',
@@ -179,6 +179,13 @@ const es = {
   editBrush: 'Tamaño del pincel',
   editUndo: 'Deshacer',
   editFullPhoto: 'Foto completa',
+  editBrushMode: 'Pincel',
+  editLassoMode: 'Lazo',
+  editLassoHint: 'Dibuja con el mouse alrededor de lo que no es pieza y suelta: se ignora todo lo de adentro.',
+  editZones: 'Zonas ignoradas',
+  editZoneBrush: (n: A) => `Pincel ${n}`,
+  editZoneLasso: (n: A) => `Lazo ${n}`,
+  editZoneRemove: (n: A) => `Quitar zona ${n}`,
   editZoomHint: 'Rueda del mouse: acercar. Arrastra para mover la foto (con una herramienta, Mayús + arrastrar).',
   detailLabel: 'Detalle',
   detailHint: 'Más detalle capta muescas y dientes pequeños; menos detalle limpia el ruido.',
@@ -245,7 +252,7 @@ const en: Dict = {
   detectAgain: 'Detect again',
   clearDrawing: 'Clear the whole drawing',
   clearTitle: 'Clear drawing',
-  clearAsk: (name: A) => `Clear all points, paths and notches of “${name}”? This cannot be undone.`,
+  clearAsk: (name: A) => `Clear all points, paths, notches and drills of “${name}”? This cannot be undone.`,
   clearConfirm: 'Clear',
   notchLayer: 'Add features',
   notchLayerHint: 'Draws the notches and drills on the DXF layer NOTCHES or the SVG group notches. The PDF does not include them.',
@@ -358,6 +365,13 @@ const en: Dict = {
   editBrush: 'Brush size',
   editUndo: 'Undo',
   editFullPhoto: 'Full photo',
+  editBrushMode: 'Brush',
+  editLassoMode: 'Lasso',
+  editLassoHint: 'Draw around what is not the part and let go: everything inside is ignored.',
+  editZones: 'Ignored areas',
+  editZoneBrush: (n: A) => `Brush ${n}`,
+  editZoneLasso: (n: A) => `Lasso ${n}`,
+  editZoneRemove: (n: A) => `Remove area ${n}`,
   editZoomHint: 'Mouse wheel: zoom. Drag to move the photo (with a tool active, Shift + drag).',
   detailLabel: 'Detail',
   detailHint: 'More detail picks up small notches and teeth; less detail cleans up noise.',
@@ -422,6 +436,7 @@ export interface HelpRow {
 export interface HelpContent {
   title: string
   flow: { section: string; intro: string; rows: HelpRow[] }
+  step3: { section: string; rows: HelpRow[] }
   tools: { section: string; rows: HelpRow[]; multiSection: string; multiRows: HelpRow[] }
   keys: {
     section: string
@@ -430,6 +445,8 @@ export interface HelpContent {
     tools: [string, string][]
     buttonSection: string
     buttons: [string, string][]
+    imageSection: string
+    image: [string, string][]
   }
   tips: { section: string; rows: HelpRow[] }
 }
@@ -443,8 +460,21 @@ export const HELP: Record<Lang, HelpContent> = {
       rows: [
         { icon: '📂', title: 'Paso 1 — Cargar imagen', desc: 'Sube una foto clara de la pieza sobre un fondo contrastante. Acepta JPG, PNG y WebP. Cuanto más nítida sea la foto y mayor el contraste, mejor será el resultado.' },
         { icon: '📏', title: 'Paso 2 — Definir escala', desc: 'Marca dos puntos sobre la imagen cuya distancia real conoces (por ejemplo, los extremos de una regla). Ingresa la medida real en mm, cm, m o pulgadas. Esto permite que el DXF exportado tenga las medidas reales de la pieza.' },
-        { icon: '🔍', title: 'Paso 3 — Vectorizar', desc: 'La app detecta el contorno automáticamente usando análisis de imagen. Puedes ajustar el umbral para incluir o excluir detalles. Si el resultado no es perfecto, puedes corregirlo en el paso siguiente.' },
+        { icon: '🔍', title: 'Paso 3 — Vectorizar', desc: 'La app detecta el contorno automáticamente usando análisis de imagen. Con Editar imagen puedes recortar, ignorar zonas (como la regla) y ajustar la foto antes de detectar, y con Detalle y Color de la pieza afinas el resultado. Si no es perfecto, puedes corregirlo en el paso siguiente.' },
         { icon: '✏️', title: 'Paso 4 — Editar y exportar', desc: 'Edita los puntos del contorno con precisión: muévelos, agrégalos, elimínalos o cambia los segmentos a curvas Bezier. Al terminar, exporta como DXF (AutoCAD/CNC), SVG o PDF.' },
+      ],
+    },
+    step3: {
+      section: 'Paso 3 — Editar imagen (preparar la foto antes de detectar)',
+      rows: [
+        { icon: '✂️', title: 'Recortar', desc: 'Arrastra las esquinas o los bordes del marco para dejar fuera la regla y la mesa. Lo de afuera no se detecta; donde el recorte corta la pieza, el contorno sigue el borde del recorte en línea recta. La escala no cambia.' },
+        { icon: '🖌️', title: 'Ignorar zona', desc: 'Pinta con el pincel (o encierra con el lazo) lo que no es pieza: la regla, una sombra, un papel. El detector no lo toma en cuenta, aunque esté pegado a la pieza. Si la regla toca la pieza, pinta hasta su borde sin pasarte. Cada zona aparece en una lista: pasa el mouse por su nombre para verla resaltada y pulsa ✕ para quitar solo esa.' },
+        { icon: '🎨', title: 'Color de la pieza', desc: 'Auto elige solo. Si el contorno sale mal, indica si la pieza es más oscura o más clara que el fondo.' },
+        { icon: '☀️', title: 'Brillo y contraste', desc: 'Ajustan lo que ve el detector, no tu foto original. Ayudan con fotos oscuras, con sombras suaves o con poco contraste.' },
+        { icon: '👁️', title: 'Ver lo que detecta', desc: 'Muestra en blanco la pieza que toma el detector y en negro el fondo, lo que descarta y la zona ignorada. Sirve para entender por qué falló una detección.' },
+        { icon: '🎚️', title: 'Detalle', desc: 'Más detalle capta muescas y dientes pequeños; menos detalle limpia el ruido. El 3 es el valor normal. Funciona en el método automático y en el semi automático.' },
+        { icon: '🔄', title: 'Girar y acercar', desc: 'Gira la foto de 90 en 90 con los botones de abajo a la derecha, acerca con la rueda del mouse y mueve la foto arrastrando (con una herramienta activa, Mayús + arrastrar). Es solo la vista: no cambia las medidas.' },
+        { icon: '↩️', title: 'Deshacer y Foto completa', desc: 'Deshacer quita el último cambio. Foto completa quita el recorte, las zonas ignoradas y los ajustes de brillo y contraste.' },
       ],
     },
     tools: {
@@ -472,6 +502,7 @@ export const HELP: Record<Lang, HelpContent> = {
         ['Arrastrar punto', 'Mover punto (seleccionar o editar)'],
         ['Ctrl + Z', 'Deshacer'],
         ['Ctrl + Y / Ctrl + Shift + Z', 'Rehacer'],
+        ['Supr / Retroceso', 'Borrar el notch o el DRILL seleccionado'],
       ],
       toolSection: 'Teclas rápidas — herramientas',
       tools: [
@@ -488,6 +519,15 @@ export const HELP: Record<Lang, HelpContent> = {
         ['Nuevo trazo (barra superior)', 'Guarda el trazo actual y empieza uno nuevo'],
         ['Exportar', 'Abre el panel de exportación (DXF / SVG / PDF)'],
       ],
+      imageSection: 'Teclas rápidas — Editar imagen (paso 3)',
+      image: [
+        ['C', 'Recortar'],
+        ['I', 'Ignorar zona con pincel'],
+        ['L', 'Ignorar zona con lazo'],
+        ['Esc', 'Soltar la herramienta'],
+        ['Ctrl + Z', 'Deshacer el último cambio de Editar imagen'],
+        ['Mayús + arrastrar', 'Mover la foto con una herramienta activa'],
+      ],
     },
     tips: {
       section: 'Para mejores resultados',
@@ -497,6 +537,7 @@ export const HELP: Record<Lang, HelpContent> = {
         { icon: '🎯', title: 'Umbral de vectorización', desc: 'En el paso 3, si el contorno detectado tiene ruido o le faltan partes, ajusta el umbral. Valores más bajos capturan más detalles; valores más altos dan contornos más limpios.' },
         { icon: '✏️', title: 'Edición de puntos', desc: 'Menos puntos = contorno más suave para CNC. Elimina puntos redundantes en zonas rectas. Usa Bezier solo en curvas reales, no en segmentos casi rectos.' },
         { icon: '📐', title: 'Valida antes de exportar', desc: 'Usa la herramienta de medición para verificar dimensiones clave antes de exportar. Compara con las medidas reales de la pieza.' },
+        { icon: '🪄', title: 'Regla pegada a la pieza', desc: 'Si la regla toca la pieza y entra en el contorno, usa Ignorar zona sobre la regla. Si aun así sale mal, prueba Color de la pieza o sube el Detalle.' },
         { icon: '🗂️', title: 'Trazos múltiples', desc: 'Para piezas con agujeros, usa "Nuevo trazo" para cada contorno interior. En el DXF exportado, cada trazo aparece como una polilínea independiente.' },
       ],
     },
@@ -509,8 +550,21 @@ export const HELP: Record<Lang, HelpContent> = {
       rows: [
         { icon: '📂', title: 'Step 1 — Upload image', desc: 'Upload a clear photo of the part on a contrasting background. Accepts JPG, PNG and WebP. The sharper the photo and the higher the contrast, the better the result.' },
         { icon: '📏', title: 'Step 2 — Set scale', desc: 'Mark two points on the image whose real distance you know (for example, the ends of a ruler). Enter the real measurement in mm, cm, m or inches. This lets the exported DXF have the real dimensions of the part.' },
-        { icon: '🔍', title: 'Step 3 — Vectorize', desc: 'The app detects the contour automatically using image analysis. You can adjust the threshold to include or exclude details. If the result is not perfect, you can fix it in the next step.' },
+        { icon: '🔍', title: 'Step 3 — Vectorize', desc: 'The app detects the contour automatically using image analysis. With Edit image you can crop, ignore areas (such as the ruler) and adjust the photo before detecting, and with Detail and Part color you fine-tune the result. If it is not perfect, you can fix it in the next step.' },
         { icon: '✏️', title: 'Step 4 — Edit and export', desc: 'Edit the contour points precisely: move, add or delete them, or turn segments into Bezier curves. When you are done, export as DXF (AutoCAD/CNC), SVG or PDF.' },
+      ],
+    },
+    step3: {
+      section: 'Step 3 — Edit image (prepare the photo before detecting)',
+      rows: [
+        { icon: '✂️', title: 'Crop', desc: 'Drag the corners or edges of the frame to leave out the ruler and the table. Whatever is outside is not detected; where the crop cuts the part, the contour follows the crop edge in a straight line. The scale does not change.' },
+        { icon: '🖌️', title: 'Ignore area', desc: 'Paint with the brush (or enclose with the lasso) whatever is not the part: the ruler, a shadow, a piece of paper. The detector leaves it out, even if it touches the part. If the ruler touches the part, paint up to its edge without going over. Each area appears in a list: hover its name to see it highlighted and press ✕ to remove only that one.' },
+        { icon: '🎨', title: 'Part color', desc: 'Auto chooses by itself. If the contour comes out wrong, say whether the part is darker or lighter than the background.' },
+        { icon: '☀️', title: 'Brightness and contrast', desc: 'They adjust what the detector sees, not your original photo. They help with dark photos, soft shadows or low contrast.' },
+        { icon: '👁️', title: 'View what it detects', desc: 'Shows the part the detector takes in white and the background, what it discards and the ignored area in black. It helps to understand why a detection failed.' },
+        { icon: '🎚️', title: 'Detail', desc: 'More detail picks up small notches and teeth; less detail cleans up noise. 3 is the normal value. It works in both the automatic and the semi-automatic method.' },
+        { icon: '🔄', title: 'Rotate and zoom', desc: 'Rotate the photo in 90° steps with the buttons at the bottom right, zoom with the mouse wheel and move the photo by dragging (with a tool active, Shift + drag). This only changes the view: measurements do not change.' },
+        { icon: '↩️', title: 'Undo and Full photo', desc: 'Undo removes the last change. Full photo removes the crop, the ignored areas and the brightness and contrast adjustments.' },
       ],
     },
     tools: {
@@ -538,6 +592,7 @@ export const HELP: Record<Lang, HelpContent> = {
         ['Drag point', 'Move point (select or edit)'],
         ['Ctrl + Z', 'Undo'],
         ['Ctrl + Y / Ctrl + Shift + Z', 'Redo'],
+        ['Del / Backspace', 'Delete the selected notch or DRILL'],
       ],
       toolSection: 'Hotkeys — tools',
       tools: [
@@ -554,6 +609,15 @@ export const HELP: Record<Lang, HelpContent> = {
         ['New path (top bar)', 'Saves the current path and starts a new one'],
         ['Export', 'Opens the export panel (DXF / SVG / PDF)'],
       ],
+      imageSection: 'Shortcuts — Edit image (step 3)',
+      image: [
+        ['C', 'Crop'],
+        ['I', 'Ignore area with brush'],
+        ['L', 'Ignore area with lasso'],
+        ['Esc', 'Put the tool down'],
+        ['Ctrl + Z', 'Undo the last Edit image change'],
+        ['Shift + drag', 'Move the photo with a tool active'],
+      ],
     },
     tips: {
       section: 'For best results',
@@ -563,6 +627,7 @@ export const HELP: Record<Lang, HelpContent> = {
         { icon: '🎯', title: 'Vectorization threshold', desc: 'In step 3, if the detected contour is noisy or missing parts, adjust the threshold. Lower values capture more detail; higher values give cleaner contours.' },
         { icon: '✏️', title: 'Point editing', desc: 'Fewer points = smoother contour for CNC. Remove redundant points in straight areas. Use Bezier only on real curves, not on nearly straight segments.' },
         { icon: '📐', title: 'Validate before exporting', desc: 'Use the measuring tool to check key dimensions before exporting. Compare them with the real measurements of the part.' },
+        { icon: '🪄', title: 'Ruler touching the part', desc: 'If the ruler touches the part and ends up in the contour, use Ignore area over the ruler. If it still comes out wrong, try Part color or raise the Detail.' },
         { icon: '🗂️', title: 'Multiple paths', desc: 'For parts with holes, use "New path" for each inner contour. In the exported DXF, each path appears as an independent polyline.' },
       ],
     },

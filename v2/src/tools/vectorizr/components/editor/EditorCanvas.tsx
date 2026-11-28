@@ -21,6 +21,8 @@ interface Props {
   onSelect: (id: string | null) => void
   selectedNotchId: string | null
   onSelectNotch: (id: string | null) => void
+  selectedDrillId: string | null
+  onSelectDrill: (id: string | null) => void
   onPointMove: (id: string, x: number, y: number) => void
   onAddPoint: (x: number, y: number) => void
   onDeletePoint: (id: string) => void
@@ -58,7 +60,7 @@ const CURSORS: Partial<Record<string, string>> = {
   measure: 'crosshair',
 }
 
-export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNotch, onPointMove, onAddPoint, onDeletePoint, onToggleSegmentType, centerTrigger }: Props) {
+export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNotch, selectedDrillId, onSelectDrill, onPointMove, onAddPoint, onDeletePoint, onToggleSegmentType, centerTrigger }: Props) {
   const { t } = useVzT()
   const api = useVectorizrApi()
   const image = useVectorizr((s) => s.image)
@@ -192,6 +194,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
     if (activeToolId === 'select' || activeToolId === 'edit-point') {
       onSelect(null)
       onSelectNotch(null)
+      onSelectDrill(null)
     }
   }
 
@@ -270,7 +273,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
             })}
             <HandleLayer />
             <NotchLayer selectedNotchId={selectedNotchId} onSelect={onSelectNotch} />
-            <DrillLayer onEdit={setDrillFor} />
+            <DrillLayer onEdit={setDrillFor} selectedId={selectedDrillId} onSelect={onSelectDrill} />
             {m0 && <Circle x={m0.x} y={m0.y} radius={4 / zoom} fill="#fbbf24" listening={false} />}
             {m0 && m1 && (
               <>
@@ -291,7 +294,7 @@ export function EditorCanvas({ selectedId, onSelect, selectedNotchId, onSelectNo
         </Layer>
       </Stage>
 
-      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} onEditDepth={setDepthFor} onEditDrill={setDrillFor} />}
+      {menu && <NotchMenu menu={menu} onClose={closeMenu} onSelectNotch={onSelectNotch} onSelectDrill={onSelectDrill} onEditDepth={setDepthFor} onEditDrill={setDrillFor} />}
       <NotchDepthDialog notchId={depthFor} onClose={() => setDepthFor(null)} />
       <DrillDialog drillId={drillFor} onClose={() => setDrillFor(null)} />
       {activeToolId === 'measure' && (

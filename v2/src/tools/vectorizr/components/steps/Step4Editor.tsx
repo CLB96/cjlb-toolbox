@@ -26,6 +26,7 @@ export function Step4Editor({ active }: { active: boolean }) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedNotchId, setSelectedNotchId] = useState<string | null>(null)
+  const [selectedDrillId, setSelectedDrillId] = useState<string | null>(null)
   const [showExport, setShowExport] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [confirmStart, setConfirmStart] = useState(false)
@@ -34,24 +35,36 @@ export function Step4Editor({ active }: { active: boolean }) {
 
   useEditorShortcuts(active)
 
-  // Supr o Retroceso borran el notch seleccionado (no dentro de campos ni de diálogos)
+  // Supr o Retroceso borran el notch o el drill seleccionado (no dentro de campos ni de diálogos)
   useEffect(() => {
-    if (!active || !selectedNotchId) return
+    if (!active || (!selectedNotchId && !selectedDrillId)) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       if (isTyping(e.target)) return
       if (e.target instanceof Element && e.target.closest('[role="dialog"]')) return
       e.preventDefault()
-      api.getState().removeNotch(selectedNotchId)
+      if (selectedNotchId) api.getState().removeNotch(selectedNotchId)
+      else if (selectedDrillId) api.getState().removeDrill(selectedDrillId)
       setSelectedNotchId(null)
+      setSelectedDrillId(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, api, selectedNotchId])
+  }, [active, api, selectedNotchId, selectedDrillId])
   useEffect(() => {
     setSelectedId(null)
     setSelectedNotchId(null)
+    setSelectedDrillId(null)
   }, [activePieceId])
+  // Un notch y un drill no se seleccionan a la vez
+  const selectNotch = (id: string | null) => {
+    setSelectedNotchId(id)
+    if (id) setSelectedDrillId(null)
+  }
+  const selectDrill = (id: string | null) => {
+    setSelectedDrillId(id)
+    if (id) setSelectedNotchId(null)
+  }
 
   const allPaths = [...paths, ...(contourPoints.length > 1 ? [contourPoints] : [])]
   const totalPts = allPaths.reduce((a, p) => a + p.length, 0)
@@ -151,7 +164,9 @@ export function Step4Editor({ active }: { active: boolean }) {
           selectedId={selectedId}
           onSelect={setSelectedId}
           selectedNotchId={selectedNotchId}
-          onSelectNotch={setSelectedNotchId}
+          onSelectNotch={selectNotch}
+          selectedDrillId={selectedDrillId}
+          onSelectDrill={selectDrill}
           onPointMove={updatePoint}
           onAddPoint={addPoint}
           onDeletePoint={deletePoint}
