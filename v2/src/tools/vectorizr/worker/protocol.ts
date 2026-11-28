@@ -14,6 +14,8 @@ export interface DetectRequest extends DetectParams {
   height: number
   /** true: devuelve todos los contornos (respuesta 'contours'); si no, solo el mayor ('contour'). */
   multi?: boolean
+  /** true: en vez de contornos, devuelve lo que el detector ve (respuesta 'mask'). */
+  mask?: boolean
   /** Píxeles RGBA; su buffer se transfiere (M8), el ImageData original queda vacío. */
   data: Uint8ClampedArray
 }
@@ -30,6 +32,14 @@ export interface ContourResponse {
   points: ImagePoint[]
 }
 
+export interface MaskResponse {
+  type: 'mask'
+  id: number
+  width: number
+  height: number
+  data: Uint8ClampedArray
+}
+
 export interface ContoursResponse {
   type: 'contours'
   id: number
@@ -43,4 +53,4 @@ export interface ErrorResponse {
   message: string
 }
 
-export type WorkerResponse = ReadyResponse | ContourResponse | ContoursResponse | ErrorResponse
+export type WorkerResponse = ReadyResponse | ContourResponse | ContoursResponse | MaskResponse | ErrorResponse

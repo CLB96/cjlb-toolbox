@@ -1,6 +1,6 @@
 // Worker clásico de OpenCV (mismo protocolo que Digitalizacion/src/workers/opencv.worker.ts, más ids,
 // errores y cola). No debe tener exports: Vite lo emitiría como módulo ESM y importScripts no existe ahí.
-import { detect, detectAll } from './detect'
+import { detect, detectAll, previewMask } from './detect'
 import type { WorkerRequest, WorkerResponse } from './protocol'
 
 declare const cv: unknown
@@ -45,9 +45,12 @@ scope.addEventListener('message', (e) => {
     return
   }
   try {
-    const { id, data, width, height, method, threshold1, threshold2, multi } = req
-    const input = { imageData: { data, width, height }, method, threshold1, threshold2 }
-    if (multi) post({ type: 'contours', id, contours: detectAll(cv, input) })
+    const { id, data, width, height, method, threshold1, threshold2, multi, mask, ignoreTransparent, detail, polarity } = req
+    const input = { imageData: { data, width, height }, method, threshold1, threshold2, ignoreTransparent, detail, polarity }
+    if (mask) {
+      const m = previewMask(cv, input)
+      post({ type: 'mask', id, width: m.width, height: m.height, data: m.data })
+    } else if (multi) post({ type: 'contours', id, contours: detectAll(cv, input) })
     else post({ type: 'contour', id, points: detect(cv, input) })
   } catch (err) {
     post({ type: 'error', id: req.id, message: errorMessage(err) })

@@ -1,0 +1,22 @@
+/* Deslizador líquido elástico (ver ElasticSlider.tsx) */
+.vz-sl { --p: 0; position: relative; height: 28px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.vz-sl__trk {
+  position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 999px; background: var(--glass-dense);
+  box-shadow: inset 0 0 0 1px var(--edge); transition: height 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), top 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.vz-sl[data-on='true'] .vz-sl__trk { height: 8px; top: 10px; }
+.vz-sl__fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: calc(9px + var(--p) * (100% - 18px)); border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+}
+.vz-sl__th {
+  position: absolute; top: 14px; left: calc(9px + var(--p) * (100% - 18px)); width: 18px; height: 18px; margin: -9px 0 0 -9px;
+  border-radius: 50%; background: #fff; box-shadow: 0 2px 8px var(--btn-shadow); pointer-events: none;
+  transition: box-shadow 0.3s;
+}
+.vz-sl[data-on='true'] .vz-sl__th { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-1) 28%, transparent), 0 2px 8px var(--btn-shadow); }
+.vz-sl:has(.vz-sl__in:focus-visible) .vz-sl__th { outline: 2px solid var(--accent-1); outline-offset: 3px; }
+.vz-sl__in { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  .vz-sl__trk, .vz-sl__th { transition: none; }
+}

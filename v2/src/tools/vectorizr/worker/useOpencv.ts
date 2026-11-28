@@ -1,6 +1,6 @@
 // Hook de React sobre el cliente singleton de OpenCV. Llamar a `detect` inicia la carga si está en 'idle'.
 import { useCallback, useSyncExternalStore } from 'react'
-import type { DetectParams, ImagePoint, OpencvStatus } from '../types'
+import type { DetectParams, ImagePoint, MaskImage, OpencvStatus } from '../types'
 import { getOpencvClient } from './opencvClient'
 
 export interface UseOpencv {
@@ -10,6 +10,8 @@ export interface UseOpencv {
   detect(imageData: ImageData, params: DetectParams): Promise<ImagePoint[]>
   /** Todos los contornos (varias piezas). */
   detectAll(imageData: ImageData, params: DetectParams): Promise<ImagePoint[][]>
+  /** Lo que el detector «ve», en blanco, gris y negro. */
+  mask(imageData: ImageData, params: DetectParams): Promise<MaskImage>
 }
 
 export function useOpencv(): UseOpencv {
@@ -23,5 +25,9 @@ export function useOpencv(): UseOpencv {
     (imageData: ImageData, params: DetectParams) => client.detectAll(imageData, params),
     [client],
   )
-  return { status, error, detect, detectAll }
+  const mask = useCallback(
+    (imageData: ImageData, params: DetectParams) => client.mask(imageData, params),
+    [client],
+  )
+  return { status, error, detect, detectAll, mask }
 }

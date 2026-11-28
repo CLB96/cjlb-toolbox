@@ -12,8 +12,9 @@ import type { ContourPoint } from './types'
 
 const detect = vi.fn()
 const detectAll = vi.fn()
+const mask = vi.fn()
 vi.mock('./worker/useOpencv', () => ({
-  useOpencv: () => ({ status: 'ready', error: null, detect, detectAll }),
+  useOpencv: () => ({ status: 'ready', error: null, detect, detectAll, mask }),
 }))
 vi.mock('./worker/opencvClient', () => ({ preloadOpencv: vi.fn(), disposeOpencvClient: vi.fn() }))
 vi.mock('./logic/imageNormalize', () => ({
@@ -487,6 +488,139 @@ describe('VectorizrTool', () => {
       fireEvent.click(screen.getByRole('checkbox', { name: 'Baja resolución' }))
       await waitFor(() => expect(drawImage()).toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480))
       expect(detect).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('editar imagen (paso 3)', () => {
+    async function openAuto() {
+      await seedStep4({ step: 3, imageWidth: 1280, imageHeight: 960 })
+      renderTool()
+      fireEvent.click(await screen.findByRole('button', { name: /Detección automática/ }))
+      await screen.findByRole('button', { name: 'Confirmar (4 pts)' })
+    }
+
+    it('el botón Editar imagen está plegado y al abrirlo muestra Recortar e Ignorar zona', async () => {
+      await openAuto()
+      const toggle = screen.getByRole('button', { name: /Editar imagen/ })
+      expect(toggle).toHaveAttribute('aria-expanded', 'false')
+      expect(screen.queryByRole('button', { name: 'Recortar' })).not.toBeInTheDocument()
+      fireEvent.click(toggle)
+      expect(toggle).toHaveAttribute('aria-expanded', 'true')
+      expect(screen.getByRole('button', { name: 'Recortar' })).toHaveAttribute('aria-pressed', 'false')
+      fireEvent.click(screen.getByRole('button', { name: 'Ignorar zona' }))
+      expect(screen.getByRole('button', { name: 'Ignorar zona' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('slider', { name: /Tamaño del pincel/ })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Foto completa' })).toBeDisabled()
+    })
+
+    it('Detalle: por defecto no manda nada; al moverlo y soltar detecta de nuevo con ese detalle', async () => {
+      await openAuto()
+      const slider = screen.getByRole('slider', { name: /Detalle/ })
+      expect(slider).toHaveValue('3')
+      fireEvent.change(slider, { target: { value: '5' } })
+      fireEvent.pointerUp(slider)
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(2))
+      expect(detect.mock.calls[0]![1]).not.toHaveProperty('detail')
+      expect(detect.mock.calls[1]![1]).toMatchObject({ detail: 5 })
+    })
+
+    it('Detalle solo aparece con el método automático', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: 'Semi automático' }))
+      expect(screen.queryByRole('slider', { name: /Detalle/ })).not.toBeInTheDocument()
+    })
+
+    it('el panel ordena: herramientas, color de la pieza, brillo y contraste, ver lo que detecta y al final deshacer', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      const body = document.querySelector('.vz-edit__body') as HTMLElement
+      const order = ['Recortar', 'Color de la pieza', 'Brillo', 'Contraste', 'Ver lo que detecta', 'Deshacer', 'Foto completa'].map((txt) => {
+        const el = within(body).getAllByText(txt, { exact: false })[0]!
+        return el
+      })
+      for (let i = 1; i < order.length; i++) {
+        expect(order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      }
+    })
+
+    it('el selector desliza su píldora a la opción elegida y el número del zoom está abajo a la izquierda', async () => {
+      await openAuto()
+      const group = screen.getByRole('button', { name: 'Semi automático' }).closest('.vz-seg') as HTMLElement
+      expect(group.style.getPropertyValue('--i')).toBe('0')
+      fireEvent.click(screen.getByRole('button', { name: 'Semi automático' }))
+      expect(group.style.getPropertyValue('--i')).toBe('1')
+      expect(group.querySelector('.vz-seg__pill')).toBeInTheDocument()
+      expect(document.querySelector('.vz-zoomtag')).toHaveTextContent('Zoom: 100%')
+    })
+
+    it('Rotar: gira la vista en pasos de 90° y el giro se muestra junto al zoom', async () => {
+      await openAuto()
+      const tag = () => document.querySelector('.vz-zoomtag')!
+      expect(tag()).not.toHaveTextContent('°')
+      fireEvent.click(screen.getByRole('button', { name: 'Rotar derecha' }))
+      expect(tag()).toHaveTextContent('Zoom: 100% · 90°')
+      fireEvent.click(screen.getByRole('button', { name: 'Rotar derecha' }))
+      expect(tag()).toHaveTextContent('· 180°')
+      fireEvent.click(screen.getByRole('button', { name: 'Rotar izquierda' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Rotar izquierda' }))
+      expect(tag()).not.toHaveTextContent('°')
+      fireEvent.click(screen.getByRole('button', { name: 'Rotar izquierda' }))
+      expect(tag()).toHaveTextContent('· 270°')
+    })
+
+    it('el panel explica el zoom con la rueda y Mayús', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      expect(screen.getByText(/Rueda del mouse: acercar/)).toBeInTheDocument()
+    })
+
+    it('Color de la pieza (dentro de Editar imagen): Oscura o Clara fuerza la polaridad; Auto no manda nada', async () => {
+      await openAuto()
+      expect(screen.queryByRole('button', { name: 'Oscura' })).not.toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      fireEvent.click(screen.getByRole('button', { name: 'Oscura' }))
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(2))
+      expect(detect.mock.calls[0]![1]).not.toHaveProperty('polarity')
+      expect(detect.mock.calls[1]![1]).toMatchObject({ polarity: 'dark' })
+      fireEvent.click(screen.getByRole('button', { name: 'Auto' }))
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(3))
+      expect(detect.mock.calls[2]![1]).not.toHaveProperty('polarity')
+    })
+
+    it('Brillo y Contraste: al soltar se detecta de nuevo y se puede volver a la foto completa', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      const brillo = screen.getByRole('slider', { name: /Brillo/ })
+      expect(brillo).toHaveValue('0')
+      fireEvent.change(brillo, { target: { value: '30' } })
+      fireEvent.pointerUp(brillo)
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(2))
+      expect(screen.getByRole('slider', { name: /Brillo/ })).toHaveValue('30')
+      fireEvent.click(screen.getByRole('button', { name: 'Foto completa' }))
+      await waitFor(() => expect(detect).toHaveBeenCalledTimes(3))
+      expect(screen.getByRole('slider', { name: /Brillo/ })).toHaveValue('0')
+    })
+
+    it('Ver lo que detecta pide la máscara al detector con los mismos parámetros y se apaga', async () => {
+      vi.stubGlobal('ImageData', class { constructor(public data: Uint8ClampedArray, public width: number, public height: number) {} })
+      mask.mockResolvedValue({ width: 1, height: 1, data: new Uint8ClampedArray(4) })
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Ver lo que detecta' }))
+      await waitFor(() => expect(mask).toHaveBeenCalledTimes(1))
+      expect(mask.mock.calls[0]![1]).toMatchObject({ method: 0 })
+      expect(screen.getByText(/Blanco: lo que toma como pieza/)).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Ver lo que detecta' }))
+      expect(screen.queryByText(/Blanco: lo que toma como pieza/)).not.toBeInTheDocument()
+      vi.unstubAllGlobals()
+    })
+
+    it('sin tocar nada la detección recibe la imagen completa, como antes', async () => {
+      await openAuto()
+      fireEvent.click(screen.getByRole('button', { name: /Editar imagen/ }))
+      expect(detect).toHaveBeenCalledTimes(1)
+      const draws = (fakeCtx as unknown as { drawImage: ReturnType<typeof vi.fn> }).drawImage.mock.calls
+      expect(draws.some((c) => c.length === 9)).toBe(false)
     })
   })
 

@@ -47,6 +47,19 @@ export interface DetectParams {
   method: DetectionMethod
   threshold1: number
   threshold2: number
+  /** true: los píxeles con alfa 0 son zona a ignorar («Editar imagen») y no entran al contorno. */
+  ignoreTransparent?: boolean
+  /** «Detalle» 1-5 (solo método automático): 3 = el de siempre; más alto capta muescas y dientes más pequeños. */
+  detail?: number
+  /** Fuerza la polaridad de Otsu: 'dark' = pieza oscura sobre fondo claro, 'light' = al revés. Sin valor: automática. */
+  polarity?: 'dark' | 'light'
+}
+
+/** Lo que el detector toma como pieza (blanco), restos que descarta (gris) y fondo o zona ignorada (negro), en RGBA. */
+export interface MaskImage {
+  width: number
+  height: number
+  data: Uint8ClampedArray
 }
 
 export interface ImagePoint {

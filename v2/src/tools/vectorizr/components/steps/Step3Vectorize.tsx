@@ -2,33 +2,25 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Button } from '../../../../ui/Button'
 import { useVectorizr, useVectorizrApi } from '../../VectorizrStoreProvider'
 import { useVzT } from '../../i18n'
-import { THRESHOLD_LIMITS } from '../../store'
+import { canvasClickToImageCoords, imageToView, letterbox, viewDims } from '../../logic/canvasCoords'
 import { lowResScale, scalePointsBack } from '../../logic/lowRes'
+import { buildDetectionInput, drawPrepOverlay } from '../../logic/prepCanvas'
+import { adjustFilter, isPrepped, offsetPoints, snapToCrop } from '../../logic/prepImage'
 import { clampQuantity, newPiece, pieceColor } from '../../logic/pieces'
 import type { ContourPoint, ImagePoint } from '../../types'
 import { useOpencv } from '../../worker/useOpencv'
 import { Icon } from '../icons'
 import { DetectedPieces, type DetectedRow } from './DetectedPieces'
+import { ChooseMode } from './ChooseMode'
+import { DetectTuning, type Polarity } from './DetectTuning'
+import { ImageEditPanel } from './ImageEditPanel'
+import { ThresholdGuide } from './ThresholdGuide'
+import { ZoomBar } from './ZoomBar'
 import { useCanvasZoom } from './useCanvasZoom'
+import { useImagePrep } from './useImagePrep'
+import { useRoutedPointer } from './useRoutedPointer'
 
 type Mode = 'choose' | 'auto' | 'manual'
-
-/** Coordenadas del clic teniendo en cuenta el letterbox de objectFit: contain (:11-26). */
-function letterbox(rect: DOMRect, imageWidth: number, imageHeight: number) {
-  const scaleRatio = Math.min(rect.width / imageWidth, rect.height / imageHeight)
-  const offsetX = (rect.width - imageWidth * scaleRatio) / 2
-  const offsetY = (rect.height - imageHeight * scaleRatio) / 2
-  return { scaleRatio, offsetX, offsetY }
-}
-
-function canvasClickToImageCoords(e: MouseEvent<HTMLCanvasElement>, imageWidth: number, imageHeight: number): ImagePoint | null {
-  const rect = e.currentTarget.getBoundingClientRect()
-  const { scaleRatio, offsetX, offsetY } = letterbox(rect, imageWidth, imageHeight)
-  const x = (e.clientX - rect.left - offsetX) / scaleRatio
-  const y = (e.clientY - rect.top - offsetY) / scaleRatio
-  if (!(x >= 0 && y >= 0 && x <= imageWidth && y <= imageHeight)) return null
-  return { x, y }
-}
 
 const toContour = (pts: ImagePoint[]): ContourPoint[] => pts.map((p, i) => ({ id: String(i), x: p.x, y: p.y, type: 'line' }))
 
@@ -42,7 +34,11 @@ export function Step3Vectorize() {
   const threshold1 = useVectorizr((s) => s.threshold1)
   const threshold2 = useVectorizr((s) => s.threshold2)
   const lowRes = useVectorizr((s) => s.lowRes)
-  const { detect, detectAll } = useOpencv()
+  const { detect, detectAll, mask } = useOpencv()
+  const rotation = useVectorizr((s) => s.imageRotation)
+  const view = viewDims(imageWidth, imageHeight, rotation)
+  const edit = useImagePrep(imageWidth, imageHeight, rotation)
+  const { prep } = edit
 
   const [mode, setMode] = useState<Mode>('choose')
   const [detecting, setDetecting] = useState(false)
@@ -50,10 +46,17 @@ export function Step3Vectorize() {
   const [detectedPoints, setDetectedPoints] = useState<ImagePoint[]>([])
   const [manualPoints, setManualPoints] = useState<ImagePoint[]>([])
   const [multi, setMulti] = useState(false)
+  const [detail, setDetail] = useState(3)
+  const detailRef = useRef(3)
+  const [polarity, setPolarity] = useState<Polarity>('auto')
+  const polarityRef = useRef<Polarity>('auto')
+  const [maskView, setMaskView] = useState<HTMLCanvasElement | null>(null)
+  const maskRequestRef = useRef(0)
   const [rows, setRows] = useState<DetectedRow[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
-  const zoom = useCanvasZoom(frameRef, mode === 'manual')
+  const zoom = useCanvasZoom(frameRef, mode !== 'choose')
+  const routed = useRoutedPointer(edit.handlers, zoom.handlers, edit.tool !== 'none')
   const zoomScale = zoom.scale
   const requestRef = useRef(0)
   const aliveRef = useRef(true)
@@ -64,22 +67,37 @@ export function Step3Vectorize() {
     }
   }, [])
 
-  /** Píxeles para el detector; `scale` < 1 es la copia reducida de baja resolución (la imagen no cambia). */
-  function getImageData(img: HTMLImageElement, scale = 1): ImageData {
-    const w = scale === 1 ? imageWidth : Math.max(1, Math.round(imageWidth * scale))
-    const h = scale === 1 ? imageHeight : Math.max(1, Math.round(imageHeight * scale))
-    const offscreen = document.createElement('canvas')
-    offscreen.width = w
-    offscreen.height = h
-    const ctx = offscreen.getContext('2d')
-    if (!ctx) throw new Error('canvas 2d no disponible')
-    if (scale === 1) {
-      ctx.drawImage(img, 0, 0)
-    } else {
-      ctx.imageSmoothingQuality = 'high'
-      ctx.drawImage(img, 0, 0, w, h)
+  /** Parámetros del detector con lo que el usuario ha ajustado (solo manda lo que no es el valor de siempre). */
+  function detectParams() {
+    const { detectionMethod, threshold1: low, threshold2: high } = api.getState()
+    return {
+      method: detectionMethod,
+      threshold1: low,
+      threshold2: high,
+      ...(prep.strokes.length > 0 ? { ignoreTransparent: true } : {}),
+      ...(detailRef.current !== 3 ? { detail: detailRef.current } : {}),
+      ...(polarityRef.current !== 'auto' ? { polarity: polarityRef.current } : {}),
     }
-    return ctx.getImageData(0, 0, w, h)
+  }
+
+  /** «Ver lo que detecta»: pide al detector la imagen en blanco y negro con lo mismo que usaría para el contorno. */
+  async function refreshMask() {
+    const img = api.getState().image?.image
+    if (!img) return
+    const id = ++maskRequestRef.current
+    const region = prep.crop ?? { x: 0, y: 0, w: imageWidth, h: imageHeight }
+    const scale = api.getState().lowRes ? lowResScale(region.w, region.h) : 1
+    try {
+      const m = await mask(buildDetectionInput(img, imageWidth, imageHeight, scale, prep), detectParams())
+      if (!aliveRef.current || id !== maskRequestRef.current) return
+      const canvas = document.createElement('canvas')
+      canvas.width = m.width
+      canvas.height = m.height
+      canvas.getContext('2d')?.putImageData(new ImageData(new Uint8ClampedArray(m.data), m.width, m.height), 0, 0)
+      setMaskView(canvas)
+    } catch {
+      if (aliveRef.current && id === maskRequestRef.current) setMaskView(null)
+    }
   }
 
   /** M12: la detección se encola hasta que OpenCV esté listo; un error se muestra y el spinner termina. */
@@ -87,25 +105,32 @@ export function Step3Vectorize() {
     const img = api.getState().image?.image
     if (!img) return
     const id = ++requestRef.current
-    const { detectionMethod, threshold1: low, threshold2: high, lowRes: small } = api.getState()
-    const scale = small ? lowResScale(imageWidth, imageHeight) : 1
+    const { lowRes: small } = api.getState()
+    const region = prep.crop ?? { x: 0, y: 0, w: imageWidth, h: imageHeight }
+    const scale = small ? lowResScale(region.w, region.h) : 1
+    const back = (pts: ImagePoint[]) => {
+      const placed = offsetPoints(scalePointsBack(pts, scale), region.x, region.y)
+      // El borde del recorte es un tope: donde corta la pieza, el contorno lo sigue en línea recta
+      return prep.crop ? snapToCrop(placed, prep.crop, Math.max(6, imageWidth * 0.008)) : placed
+    }
     setDetecting(true)
     setDetectError(false)
     try {
-      const params = { method: detectionMethod, threshold1: low, threshold2: high }
+      const params = detectParams()
       if (multiNow) {
-        const found = await detectAll(getImageData(img, scale), params)
+        const found = await detectAll(buildDetectionInput(img, imageWidth, imageHeight, scale, prep), params)
         if (aliveRef.current && id === requestRef.current) {
-          setRows(found.map((points, i) => ({ key: i, name: `Pieza ${i + 1}`, quantity: 1, points: scalePointsBack(points, scale) })))
+          setRows(found.map((points, i) => ({ key: i, name: `Pieza ${i + 1}`, quantity: 1, points: back(points) })))
         }
       } else {
-        const pts = await detect(getImageData(img, scale), params)
-        if (aliveRef.current && id === requestRef.current) setDetectedPoints(scalePointsBack(pts, scale))
+        const pts = await detect(buildDetectionInput(img, imageWidth, imageHeight, scale, prep), params)
+        if (aliveRef.current && id === requestRef.current) setDetectedPoints(back(pts))
       }
     } catch {
       if (aliveRef.current && id === requestRef.current) setDetectError(true)
     } finally {
       if (aliveRef.current && id === requestRef.current) setDetecting(false)
+      if (edit.showMask && aliveRef.current) void refreshMask()
     }
   }
 
@@ -114,17 +139,55 @@ export function Step3Vectorize() {
     void runDetection()
   }
 
+  // «Ver lo que detecta»: al encender se pide la imagen; al apagar se quita
+  useEffect(() => {
+    if (mode !== 'auto') return
+    if (edit.showMask) void refreshMask()
+    else setMaskView(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [edit.showMask, mode])
+
+  // Al girar la foto, un pequeño destello que acompaña el cambio (no corre con «reducir movimiento»)
+  const firstRotation = useRef(true)
+  useEffect(() => {
+    if (firstRotation.current) {
+      firstRotation.current = false
+      return
+    }
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!reduced) canvasRef.current?.animate?.([{ opacity: 0.2 }, { opacity: 1 }], { duration: 380, easing: 'cubic-bezier(0.3, 1.2, 0.5, 1)' })
+  }, [rotation])
+
+  // Tras cada edición de la foto (recorte o borrado) se vuelve a detectar solo
+  useEffect(() => {
+    if (edit.tick > 0 && mode === 'auto') void runDetection()
+  }, [edit.tick])
+
   // Imagen + contorno sobre el canvas
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !image) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    canvas.width = imageWidth
-    canvas.height = imageHeight
-    ctx.drawImage(image.image, 0, 0)
+    // La foto se dibuja girada alrededor de su centro; todo lo demás se sigue dibujando en píxeles de la foto
+    canvas.width = view.w
+    canvas.height = view.h
+    ctx.translate(view.w / 2, view.h / 2)
+    ctx.rotate((rotation * Math.PI) / 180)
+    ctx.translate(-imageWidth / 2, -imageHeight / 2)
+    if (maskView && edit.showMask && mode === 'auto') {
+      const r = prep.crop ?? { x: 0, y: 0, w: imageWidth, h: imageHeight }
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, imageWidth, imageHeight)
+      ctx.drawImage(maskView, r.x, r.y, r.w, r.h)
+    } else {
+      ctx.drawImage(image.image, 0, 0)
+    }
+    if ((mode === 'auto' && isPrepped(prep)) || edit.tool === 'crop') {
+      drawPrepOverlay(ctx, imageWidth, imageHeight, prep, { handles: edit.tool === 'crop', handleSize: Math.max(10, imageWidth / 70) / zoomScale })
+    }
     if (mode === 'auto' && multi) {
-      const lw = Math.max(2, imageWidth / 300)
+      const lw = Math.max(1.5, imageWidth / 700)
       rows.forEach((r, i) => {
         ctx.beginPath()
         r.points.forEach((p, j) => (j === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)))
@@ -142,16 +205,16 @@ export function Step3Vectorize() {
       pts.slice(1).forEach((p) => ctx.lineTo(p.x, p.y))
       ctx.closePath()
       ctx.strokeStyle = '#4a7eff'
-      ctx.lineWidth = Math.max(2, imageWidth / 300) / zoomScale
+      ctx.lineWidth = Math.max(1.5, imageWidth / 700) / zoomScale
       ctx.stroke()
     }
     pts.forEach((p, i) => {
       ctx.beginPath()
-      ctx.arc(p.x, p.y, Math.max(4, imageWidth / 200) / zoomScale, 0, Math.PI * 2)
+      ctx.arc(p.x, p.y, Math.max(2.5, imageWidth / 450) / zoomScale, 0, Math.PI * 2)
       ctx.fillStyle = i === 0 && pts.length > 1 ? '#ea580c' : '#e11d48'
       ctx.fill()
     })
-  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight, zoomScale])
+  }, [detectedPoints, manualPoints, mode, multi, rows, image, imageWidth, imageHeight, zoomScale, prep, edit.tool, maskView, edit.showMask, rotation, view.w, view.h])
 
   function confirmPoints(pts: ImagePoint[]) {
     const s = api.getState()
@@ -169,42 +232,26 @@ export function Step3Vectorize() {
   function handleCanvasClick(e: MouseEvent<HTMLCanvasElement>) {
     if (mode !== 'manual') return
     if (zoom.consumeDrag()) return
-    const coords = canvasClickToImageCoords(e, imageWidth, imageHeight)
+    const coords = canvasClickToImageCoords(e, imageWidth, imageHeight, rotation)
     if (!coords) return
     // Cierra el contorno si el clic cae a menos de 18 px (pantalla) del primer punto
     if (manualPoints.length > 2) {
       const rect = e.currentTarget.getBoundingClientRect()
-      const { scaleRatio, offsetX, offsetY } = letterbox(rect, imageWidth, imageHeight)
-      const dx = e.clientX - rect.left - (manualPoints[0]!.x * scaleRatio + offsetX)
-      const dy = e.clientY - rect.top - (manualPoints[0]!.y * scaleRatio + offsetY)
+      const { scaleRatio, offsetX, offsetY } = letterbox(rect, view.w, view.h)
+      const first = imageToView(manualPoints[0]!.x, manualPoints[0]!.y, imageWidth, imageHeight, rotation)
+      const dx = e.clientX - rect.left - (first.x * scaleRatio + offsetX)
+      const dy = e.clientY - rect.top - (first.y * scaleRatio + offsetY)
       if (Math.sqrt(dx * dx + dy * dy) < 18) return confirmPoints(manualPoints)
     }
     setManualPoints((pts) => [...pts, coords])
   }
 
   if (mode === 'choose') {
-    return (
-      <div className="vz-choose">
-        <h2>{t('chooseTitle')}</h2>
-        <div className="vz-cards">
-          {[
-            { icon: '🤖', title: t('autoTitle'), desc: t('autoDesc'), action: handleAutoMode },
-            { icon: '✏️', title: t('manualTitle'), desc: t('manualDesc'), action: () => setMode('manual') },
-          ].map((opt) => (
-            <button key={opt.icon} type="button" className="vz-card glass" onClick={opt.action}>
-              <span className="vz-card__icon">{opt.icon}</span>
-              <h3>{opt.title}</h3>
-              <span className="vz-muted">{opt.desc}</span>
-            </button>
-          ))}
-        </div>
-        <Button variant="ghost" onClick={() => api.getState().setStep(2)}>
-          <Icon name="back" inline />
-          {t('back')}
-        </Button>
-      </div>
-    )
+    return <ChooseMode onAuto={handleAutoMode} onManual={() => setMode('manual')} onBack={() => api.getState().setStep(2)} />
   }
+
+  /** Gira la foto en pasos de 90° (solo la vista, como en el editor: los puntos y la escala no cambian). */
+  const rotateBy = (delta: number) => api.getState().setImageRotation((((rotation + delta) % 360) + 360) % 360)
 
   // M19: volver a detectar al soltar el slider (puntero o teclado)
   const onRelease = () => void runDetection()
@@ -215,23 +262,16 @@ export function Step3Vectorize() {
         <canvas
           ref={canvasRef}
           className="vz-detect-canvas"
-          style={{ cursor: mode === 'manual' ? 'crosshair' : 'default', ...(mode === 'manual' ? zoom.style : {}) }}
+          style={{ cursor: mode === 'manual' ? 'crosshair' : edit.cursor, filter: mode === 'auto' && !edit.showMask ? adjustFilter(prep.brightness, prep.contrast) : undefined, ...zoom.style }}
           onClick={handleCanvasClick}
-          {...(mode === 'manual' ? zoom.handlers : {})}
+          {...(mode === 'manual' ? zoom.handlers : routed)}
         />
-        {mode === 'manual' && (
-          <div className="vz-zoombar glass" role="group">
-            <button type="button" aria-label={t('zoomOut')} title={t('zoomOut')} onClick={zoom.zoomOut} disabled={zoom.scale <= 1}>
-              −
-            </button>
-            <button type="button" className="vz-zoombar__pct" onClick={zoom.reset} disabled={zoom.scale <= 1}>
-              {Math.round(zoom.scale * 100)}%
-            </button>
-            <button type="button" aria-label={t('zoomIn')} title={t('zoomIn')} onClick={zoom.zoomIn}>
-              +
-            </button>
-          </div>
-        )}
+        <div className="vz-zoomtag glass">
+          {t('statusZoom', Math.round(zoom.scale * 100))}
+          {rotation !== 0 ? ` · ${rotation}°` : ''}
+        </div>
+        {edit.hover && <span className="vz-brush" style={{ left: edit.hover.x, top: edit.hover.y, width: edit.hover.d, height: edit.hover.d }} />}
+        <ZoomBar zoom={zoom} onRotate={rotateBy} />
         {detecting && (
           <div className="vz-spinner-wrap" role="status">
             <div className="vz-spinner" />
@@ -267,49 +307,20 @@ export function Step3Vectorize() {
               {t('lowRes')}
             </label>
             {lowRes && <p className="vz-muted vz-small">{t('lowResHint')}</p>}
-            <div className="vz-seg" role="group">
-              <button type="button" className={method === 0 ? 'is-on' : ''} aria-pressed={method === 0} onClick={() => api.getState().setDetectionMethod(0)}>
-                {t('methodAuto')}
-              </button>
-              <button type="button" className={method === 1 ? 'is-on' : ''} aria-pressed={method === 1} onClick={() => api.getState().setDetectionMethod(1)}>
-                {t('methodSemi')}
-              </button>
-            </div>
-            {method === 1 && (
-              <>
-                <label className="vz-field">
-                  <span className="vz-slider-label">
-                    <span>{t('lowThreshold')}</span>
-                    <b>{threshold1}</b>
-                  </span>
-                  <input
-                    type="range"
-                    min={THRESHOLD_LIMITS.low.min}
-                    max={THRESHOLD_LIMITS.low.max}
-                    value={threshold1}
-                    onChange={(e) => api.getState().setThreshold1(Number(e.target.value))}
-                    onPointerUp={onRelease}
-                    onKeyUp={onRelease}
-                  />
-                </label>
-                <label className="vz-field">
-                  <span className="vz-slider-label">
-                    <span>{t('highThreshold')}</span>
-                    <b>{threshold2}</b>
-                  </span>
-                  <input
-                    type="range"
-                    min={THRESHOLD_LIMITS.high.min}
-                    max={THRESHOLD_LIMITS.high.max}
-                    value={threshold2}
-                    onChange={(e) => api.getState().setThreshold2(Number(e.target.value))}
-                    onPointerUp={onRelease}
-                    onKeyUp={onRelease}
-                  />
-                </label>
-              </>
-            )}
-            {method === 0 && <p className="vz-muted vz-small">{t('autoHelp')}</p>}
+            <DetectTuning
+              method={method}
+              threshold1={threshold1}
+              threshold2={threshold2}
+              detail={detail}
+              onMethod={(m) => api.getState().setDetectionMethod(m)}
+              onThreshold1={(v) => api.getState().setThreshold1(v)}
+              onThreshold2={(v) => api.getState().setThreshold2(v)}
+              onDetail={(v) => {
+                detailRef.current = v
+                setDetail(v)
+              }}
+              onRelease={onRelease}
+            />
             {detectError && (
               <p className="vz-error" role="alert">
                 {t('errDetect')}
@@ -330,19 +341,7 @@ export function Step3Vectorize() {
                 {t('confirmPts', detectedPoints.length)}
               </Button>
             )}
-            {method === 1 && (
-              <div className="vz-guide">
-                <p className="vz-guide__title">{t('guideTitle')}</p>
-                <p>
-                  <b>{t('guideLowLabel')}</b>
-                  {t('guideLow')}
-                </p>
-                <p>
-                  <b>{t('guideHighLabel')}</b>
-                  {t('guideHigh')}
-                </p>
-              </div>
-            )}
+            {method === 1 && <ThresholdGuide />}
           </>
         )}
         {mode === 'manual' && (
@@ -365,6 +364,18 @@ export function Step3Vectorize() {
           </>
         )}
         <span className="vz-spacer" />
+        {mode === 'auto' && (
+          <ImageEditPanel
+            edit={edit}
+            edited={isPrepped(prep)}
+            polarity={polarity}
+            onPolarity={(p) => {
+              polarityRef.current = p
+              setPolarity(p)
+              void runDetection()
+            }}
+          />
+        )}
         <Button
           variant="ghost"
           onClick={() => {

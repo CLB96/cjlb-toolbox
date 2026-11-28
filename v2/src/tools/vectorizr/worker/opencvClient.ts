@@ -1,6 +1,6 @@
 // Cliente del worker de OpenCV: singleton perezoso (se crea al primer uso), cola de detecciones hasta
 // 'ready' (M12), una petición a la vez y errores que rechazan la promesa en vez de colgar el spinner.
-import type { DetectParams, ImagePoint, OpencvStatus } from '../types'
+import type { DetectParams, ImagePoint, MaskImage, OpencvStatus } from '../types'
 import type { DetectRequest, InitRequest, WorkerResponse } from './protocol'
 
 export interface WorkerLike {
@@ -24,6 +24,8 @@ export interface OpencvClient {
   detect(imageData: ImageData, params: DetectParams): Promise<ImagePoint[]>
   /** Detecta todos los contornos (varias piezas), de izquierda a derecha. Mismo trato del buffer. */
   detectAll(imageData: ImageData, params: DetectParams): Promise<ImagePoint[][]>
+  /** La imagen que el detector «ve» (blanco = pieza, gris = otros objetos, negro = fondo o zona ignorada). Mismo trato del buffer. */
+  mask(imageData: ImageData, params: DetectParams): Promise<MaskImage>
   /** Termina el worker, rechaza lo pendiente y vuelve a 'idle'. */
   dispose(): void
 }
@@ -32,8 +34,8 @@ interface Job {
   id: number
   imageData: ImageData
   params: DetectParams
-  multi: boolean
-  resolve: (result: ImagePoint[] | ImagePoint[][]) => void
+  mode: 'single' | 'multi' | 'mask'
+  resolve: (result: ImagePoint[] | ImagePoint[][] | MaskImage) => void
   reject: (err: Error) => void
 }
 
@@ -66,7 +68,7 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
     queue = rest
     inFlight = job
     const { data, width, height } = job.imageData
-    const msg: DetectRequest = { type: 'detect', id: job.id, data, width, height, ...job.params, ...(job.multi ? { multi: true } : {}) }
+    const msg: DetectRequest = { type: 'detect', id: job.id, data, width, height, ...job.params, ...(job.mode === 'multi' ? { multi: true } : {}), ...(job.mode === 'mask' ? { mask: true } : {}) }
     worker.postMessage(msg, [data.buffer])
   }
 
@@ -100,13 +102,14 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
     inFlight = null
     if (res.type === 'contour') job.resolve(res.points)
     else if (res.type === 'contours') job.resolve(res.contours)
+    else if (res.type === 'mask') job.resolve({ width: res.width, height: res.height, data: res.data })
     else job.reject(new Error(res.message))
     pump()
   }
 
-  const enqueue = <T,>(imageData: ImageData, params: DetectParams, multi: boolean) =>
+  const enqueue = <T,>(imageData: ImageData, params: DetectParams, mode: Job['mode']) =>
     new Promise<T>((resolve, reject) => {
-      queue = [...queue, { id: nextId++, imageData, params, multi, resolve: resolve as Job['resolve'], reject }]
+      queue = [...queue, { id: nextId++, imageData, params, mode, resolve: resolve as Job['resolve'], reject }]
       start()
       pump()
     })
@@ -130,8 +133,9 @@ export function createOpencvClient(createWorker: () => WorkerLike, opencvUrl: ()
       return () => { listeners.delete(listener) }
     },
     preload: start,
-    detect: (imageData, params) => enqueue<ImagePoint[]>(imageData, params, false),
-    detectAll: (imageData, params) => enqueue<ImagePoint[][]>(imageData, params, true),
+    detect: (imageData, params) => enqueue<ImagePoint[]>(imageData, params, 'single'),
+    detectAll: (imageData, params) => enqueue<ImagePoint[][]>(imageData, params, 'multi'),
+    mask: (imageData, params) => enqueue<MaskImage>(imageData, params, 'mask'),
     dispose() {
       teardown()
       failAll(DISPOSED)
